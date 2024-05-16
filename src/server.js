@@ -3,7 +3,6 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 3000;
 import businessRoutes from "./routes/business.routes.js";
 import authRoutes from "./routes/authentication.routes.js";
 import groupRoutes from "./routes/group.routes.js";
@@ -23,11 +22,12 @@ app.use("/api/v1/params", paramsRoutes);
 app.use("/api/v1/target", targetRoutes);
 app.use("/api/v1/user", userRoutes);
 
+const port = process.env.PORT || 3000;
 connectDB()
   .then(() => {
     console.log("Connected to MongoDB");
-    app.listen(PORT, () => {
-      console.log("Node API app is running on port 3000");
+    app.listen(port, () => {
+      console.log(`Node API app is running on port ${port}`);
     });
   })
   .catch((error) => {
