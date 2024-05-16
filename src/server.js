@@ -34,4 +34,8 @@ connectDB()
     console.log(error);
   });
 
+app.get("/", (req, res) => {
+  res.json({ message: "welcome to software api" });
+});
+
 export default app;
