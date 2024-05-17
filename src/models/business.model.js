@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+// import { Target } from "../models/target.model.js";
 
 const commonStringConstraints = {
   type: String,
@@ -26,6 +27,12 @@ const businessSchema = new Schema({
   industryType: commonStringConstraints,
   city: commonStringConstraints,
   country: commonStringConstraints,
+  targets: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Target",
+    },
+  ],
 });
 
 const Business = model("Business", businessSchema);
