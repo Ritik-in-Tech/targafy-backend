@@ -1,5 +1,5 @@
-import {Target} from "../models/target.model.js";
-import {Business} from "../models/business.model.js";
+import { Target } from "../models/target.model.js";
+import { Business } from "../models/business.model.js";
 import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -10,8 +10,6 @@ const createTarget = asyncHandler(async (req, res) => {
     const {
       title,
       details,
-      blocked,
-      delayed,
       createdBy,
       assignedTo,
       createdDate,
@@ -21,10 +19,10 @@ const createTarget = asyncHandler(async (req, res) => {
     } = req.body;
 
     const businessId = req.params.id;
-    console.log(businessId);
+    // console.log(businessId);
     const business = await Business.findOne({ _id: businessId });
 
-    // Validate required fields
+    // Validate required fields and ensure business exists
     if (!title || !business) {
       return res
         .status(400)
@@ -38,11 +36,9 @@ const createTarget = asyncHandler(async (req, res) => {
     }
 
     // Create a new target
-    const target = Target({
+    const target = new Target({
       title,
       details,
-      blocked,
-      delayed,
       createdBy,
       assignedTo,
       createdDate,
@@ -51,14 +47,24 @@ const createTarget = asyncHandler(async (req, res) => {
       status,
     });
 
-    business.targets.push(target);
-
     // Save the target to the database
+    const savedTarget = await target.save();
+
+    // Add the target reference to the business's targets array
+    business.targets.push(savedTarget._id);
+
+    // Save the updated business
     await business.save();
 
     return res
       .status(201)
-      .json(new ApiResponse(200, { target }, "Target created successfully"));
+      .json(
+        new ApiResponse(
+          201,
+          { target: savedTarget },
+          "Target created successfully"
+        )
+      );
   } catch (error) {
     console.error("Error:", error);
     return res
@@ -71,16 +77,19 @@ const createTarget = asyncHandler(async (req, res) => {
 const getAllTargets = asyncHandler(async (req, res) => {
   try {
     const id = req.params.id;
-    const business = await Business.findOne({ _id: id });
+    // console.log(id);
+    const business = await Business.findOne({ _id: id }).populate(
+      "targets",
+      "title details createdBy assignedTo dailyFinishedTarget createdDate deliveryDate nextFollowUpDate status"
+    );
     if (!business) {
       return res
         .status(404)
         .json(new ApiResponse(404, {}, "Business not found"));
     }
-    const targets = business.targets;
     return res
       .status(200)
-      .json(new ApiResponse(200, { targets }, "Target fetched successfully!"));
+      .json(new ApiResponse(200, { business }, "Target fetched successfully!"));
   } catch (error) {
     console.error("Error:", error);
     return res
@@ -93,17 +102,28 @@ const getAllTargets = asyncHandler(async (req, res) => {
 const getTargetById = asyncHandler(async (req, res) => {
   try {
     const { bid, tid } = req.params;
-    const business = await Business.findOne({ _id: bid });
+
+    // Find the business and populate targets
+    const business = await Business.findOne({ _id: bid }).populate("targets");
+
     if (!business) {
       return res
         .status(404)
         .json(new ApiResponse(404, {}, "Business not found"));
     }
-    const target = business.targets.find((target) => target._id == tid);
+
+    // Find the specific target within the populated targets
+    const target = business.targets.find(
+      (target) => target._id.toString() === tid
+    );
+
     if (!target) {
       return res.status(404).json(new ApiResponse(404, {}, "Target not found"));
     }
-    res.status(200).json(target);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, { target }, "Target fetched successfully"));
   } catch (error) {
     console.error("Error:", error);
     return res
@@ -116,48 +136,33 @@ const getTargetById = asyncHandler(async (req, res) => {
 const updateTarget = asyncHandler(async (req, res) => {
   try {
     const updateFields = req.body;
+    const { bid, tid } = req.params;
 
+    // Find the business to ensure it exists
     const business = await Business.findById(bid);
-    console.log(business);
     if (!business) {
       return res
         .status(404)
         .json(new ApiResponse(404, {}, "Business not found"));
     }
 
-    const target = business.targets.find((target) => target._id == tid);
+    // Check if the target ID exists in the business' targets array
+    if (!business.targets.includes(tid)) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, {}, "Target not found in this business"));
+    }
+
+    // Find and update the target document directly
+    const target = await Target.findByIdAndUpdate(
+      tid,
+      { $set: updateFields },
+      { new: true }
+    );
+
     if (!target) {
       return res.status(404).json(new ApiResponse(404, {}, "Target not found"));
     }
-
-    console.log(target);
-    // Update only the specified fields from updateFields
-    Object.keys(updateFields).forEach((key) => {
-      if (target[key] !== undefined) {
-        target[key] = updateFields[key];
-      }
-    });
-    console.log(updateFields);
-    const updatedTarget = await Business.findByIdAndUpdate(
-      new mongoose.Types.ObjectId(bid),
-      // "targets._id": new mongoose.Types.ObjectId(tid),
-      {
-        $set: {
-          "targets.$[elem]": {
-            ...updateFields,
-            _id: new mongoose.Types.ObjectId(tid),
-          },
-        },
-      },
-      {
-        new: true,
-        arrayFilters: [{ "elem._id": new mongoose.Types.ObjectId(tid) }],
-      }
-    );
-    console.log(tid);
-    console.log(bid);
-    console.log(updatedTarget);
-    await business.save();
 
     return res
       .status(200)
@@ -174,16 +179,32 @@ const updateTarget = asyncHandler(async (req, res) => {
 const deleteTarget = asyncHandler(async (req, res) => {
   try {
     const { bid, tid } = req.params;
+
+    // Find the business to ensure it exists
     const business = await Business.findById(bid);
     if (!business) {
       return res
         .status(404)
         .json(new ApiResponse(404, {}, "Business not found"));
     }
+
+    // Check if the target ID exists in the business' targets array
+    if (!business.targets.includes(tid)) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, {}, "Target not found in this business"));
+    }
+
+    // Remove target ID from the business' targets array
     const targetIndex = business.targets.indexOf(tid);
     business.targets.splice(targetIndex, 1);
+
+    // Save the updated business document
     await business.save();
-    console.log(business.targets);
+
+    // Delete the actual Target document from the Target collection
+    await Target.findByIdAndDelete(tid);
+
     return res
       .status(200)
       .json(new ApiResponse(200, {}, "Target deleted successfully"));
