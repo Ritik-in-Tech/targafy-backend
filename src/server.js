@@ -35,7 +35,7 @@ connectDB()
   });
 
 app.get("/", (req, res) => {
-  res.json({ message: "welcome to targafy api" });
+  res.json({ message: "welcome to Targafy API" });
 });
 
 export default app;
