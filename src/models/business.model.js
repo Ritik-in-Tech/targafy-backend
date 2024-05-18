@@ -28,9 +28,8 @@ const businessSchema = new Schema({
   city: commonStringConstraints,
   country: commonStringConstraints,
   parameters: {
-    type: String,
-    trim: true,
-    default: "",
+    type: [String],
+    default: [],
   },
   targets: [
     {
@@ -42,9 +41,12 @@ const businessSchema = new Schema({
 
 // Pre-save middleware to process the 'parameters' field
 businessSchema.pre("save", function (next) {
-  if (this.parameters) {
-    // Split by spaces, join with commas, and remove any extra spaces
-    this.parameters = this.parameters.split(" ").filter(Boolean).join(",");
+  if (this.parameters && typeof this.parameters === "string") {
+    // Split the string by commas, trim each part, and filter out empty strings
+    this.parameters = this.parameters
+      .split(",")
+      .map((param) => param.trim())
+      .filter(Boolean);
   }
   next();
 });
