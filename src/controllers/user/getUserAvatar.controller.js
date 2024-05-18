@@ -4,7 +4,7 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 
 const getUserAvatar = asyncHandler(async (req, res, next) => {
   try {
-    const userId = req?.query?.userId;
+    const userId = req?.user?._id;
 
     const user = await User.findOne({ _id: userId });
 
