@@ -40,7 +40,7 @@ router.route("/update/:businessId").patch(updateBusinessDetails); // done
 // add user to business
 router.route("/send/request/:businessCode").post(joinBusiness); // done
 
-// accept request or get all accepted request
+// accept, request or get all accepted request
 router
   .route("/accept/request/:businessId")
   .post(acceptUserJoinRequest)
@@ -83,7 +83,7 @@ router.route("/requests/count/:businessId").get(getPendingRequestCount); // done
 // get business logo
 router.route("/requests/user-business-logo/:businessId").get(getBusinessLogo); // done
 
-// rate business user 
-router.route("/rate/user/:businessId/:userId").post(rateUserInBusiness);  // done
+// rate business user
+router.route("/rate/user/:businessId/:userId").post(rateUserInBusiness); // done
 
 export default router;
