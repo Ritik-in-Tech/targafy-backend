@@ -65,7 +65,11 @@ const verifyloginOTP = asyncHandler(async (req, res) => {
         name: user?.name,
       };
 
-      const authToken = jwt.sign({ userDetails }, ENV_VAR.ACCESS_TOKEN_SECRET);
+      const authToken = jwt.sign(
+        { userDetails },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+      );
       return res
         .status(200)
         .json(new ApiResponse(200, { authToken }, "Login successfully"));
@@ -104,7 +108,11 @@ const verifyloginOTP = asyncHandler(async (req, res) => {
       name: user?.name == "" ? "Guest" : user?.name,
     };
 
-    const authToken = jwt.sign({ userDetails }, ENV_VAR.ACCESS_TOKEN_SECRET);
+    const authToken = jwt.sign(
+      { userDetails },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+    );
 
     return res
       .status(200)
