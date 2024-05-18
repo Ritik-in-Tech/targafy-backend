@@ -12,16 +12,22 @@ const joinBusiness = asyncHandler(async (req, res, next) => {
   const businessCode = req?.params?.businessCode;
   const userId = req?.user?._id;
   try {
-    if (!businessCode || businessCode.length != 6 || !userId) {
+    if (!businessCode || businessCode.length != 6) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Enter a valid business code!!"));
+    }
+
+    if (!userId) {
+      return res.status(400).json(new ApiResponse(400, {}, "Invalid Token!"));
     }
 
     const [user, businessData] = await Promise.all([
       User.findById(userId),
       Business.findOne({ businessCode }).populate("_id"),
     ]);
+    // console.log(user);
+    // console.log(businessData);
 
     if (!user) {
       return res
@@ -36,6 +42,8 @@ const joinBusiness = asyncHandler(async (req, res, next) => {
     }
 
     const businessId = businessData?._id;
+    console.log(businessId);
+    console.log(userId);
 
     const existingUser = await Businessusers.findOne({
       businessId,
