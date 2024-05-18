@@ -4,15 +4,27 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 
 export const updateUserAvtar = asyncHandler(async (req, res, next) => {
   try {
-    const userId = req?.params?.id;
+    // const userId = req?.params?.id;
+    const userId = req?.user?._id;
     if (!req.body || !req.body.avatar) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Please provide a avatar URL"));
     }
-    // console.log("print hello world");
-    // console.log(req.body.avatar);
     const userAvatar = req?.body?.avatar;
+
+    // Validate the avatar URL
+    if (!/\.(jpg|jpeg|png)$/i.test(userAvatar)) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Avatar URL must end with .jpg, .jpeg, or .png"
+          )
+        );
+    }
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $set: { avatar: userAvatar } },
