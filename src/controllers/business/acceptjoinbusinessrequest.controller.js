@@ -14,6 +14,7 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 const acceptUserJoinRequest = asyncHandler(async (req, res) => {
   const { role, userId, parentId, acceptedByName } = req.body;
   const businessId = req.params.businessId;
+  // console.log(businessId);
 
   try {
     // Input validation
@@ -28,6 +29,8 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
           )
         );
     }
+
+    // console.log(role);
 
     const session = await mongoose.startSession();
     session.startTransaction();
