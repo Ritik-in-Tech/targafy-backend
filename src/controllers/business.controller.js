@@ -11,8 +11,15 @@ const createBusiness = asyncHandler(async (req, res) => {
   const session = await startSession();
   session.startTransaction();
   try {
-    const { buisnessName, logo, industryType, city, country, userName } =
-      req.body;
+    const {
+      buisnessName,
+      logo,
+      industryType,
+      city,
+      country,
+      userName,
+      parameters,
+    } = req.body;
 
     // Validation: Check if admin name and contact number are provided
     const adminId = req.user._id;
@@ -47,6 +54,7 @@ const createBusiness = asyncHandler(async (req, res) => {
           city: city,
           logo: logo,
           country: country,
+          parameters: parameters,
         },
       ],
       { session: session }
