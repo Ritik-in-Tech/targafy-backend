@@ -27,12 +27,26 @@ const businessSchema = new Schema({
   industryType: commonStringConstraints,
   city: commonStringConstraints,
   country: commonStringConstraints,
+  parameters: {
+    type: String,
+    trim: true,
+    default: "",
+  },
   targets: [
     {
       type: Schema.Types.ObjectId,
       ref: "Target",
     },
   ],
+});
+
+// Pre-save middleware to process the 'parameters' field
+businessSchema.pre("save", function (next) {
+  if (this.parameters) {
+    // Split by spaces, join with commas, and remove any extra spaces
+    this.parameters = this.parameters.split(" ").filter(Boolean).join(",");
+  }
+  next();
 });
 
 const Business = model("Business", businessSchema);
