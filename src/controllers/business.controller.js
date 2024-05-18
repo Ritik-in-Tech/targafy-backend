@@ -384,10 +384,10 @@ const deleteBusiness = asyncHandler(async (req, res) => {
       );
     }
 
-    const responce = await Business.findByIdAndDelete(businessId, {
+    const response = await Business.findByIdAndDelete(businessId, {
       session: session,
     });
-    if (!responce) {
+    if (!response) {
       await session.abortTransaction();
       session.endSession();
       return res
