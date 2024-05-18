@@ -10,7 +10,8 @@ export const updateUserName = asyncHandler(async (req, res) => {
     // Construct the query to find the user by _id and update their name
     const updatedUser = await User.findOneAndUpdate(
       { _id: userId }, // Find user by _id
-      { $set: { name: newName } } // Update user's name
+      { $set: { name: newName } }, // Update user's name
+      { new: true } // Return the updated document
     );
 
     console.log(updatedUser);
@@ -31,7 +32,7 @@ export const updateUserName = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(new ApiResponse(200, {}, "Name updated successfully!!"));
+      .json(new ApiResponse(200, updatedUser, "Name updated successfully!!"));
   } catch (error) {
     console.log(error);
     return res
