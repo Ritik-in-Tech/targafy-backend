@@ -33,7 +33,7 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
     req.userDetails = decodedToken?.userDetails;
     next();
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     return res
       .status(401)
       .json(new ApiResponse(401, {}, "Invalid access token"));
