@@ -14,7 +14,7 @@ export const updateUserName = asyncHandler(async (req, res) => {
       { new: true } // Return the updated document
     );
 
-    console.log(updatedUser);
+    // console.log(updatedUser);
     if (updatedUser.matchedCount == 0) {
       return res
         .status(404)
@@ -34,7 +34,7 @@ export const updateUserName = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, updatedUser, "Name updated successfully!!"));
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     return res
       .status(500)
       .json(new ApiResponse(500, {}, "Internal Server Error"));
