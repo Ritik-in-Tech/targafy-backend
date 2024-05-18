@@ -42,9 +42,9 @@ const businessSchema = new Schema({
 // Pre-save middleware to process the 'parameters' field
 businessSchema.pre("save", function (next) {
   if (this.parameters && typeof this.parameters === "string") {
-    // Split the string by commas, trim each part, and filter out empty strings
+    // Split the string by spaces, trim each part, and filter out empty strings
     this.parameters = this.parameters
-      .split(",")
+      .split(" ")
       .map((param) => param.trim())
       .filter(Boolean);
   }
