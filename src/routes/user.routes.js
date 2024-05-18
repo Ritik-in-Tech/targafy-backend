@@ -18,7 +18,7 @@ router.route("/update/name/:newName").patch(updateUserName);
 
 // router.route("/update/fcmToken").patch(setFCMToken);
 
-router.route("/update/user-avatar/:id").post(updateUserAvtar);
+router.route("/update/user-avatar").post(updateUserAvtar);
 
 // router.route("/reset/notificationCounter").patch(resetNotificationCounter);
 
