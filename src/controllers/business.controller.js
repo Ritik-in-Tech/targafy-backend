@@ -11,7 +11,8 @@ const createBusiness = asyncHandler(async (req, res) => {
   const session = await startSession();
   session.startTransaction();
   try {
-    const { name, logo, industryType, city, country, userName } = req.body;
+    const { buisnessName, logo, industryType, city, country, userName } =
+      req.body;
 
     // Validation: Check if admin name and contact number are provided
     const adminId = req.user._id;
@@ -27,7 +28,7 @@ const createBusiness = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Token is Invalid!!"));
     }
 
-    if (!name || !adminId || !adminName) {
+    if (!buisnessName || !adminId || !adminName) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Fill name and admin of business!!"));
@@ -41,7 +42,7 @@ const createBusiness = asyncHandler(async (req, res) => {
       [
         {
           businessCode: businessCode,
-          name: name,
+          name: buisnessName,
           industryType: industryType,
           city: city,
           logo: logo,
@@ -71,7 +72,7 @@ const createBusiness = asyncHandler(async (req, res) => {
       {
         $push: {
           businesses: {
-            name: name,
+            name: buisnessName,
             businessId: business[0]._id,
             userType: "Insider",
           },
