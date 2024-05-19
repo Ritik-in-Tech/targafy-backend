@@ -28,6 +28,7 @@ const createGroup = asyncHandler(async (req, res, next) => {
     }
 
     usersToAddIds.push(userId);
+    console.log(usersToAddIds);
 
     if (!userId) {
       return res
@@ -57,8 +58,10 @@ const createGroup = asyncHandler(async (req, res, next) => {
     };
 
     const result = await Group.create([newGroup], { session: session });
+    console.log(result);
 
     const group = result[0];
+    console.log(group);
     const result2 = await Businessusers.updateMany(
       { businessId: businessId, userId: { $in: usersToAddIds } },
       {
