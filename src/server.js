@@ -27,7 +27,7 @@ connectDB()
   .then(() => {
     console.log("Connected to MongoDB");
     app.listen(port, () => {
-      console.log(`Node API app is running on port ${port}`);
+      console.log(`Targafy API server is running on port ${port}`);
     });
   })
   .catch((error) => {
