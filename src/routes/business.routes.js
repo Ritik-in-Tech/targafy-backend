@@ -1,6 +1,7 @@
 import { Router } from "express";
 const router = Router();
 import {
+  checkIsUserBusiness,
   createBusiness,
   deleteBusiness,
 } from "../controllers/business.controller.js";
@@ -27,6 +28,9 @@ router.use(verifyJWT);
 
 // create business
 router.route("/create").post(createBusiness);
+
+//check userHaveBusiness
+router.route("/checkBusiness").get(checkIsUserBusiness);
 
 // delete business
 router.route("/delete/:businessId").patch(deleteBusiness); //done

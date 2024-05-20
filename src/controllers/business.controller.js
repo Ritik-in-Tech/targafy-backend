@@ -137,6 +137,31 @@ const createBusiness = asyncHandler(async (req, res) => {
   }
 });
 
+const checkIsUserBusiness = asyncHandler(async (req, res) => {
+  try {
+    const contactNumber = req.user.contactNumber;
+    // console.log(contactNumber);
+    if (!contactNumber) {
+      return res.status(404).json(new ApiResponse(404, {}, "Invalid Token"));
+    }
+    const { countryCode, number } = contactNumber;
+    const user = await Businessusers.findOne({
+      "contactNumber.countryCode": countryCode,
+      "contactNumber.number": number,
+    });
+    if (user) {
+      res.json({ exists: true });
+    } else {
+      res.json({ exists: false });
+    }
+  } catch (error) {
+    // console.log(error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, {}, "Internal Server Error"));
+  }
+});
+
 const joinBusiness = asyncHandler(async (req, res) => {
   try {
     // Validation: Check if business code is valid
@@ -497,4 +522,5 @@ export {
   deleteBusiness,
   updateBusiness,
   joinBusiness,
+  checkIsUserBusiness,
 };
