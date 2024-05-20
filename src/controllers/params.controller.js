@@ -40,6 +40,8 @@ const createParam = asyncHandler(async (req, res) => {
       stats,
     });
 
+    console.log(business.params);
+
     business.params.push(param);
 
     // Save the param to the database

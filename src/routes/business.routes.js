@@ -23,6 +23,7 @@ import { getBusinessDeclinedRequests } from "../controllers/business/getBusiness
 import getPendingRequestCount from "../controllers/business/getPendingRequestCount.controller.js";
 import { getBusinessLogo } from "../controllers/business/getBusinessLogo.controller.js";
 import { rateUserInBusiness } from "../controllers/business/rateUserInBusiness.controller.js";
+import { updateBusinessParameters } from "../controllers/business/updatebusinessparameters.js";
 
 router.use(verifyJWT);
 
@@ -40,6 +41,9 @@ router.route("/update/logo/:businessId").put(updateBusinessLogo); // done
 
 // update business details
 router.route("/update/:businessId").patch(updateBusinessDetails); // done
+
+// update business parameters
+router.route("/update-parameters/:businessId").patch(updateBusinessParameters);
 
 // add user to business
 router.route("/send/request/:businessCode").post(joinBusiness); // done
