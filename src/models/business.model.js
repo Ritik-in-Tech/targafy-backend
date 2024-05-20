@@ -7,6 +7,21 @@ const commonStringConstraints = {
   default: "",
 };
 
+// const paramSchema = new Schema({
+//   name: {
+//     type: String,
+//     required: true,
+//   },
+//   type: {
+//     type: String,
+//     required: true,
+//     enum: ["TypeA", "TypeB"], // Assuming these are the only valid types
+//   },
+//   stats: {
+//     type: String, // Adjust this according to the actual structure of stats
+//     // required: true,
+//   },
+// });
 const businessSchema = new Schema({
   businessCode: {
     type: String,
@@ -39,6 +54,10 @@ const businessSchema = new Schema({
       message: (props) => `${props.value} is not a valid email address!`,
     },
   },
+  // params: {
+  //   type: [paramSchema],
+  //   default: [],
+  // },
   parameters: {
     type: [String],
     default: [],
@@ -54,9 +73,9 @@ const businessSchema = new Schema({
 // Pre-save middleware to process the 'parameters' field
 businessSchema.pre("save", function (next) {
   if (this.parameters && typeof this.parameters === "string") {
-    // Split the string by spaces, trim each part, and filter out empty strings
+    // Split the string by commas, trim each part, and filter out empty strings
     this.parameters = this.parameters
-      .split(" ")
+      .split(",")
       .map((param) => param.trim())
       .filter(Boolean);
   }

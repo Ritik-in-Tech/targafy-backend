@@ -52,6 +52,10 @@ const createBusiness = asyncHandler(async (req, res) => {
 
     const businessCode = generateUniqueCode(existingCodes);
 
+    const parametersArray = parameters
+      .split(",")
+      .map((param) => param.trim())
+      .filter(Boolean);
     const business = await Business.create(
       [
         {
@@ -61,7 +65,7 @@ const createBusiness = asyncHandler(async (req, res) => {
           city: city,
           logo: logo,
           country: country,
-          parameters: parameters,
+          parameters: parametersArray,
           email: email,
         },
       ],
