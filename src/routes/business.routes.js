@@ -24,11 +24,15 @@ import getPendingRequestCount from "../controllers/business/getPendingRequestCou
 import { getBusinessLogo } from "../controllers/business/getBusinessLogo.controller.js";
 import { rateUserInBusiness } from "../controllers/business/rateUserInBusiness.controller.js";
 import { updateBusinessParameters } from "../controllers/business/updatebusinessparameters.js";
+import { getBusinessUserDetails } from "../controllers/business/getBusinessDetails.js";
 
 router.use(verifyJWT);
 
 // create business
 router.route("/create").post(createBusiness);
+
+// fetchBusiness Details
+router.route("/get-business-details").get(getBusinessUserDetails);
 
 //check userHaveBusiness
 router.route("/checkBusiness").get(checkIsUserBusiness);
