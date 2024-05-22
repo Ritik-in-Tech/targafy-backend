@@ -1,6 +1,8 @@
 import { Business } from "../models/business.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import catchAsync from "../utils/catchAsync.js";
+import { User } from "../../src/models/user.model.js";
 
 // Create a new user
 const createUser = asyncHandler(async (req, res) => {
@@ -141,4 +143,44 @@ const deleteUser = asyncHandler(async (req, res) => {
   }
 });
 
-export { createUser, getAllUsers, getUserById, updateUser, deleteUser };
+const setFCMToken = catchAsync(async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const fcmToken = req.query.fcmToken;
+    console.log(userId);
+    console.log(fcmToken);
+    if (!userId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Token is not valid!"));
+    }
+
+    const result = await User.updateOne(
+      { _id: userId },
+      { $set: { fcmToken: fcmToken } }
+    );
+
+    if (result.matchedCount == 1) {
+      return res
+        .status(200)
+        .json(new ApiResponse(200, "FCM Token Updated Successfully!!"));
+    }
+
+    return next(new ApiResponse(500, "Something got wrong while updating!!"));
+  } catch (error) {
+    // Handle errors appropriately (e.g., send an error response or log the error)
+    console.error(error);
+    return next(
+      new ApiResponse(500, `Internal Server Error: ${error.message}`)
+    );
+  }
+});
+
+export {
+  createUser,
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+  setFCMToken,
+};

@@ -1,10 +1,13 @@
-import { Schema, model } from "mongoose";
-import { getCurrentIndianTime } from "../utils/helpers/time.helper.js";
+import mongoose, { Schema } from "mongoose";
+
+import {} from "../utils/helpers.js";
+
+import { getCurrentUTCTime } from "../utils/helpers/time.helper.js";
 
 const notificationSchema = new Schema({
   // This is userId is used to identify that the notification belong to which user
   userId: {
-    type: Schema.Types.ObjectId,
+    type: String,
     required: true,
   },
   content: {
@@ -17,17 +20,22 @@ const notificationSchema = new Schema({
   },
   createdDate: {
     type: Date,
-    default: getCurrentIndianTime(),
+    default: getCurrentUTCTime(),
   },
 
   // i dont think it is useful if not necessary in future remove this
   businessName: {
     type: String,
+    required: function () {
+      return this.notificationCategory == "business";
+    },
   },
   businessId: {
-    type: Schema.Types.ObjectId,
+    type: String,
+    required: function () {
+      return this.notificationCategory == "business";
+    },
   },
 });
 
-const Notifications = model("Notifications", notificationSchema);
-export { Notifications };
+export default mongoose.model("notifications", notificationSchema);
