@@ -21,8 +21,7 @@ export async function sendNotification(userId, body) {
 
     // console.log("Hiii");
 
-    let serverKey =
-      "AAAA-FPuLHw:APA91bHY8K4BFDEdqoE9e7oJMbnqueJyzDi0SDaBz8qazIu_QQgJnX0qe7trd70_ko2DE6LxS3FEUBuWMGF8tdiwSkqG_mROURh1MjPfIeyDkUs_7lJHLvFJMbntR8-Z1fnoMsFo9LYq";
+    let serverKey = process.env.FCM_API_KEY;
 
     const data = JSON.stringify({
       to: token,
