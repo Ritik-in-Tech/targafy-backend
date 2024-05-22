@@ -45,4 +45,5 @@ jobs:
               -e ACCESS_TOKEN_SECRET='${{ secrets.ACCESS_TOKEN_SECRET }}' \
               -e ACCESS_TOKEN_EXPIRY='${{ secrets.ACCESS_TOKEN_EXPIRY }}' \
               -e AUTHKEY='${{ secrets.AUTHKEY }}' \
+              -e FCM_API_KEY='${{ secrets.FCM_API_KEY }}' \
               ritik819/targafybackend:latest
