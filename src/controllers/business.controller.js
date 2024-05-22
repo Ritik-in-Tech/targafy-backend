@@ -17,18 +17,17 @@ const createBusiness = asyncHandler(async (req, res) => {
       industryType,
       city,
       country,
-      userName,
       parameters,
       email,
     } = req.body;
 
     // Validation: Check if admin name and contact number are provided
     const adminId = req.user._id;
-    const adminName = userName;
+    const adminName = req.user.name;
     const adminContactNumber = req.user.contactNumber;
     // console.log(adminId);
     // console.log(adminContactNumber);
-    // console.log(adminName);
+    console.log(adminName);
 
     if (!adminContactNumber) {
       return res
