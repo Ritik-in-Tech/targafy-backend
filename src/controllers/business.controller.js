@@ -6,7 +6,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { generateUniqueCode } from "../utils/helpers/array.helper.js";
 import { Businessusers } from "../models/businessUsers.model.js";
 import { startSession } from "mongoose";
-
+import { emitNewNotificationEvent } from "../sockets/notification_socket.js";
+import { getCurrentUTCTime } from "../utils/helpers/time.helper.js";
 const createBusiness = asyncHandler(async (req, res) => {
   const session = await startSession();
   session.startTransaction();
@@ -100,15 +101,15 @@ const createBusiness = asyncHandler(async (req, res) => {
       { session: session }
     );
 
-    // const emitData = {
-    //   content: `Congratulation, ${adminName} ${name} business created successfully`,
-    //   notificationCategory: "business",
-    //   createdDate: getCurrentUTCTime(),
-    //   businessName: name,
-    //   businessId: business[0]._id,
-    // };
+    const emitData = {
+      content: `Congratulation, ${adminName} ${buisnessName} business created successfully`,
+      notificationCategory: "business",
+      createdDate: getCurrentUTCTime(),
+      businessName: buisnessName,
+      businessId: business[0]._id,
+    };
 
-    // emitNewNotificationEvent(adminId, emitData);
+    emitNewNotificationEvent(adminId, emitData);
 
     if (result.modifiedCount == 0) {
       await session.abortTransaction();
