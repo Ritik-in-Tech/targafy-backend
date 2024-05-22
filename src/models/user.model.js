@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-
+import { getCurrentIndianTime } from "../utils/helpers/time.helper.js";
 import {
   contactNumberSchema,
   commonStringConstraints,
@@ -19,6 +19,34 @@ const businessSchema = new Schema(
   },
   { _id: false }
 );
+
+const notificationSchema = new Schema({
+  content: {
+    type: String,
+    required: true,
+  },
+  notificationCategory: {
+    type: String,
+    required: true,
+  },
+  createdDate: {
+    type: Date,
+    default: getCurrentIndianTime(),
+  },
+  businessName: {
+    type: String,
+    required: function () {
+      return this.notificationCategory == "business";
+    },
+  },
+
+  businessId: {
+    type: String,
+    required: function () {
+      return this.notificationCategory == "business";
+    },
+  },
+});
 
 const userSchema = new Schema({
   name: commonStringConstraints,

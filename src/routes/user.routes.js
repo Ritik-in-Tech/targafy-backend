@@ -7,6 +7,7 @@ import { getUserNotification } from "../controllers/user/getUserNotification.con
 import { updateUserName } from "../controllers/user/updateUserName.controller.js";
 import { updateUserAvtar } from "../controllers/user/updateUserAvtar.controller.js";
 import { getUserAvatar } from "../controllers/user/getUserAvatar.controller.js";
+import { setFCMToken } from "../controllers/user.controller.js";
 
 router.use(verifyJWT);
 
@@ -16,7 +17,7 @@ router.route("/notifications").get(getUserNotification);
 
 router.route("/update/name/:newName").patch(updateUserName);
 
-// router.route("/update/fcmToken").patch(setFCMToken);
+router.route("/update/fcmToken").patch(setFCMToken);
 
 router.route("/update/user-avatar").post(updateUserAvtar);
 

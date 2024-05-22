@@ -6,18 +6,22 @@ import { Acceptedrequests } from "../../models/acceptedRequests.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { emitNewNotificationEvent } from "../../sockets/notification_socket.js";
+import mongoose from "mongoose";
+import { getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
+import catchAsync from "../../utils/catchAsync.js";
+import { ApiError } from "../../utils/ApiError.js";
 
-// need to improved
-const joinBusiness = asyncHandler(async (req, res, next) => {
-  const businessCode = req?.params?.businessCode;
-  const userId = req?.user?._id;
+const joinBusiness = catchAsync(async (req, res, next) => {
+  const { businessCode } = req.params;
+  const userId = req.user._id;
+
   try {
-    if (!businessCode || businessCode.length != 6) {
+    if (!businessCode || businessCode.length != 6 || !userId) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Enter a valid business code!!"));
     }
-
     if (!userId) {
       return res.status(400).json(new ApiResponse(400, {}, "Invalid Token!"));
     }
@@ -27,7 +31,6 @@ const joinBusiness = asyncHandler(async (req, res, next) => {
       Business.findOne({ businessCode }).populate("_id"),
     ]);
     // console.log(user);
-    // console.log(businessData);
 
     if (!user) {
       return res
@@ -35,15 +38,13 @@ const joinBusiness = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(400, {}, "User does not exist!!"));
     }
 
-    if (!businessData || !businessData?._id) {
+    if (!businessData || !businessData._id) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Business does not exist!!"));
     }
 
-    const businessId = businessData?._id;
-    console.log(businessId);
-    console.log(userId);
+    const businessId = businessData._id;
 
     const existingUser = await Businessusers.findOne({
       businessId,
@@ -52,7 +53,7 @@ const joinBusiness = asyncHandler(async (req, res, next) => {
     if (existingUser) {
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "User already exist in business!!"));
+        .json(new ApiResponse(400, {}, "User already exists in business!!"));
     }
 
     const existingRequest = await Requests.findOne({ businessId, userId });
@@ -67,7 +68,6 @@ const joinBusiness = asyncHandler(async (req, res, next) => {
           )
         );
     }
-
     const existingDeclinedRequest = await Declinedrequests.findOne({
       businessId,
       userId,
@@ -85,6 +85,7 @@ const joinBusiness = asyncHandler(async (req, res, next) => {
       userId,
     });
     if (existingAcceptedRequest) {
+      await session.abortTransaction();
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "User already present in business!!"));
@@ -92,37 +93,37 @@ const joinBusiness = asyncHandler(async (req, res, next) => {
 
     const requestedUser = {
       businessId: businessData._id,
-      name: user?.name,
-      contactNumber: user?.contactNumber,
+      name: user.name,
+      contactNumber: user.contactNumber,
       userId,
     };
 
     await Requests.create(requestedUser);
 
-    // const emitData = {
-    //   content: `New Join Request: ${user.name} is eager to join your business. Act now!`,
-    //   notificationCategory: "business",
-    //   createdDate: getCurrentUTCTime(),
-    //   businessName: businessData.name,
-    //   businessId: businessData._id,
-    // };
+    const emitData = {
+      content: `New Join Request: ${user.name} is eager to join your business. Act now!`,
+      notificationCategory: "business",
+      createdDate: getCurrentUTCTime(),
+      businessName: businessData.name,
+      businessId: businessData._id,
+    };
 
-    // const businessAdmins = await Business.find(
-    //   { businessId, role: "Admin" },
-    //   { name: 1, userId: 1 }
-    // );
+    const businessAdmins = await Businessusers.find(
+      { businessId, role: "Admin" },
+      { name: 1, userId: 1 }
+    );
 
-    // await Promise.all(
-    //   businessAdmins.map(async (admin) => {
-    //     await emitNewNotificationEvent(admin.userId, emitData);
-    //   })
-    // );
+    await Promise.all(
+      businessAdmins.map(async (admin) => {
+        await emitNewNotificationEvent(admin.userId, emitData);
+      })
+    );
 
     return res
       .status(200)
       .json(new ApiResponse(200, {}, "Request sent successfully"));
   } catch (error) {
-    console.error("Error : ", error);
+    // console.error("Error : ", error);
     return res
       .status(500)
       .json(new ApiResponse(500, {}, "Internal Server Error"));

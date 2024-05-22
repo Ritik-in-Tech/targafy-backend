@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Notifications } from "../../models/notification.model.js";
+import Notifications from "../../models/notification.model.js";
 import { User } from "../../models/user.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
