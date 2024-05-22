@@ -33,7 +33,11 @@ const getBusinessUserDetails = asyncHandler(async (req, res) => {
     return res
       .status(200)
       .json(
-        new ApiResponse(200, { businesses }, "Businesses fetched successfully")
+        new ApiResponse(
+          200,
+          { businesses, user },
+          "Businesses fetched successfully"
+        )
       );
   } catch (error) {
     console.error("Error fetching user business details:", error);
