@@ -19,7 +19,7 @@ const createBusiness = asyncHandler(async (req, res) => {
       city,
       country,
       parameters,
-      email,
+      // email,
     } = req.body;
 
     // Validation: Check if admin name and contact number are provided
@@ -42,11 +42,11 @@ const createBusiness = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Fill name and admin of business!!"));
     }
 
-    if (!email) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Email is required!"));
-    }
+    // if (!email) {
+    //   return res
+    //     .status(400)
+    //     .json(new ApiResponse(400, {}, "Email is required!"));
+    // }
 
     const existingCodes = new Set(await Business.distinct("businessCode"));
 
@@ -66,7 +66,7 @@ const createBusiness = asyncHandler(async (req, res) => {
           logo: logo,
           country: country,
           parameters: parametersArray,
-          email: email,
+          // email: email,
         },
       ],
       { session: session }
