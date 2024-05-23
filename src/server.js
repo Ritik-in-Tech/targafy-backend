@@ -1,17 +1,29 @@
-import express, { json, urlencoded } from "express";
+import express from "express";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import dotenv from "dotenv";
+import cors from "cors";
+import bodyParser from "body-parser";
 import { createServer } from "http";
 import { Server } from "socket.io";
-dotenv.config();
-import businessRoutes from "./routes/business.routes.js";
-import authRoutes from "./routes/authentication.routes.js";
-import groupRoutes from "./routes/group.routes.js";
-import paramsRoutes from "./routes/params.routes.js";
-import targetRoutes from "./routes/target.routes.js";
-import userRoutes from "./routes/user.routes.js";
-import { connectDB } from "./db/index.js";
+import morgan from "morgan";
+import path from "path";
+import fs from "fs";
+import swaggerUi from "swagger-ui-express";
+import { fileURLToPath } from "url";
+import YAML from "yaml";
+import sdk from "api";
+const sdkInstance = sdk("@msg91api/v5.0#6n91xmlhu4pcnz");
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const file = fs.readFileSync(
+  path.resolve(__dirname, "../swagger.yaml"),
+  "utf8"
+);
+const swaggerDocument = YAML.parse(file);
+
 import { initializeNotificationSocket } from "./sockets/notification_socket.js";
 
 const app = express();
@@ -31,10 +43,27 @@ const io = new Server(server, {
 
 const notificationNamespace = initializeNotificationSocket(io);
 
-app.use(json({ limit: "16kb" }));
-app.use(urlencoded({ extended: true, limit: "16kb" }));
-app.use(cookieParser());
+// Middleware
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
+}
 
+// Global middlewares
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
+
+app.use(bodyParser.json()); // Parse incoming JSON data
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express.static("public"));
+app.use(cookieParser());
 app.use(
   session({
     secret: process.env.EXPRESS_SESSION_SECRET || "your-secret-key",
@@ -43,6 +72,14 @@ app.use(
   })
 );
 
+import businessRoutes from "./routes/business.routes.js";
+import authRoutes from "./routes/authentication.routes.js";
+import groupRoutes from "./routes/group.routes.js";
+import paramsRoutes from "./routes/params.routes.js";
+import targetRoutes from "./routes/target.routes.js";
+import userRoutes from "./routes/user.routes.js";
+import ApiError from "./utils/ApiError.js";
+
 app.use("/api/v1/business", businessRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/group", groupRoutes);
@@ -50,20 +87,9 @@ app.use("/api/v1/params", paramsRoutes);
 app.use("/api/v1/target", targetRoutes);
 app.use("/api/v1/user", userRoutes);
 
-const port = process.env.PORT || 3000;
-connectDB()
-  .then(() => {
-    console.log("Connected to MongoDB");
-    app.listen(port, () => {
-      console.log(`Targafy API server is running on port ${port}`);
-    });
-  })
-  .catch((error) => {
-    console.log(error);
+app.get("*", (req, res) => {
+  res.json({
+    message: "welcome to Targafy API. To see all api's please visit this url: ",
   });
-
-app.get("/", (req, res) => {
-  res.json({ message: "welcome to Targafy API" });
 });
-
-export default app;
+export { server };
