@@ -42,18 +42,18 @@ const businessSchema = new Schema({
   industryType: commonStringConstraints,
   city: commonStringConstraints,
   country: commonStringConstraints,
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    validate: {
-      validator: function (value) {
-        // Simple regex for email validation
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-      },
-      message: (props) => `${props.value} is not a valid email address!`,
-    },
-  },
+  // email: {
+  //   type: String,
+  //   required: true,
+  //   unique: true,
+  //   validate: {
+  //     validator: function (value) {
+  //       // Simple regex for email validation
+  //       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  //     },
+  //     message: (props) => `${props.value} is not a valid email address!`,
+  //   },
+  // },
   // params: {
   //   type: [paramSchema],
   //   default: [],
