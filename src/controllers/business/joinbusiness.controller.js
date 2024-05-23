@@ -10,7 +10,7 @@ import { emitNewNotificationEvent } from "../../sockets/notification_socket.js";
 import mongoose from "mongoose";
 import { getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
 import catchAsync from "../../utils/catchAsync.js";
-import { ApiError } from "../../utils/ApiError.js";
+import ApiError from "../../utils/ApiError.js";
 
 const joinBusiness = catchAsync(async (req, res, next) => {
   const { businessCode } = req.params;
