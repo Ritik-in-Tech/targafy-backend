@@ -79,6 +79,7 @@ import paramsRoutes from "./routes/params.routes.js";
 import targetRoutes from "./routes/target.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import ApiError from "./utils/ApiError.js";
+import uploadRouter from "./routes/upload.document.js";
 
 app.use("/api/v1/business", businessRoutes);
 app.use("/api/v1/auth", authRoutes);
@@ -86,7 +87,7 @@ app.use("/api/v1/group", groupRoutes);
 app.use("/api/v1/params", paramsRoutes);
 app.use("/api/v1/target", targetRoutes);
 app.use("/api/v1/user", userRoutes);
-
+app.use("/api/v1", uploadRouter);
 app.get("*", (req, res) => {
   res.json({
     message: "welcome to Targafy API. To see all api's please visit this url: ",
