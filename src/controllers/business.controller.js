@@ -18,7 +18,7 @@ const createBusiness = asyncHandler(async (req, res) => {
       industryType,
       city,
       country,
-      parameters,
+      parameters = "",
       // email,
     } = req.body;
 
