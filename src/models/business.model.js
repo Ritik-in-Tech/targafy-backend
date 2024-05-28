@@ -58,28 +58,12 @@ const businessSchema = new Schema({
   //   type: [paramSchema],
   //   default: [],
   // },
-  parameters: {
-    type: [String],
-    default: [],
-  },
   targets: [
     {
       type: Schema.Types.ObjectId,
       ref: "Target",
     },
   ],
-});
-
-// Pre-save middleware to process the 'parameters' field
-businessSchema.pre("save", function (next) {
-  if (this.parameters && typeof this.parameters === "string") {
-    // Split the string by commas, trim each part, and filter out empty strings
-    this.parameters = this.parameters
-      .split(",")
-      .map((param) => param.trim())
-      .filter(Boolean);
-  }
-  next();
 });
 
 const Business = model("Business", businessSchema);

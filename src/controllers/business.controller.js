@@ -12,15 +12,7 @@ const createBusiness = asyncHandler(async (req, res) => {
   const session = await startSession();
   session.startTransaction();
   try {
-    const {
-      buisnessName,
-      logo,
-      industryType,
-      city,
-      country,
-      parameters = "",
-      // email,
-    } = req.body;
+    const { buisnessName, logo, industryType, city, country } = req.body;
 
     // Validation: Check if admin name and contact number are provided
     const adminId = req.user._id;
@@ -52,10 +44,10 @@ const createBusiness = asyncHandler(async (req, res) => {
 
     const businessCode = generateUniqueCode(existingCodes);
 
-    const parametersArray = parameters
-      .split(",")
-      .map((param) => param.trim())
-      .filter(Boolean);
+    // const parametersArray = parameters
+    //   .split(",")
+    //   .map((param) => param.trim())
+    //   .filter(Boolean);
     const business = await Business.create(
       [
         {
@@ -65,8 +57,6 @@ const createBusiness = asyncHandler(async (req, res) => {
           city: city,
           logo: logo,
           country: country,
-          parameters: parametersArray,
-          // email: email,
         },
       ],
       { session: session }
@@ -101,15 +91,15 @@ const createBusiness = asyncHandler(async (req, res) => {
       { session: session }
     );
 
-    const emitData = {
-      content: `Congratulation, ${adminName} ${buisnessName} business created successfully`,
-      notificationCategory: "business",
-      createdDate: getCurrentUTCTime(),
-      businessName: buisnessName,
-      businessId: business[0]._id,
-    };
+    // const emitData = {
+    //   content: `Congratulation, ${adminName} ${buisnessName} business created successfully`,
+    //   notificationCategory: "business",
+    //   createdDate: getCurrentUTCTime(),
+    //   businessName: buisnessName,
+    //   businessId: business[0]._id,
+    // };
 
-    emitNewNotificationEvent(adminId, emitData);
+    // emitNewNotificationEvent(adminId, emitData);
 
     if (result.modifiedCount == 0) {
       await session.abortTransaction();
