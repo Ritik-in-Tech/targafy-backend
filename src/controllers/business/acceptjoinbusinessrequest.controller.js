@@ -12,20 +12,36 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
 const acceptUserJoinRequest = asyncHandler(async (req, res) => {
-  const { role, userId, parentId, acceptedByName } = req.body;
+  const { role, userId } = req.body;
   const businessId = req.params.businessId;
   // console.log(businessId);
+  const parentId = req.user._id;
+  console.log(parentId);
+  const acceptedByName = req.user.name;
+  console.log(acceptedByName);
 
   try {
     // Input validation
-    if (!role || !userId || !parentId || !businessId || !acceptedByName) {
+    if (!parentId) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Token expired you have to Log in again")
+        );
+    }
+    if (!businessId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Business Id is not found in params"));
+    }
+    if (!role || !userId || !acceptedByName) {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "Fill role, userId, parentId, and businessId!!"
+            "Fill role, userId, and acceptedByName in req.body!!"
           )
         );
     }

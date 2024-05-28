@@ -13,7 +13,7 @@ const getBusinessUsers = asyncHandler(async (req, res, next) => {
       { name: 1, userId: 1, userType: 1, role: 1, lastSeen: 1 }
     );
 
-    console.log("business users: ", businessUsers);
+    // console.log("business users: ", businessUsers);
 
     if (businessUsers) {
       let users = businessUsers;
@@ -30,7 +30,7 @@ const getBusinessUsers = asyncHandler(async (req, res, next) => {
         });
       }
 
-      console.log(`This is the data of new users: ${newUsers}`);
+      // console.log(`This is the data of new users: ${newUsers}`);
 
       return res
         .status(200)
