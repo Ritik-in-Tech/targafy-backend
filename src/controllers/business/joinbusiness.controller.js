@@ -15,6 +15,7 @@ import ApiError from "../../utils/ApiError.js";
 const joinBusiness = catchAsync(async (req, res, next) => {
   const { businessCode } = req.params;
   const userId = req.user._id;
+  console.log("hello");
 
   try {
     if (!businessCode || businessCode.length != 6 || !userId) {
@@ -85,7 +86,7 @@ const joinBusiness = catchAsync(async (req, res, next) => {
       userId,
     });
     if (existingAcceptedRequest) {
-      await session.abortTransaction();
+      // await session.abortTransaction();
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "User already present in business!!"));
@@ -123,7 +124,7 @@ const joinBusiness = catchAsync(async (req, res, next) => {
       .status(200)
       .json(new ApiResponse(200, {}, "Request sent successfully"));
   } catch (error) {
-    // console.error("Error : ", error);
+    console.error("Error : ", error);
     return res
       .status(500)
       .json(new ApiResponse(500, {}, "Internal Server Error"));
