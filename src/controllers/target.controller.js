@@ -1,60 +1,151 @@
-import { Target } from "../models/target.model.js";
-import { Business } from "../models/business.model.js";
 import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { Target } from "../models/target.model.js";
+import { User } from "../models/user.model.js";
+import { Business } from "../models/business.model.js";
+import { Params } from "../models/params.model.js";
+import { Businessusers } from "../models/businessUsers.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
-// Create a new target
 const createTarget = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const {
-      title,
-      details,
-      createdBy,
-      assignedTo,
-      createdDate,
-      deliveryDate,
-      nextFollowUpDate,
-      status,
-    } = req.body;
+    const { targetValue, paramName, comment, userNames } = req.body;
+    const businessId = req.params.businessId;
 
-    const businessId = req.params.id;
-    // console.log(businessId);
-    const business = await Business.findOne({ _id: businessId });
+    // Validate required fields
+    if (!targetValue || !paramName || !userNames || !Array.isArray(userNames)) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Please provide all required fields"));
+    }
 
-    // Validate required fields and ensure business exists
-    if (!title || !business) {
+    // Validate business existence
+    const business = await Business.findById(businessId).session(session);
+    if (!business) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Business with the given Id does not exist")
+        );
+    }
+
+    // Validate paramName existence in Params table for the provided businessId
+    const param = await Params.findOne({ name: paramName, businessId }).session(
+      session
+    );
+    if (!param) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "Please provide a target name and businessId"
+            "Parameter name does not exist for this business where you want to set the target"
           )
         );
     }
 
+    // Validate userNames, map to userIds, and check associations
+    const validUsers = [];
+    for (const username of userNames) {
+      const user = await User.findOne({ name: username }).session(session);
+      if (!user) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(
+              400,
+              {},
+              `User with name ${username} does not exist`
+            )
+          );
+      }
+
+      const businessUser = await Businessusers.findOne({
+        userId: user._id,
+        businessId,
+      }).session(session);
+      if (!businessUser) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(
+              400,
+              {},
+              `User with name ${username} is not associated with this business`
+            )
+          );
+      }
+
+      const userAssigned = param.usersAssigned.some((u) =>
+        u.userId.equals(user._id)
+      );
+      if (!userAssigned) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(
+              400,
+              {},
+              `User with name ${username} is not assigned to this parameter`
+            )
+          );
+      }
+      validUsers.push({ userId: user._id, name: user.name });
+    }
+    console.log(validUsers.length);
+
+    const numericTargetValue = parseFloat(targetValue);
+    if (isNaN(numericTargetValue)) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Invalid targetValue"));
+    }
+
+    // Calculate savedTargetValue
+    const savedTargetValue = numericTargetValue * validUsers.length;
+
     // Create a new target
     const target = new Target({
-      title,
-      details,
-      createdBy,
-      assignedTo,
-      createdDate,
-      deliveryDate,
-      nextFollowUpDate,
-      status,
+      targetValue,
+      paramName,
+      businessId: business._id,
+      comment,
+      usersAssigned: validUsers,
     });
 
     // Save the target to the database
-    const savedTarget = await target.save();
+    const savedTarget = await target.save({ session });
 
     // Add the target reference to the business's targets array
-    business.targets.push(savedTarget._id);
+    business.targets.push({
+      targetId: savedTarget._id,
+      targetName: paramName,
+      targetValue: savedTargetValue,
+    });
 
     // Save the updated business
-    await business.save();
+    await business.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
 
     return res
       .status(201)
@@ -63,6 +154,43 @@ const createTarget = asyncHandler(async (req, res) => {
           201,
           { target: savedTarget },
           "Target created successfully"
+        )
+      );
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Error:", error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, { error }, "Internal Server Error"));
+  }
+});
+
+// controllers to get parameters and target values
+const getTargetValues = asyncHandler(async (req, res) => {
+  try {
+    const businessId = req.params.businessId;
+    const business = await Business.findById(businessId);
+
+    if (!business) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, {}, "Business not found"));
+    }
+
+    // Extract target names and values
+    const targetValues = business.targets.map((target) => ({
+      targetName: target.targetName,
+      targetValue: target.targetValue,
+    }));
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          targetValues,
+          "Target values retrieved successfully"
         )
       );
   } catch (error) {
@@ -222,4 +350,5 @@ export {
   getTargetById,
   updateTarget,
   deleteTarget,
+  getTargetValues,
 };
