@@ -20,6 +20,21 @@ const businessSchema = new Schema(
   { _id: false }
 );
 
+const dataSchema = new Schema(
+  {
+    name: commonStringConstraints,
+    dataId: {
+      type: Schema.Types.ObjectId,
+    },
+    targetDone: {
+      type: Number,
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const notificationSchema = new Schema({
   content: {
     type: String,
@@ -74,6 +89,7 @@ const userSchema = new Schema({
   fcmToken: {
     type: String,
   },
+  data: [dataSchema],
 });
 
 const User = model("Users", userSchema);
