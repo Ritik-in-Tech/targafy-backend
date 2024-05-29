@@ -7,6 +7,21 @@ const commonStringConstraints = {
   default: "",
 };
 
+const targetSchema = new Schema(
+  {
+    targetName: commonStringConstraints,
+    targetValue: {
+      type: Number,
+    },
+    targetId: {
+      type: Schema.Types.ObjectId,
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const paramSchema = new Schema(
   {
     name: {
@@ -43,12 +58,7 @@ const businessSchema = new Schema({
     type: [paramSchema],
     default: [],
   },
-  targets: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Target",
-    },
-  ],
+  targets: [targetSchema],
 });
 
 const Business = model("Business", businessSchema);
