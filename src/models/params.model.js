@@ -34,7 +34,6 @@ const paramsSchema = new Schema({
     enum: ["1stTo31st", "upto30days", "30days"],
     default: "1stTo31st",
   },
-  target: commonStringConstraints,
   description: commonStringConstraints,
   createdAt: {
     type: Date,
