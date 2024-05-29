@@ -4,14 +4,20 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Businessusers } from "../models/businessUsers.model.js";
-
+import mongoose from "mongoose";
 // Create a new param
+
 const createParam = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const { name, charts, duration, description, userIds } = req.body;
+    const { name, charts, duration, description, usernames } = req.body;
 
     // Validate required fields
-    if (!name || !charts || !duration || !description || !userIds) {
+    if (!name || !charts || !duration || !description || !usernames) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Please provide all required fields"));
@@ -20,46 +26,79 @@ const createParam = asyncHandler(async (req, res) => {
     // Validate duration field
     const validDurations = ["1stTo31st", "upto30days", "30days"];
     if (!validDurations.includes(duration)) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Invalid duration value"));
     }
 
     const businessId = req.params.businessId;
-    const business = await Business.findById(businessId);
+    const business = await Business.findById(businessId).session(session);
 
     // Validate business existence
     if (!business) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Please provide a valid businessId"));
     }
 
-    // Validate userIds
+    // Check if the param name already exists for the business
+    const existingParam = business.params.find((param) => param.name === name);
+    if (existingParam) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Param name already exists for this business"
+          )
+        );
+    }
+
+    // Validate usernames and map to userIds
     const validUserIds = [];
     const usersAssigned = [];
-    for (const userId of userIds) {
-      const user = await User.findById(userId);
+    for (const username of usernames) {
+      const user = await User.findOne({ name: username }).session(session);
       if (!user) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(400, {}, `User with ID ${userId} does not exist`)
-          );
-      }
-      const businessUser = await Businessusers.findOne({ userId, businessId });
-      if (!businessUser) {
+        await session.abortTransaction();
+        session.endSession();
         return res
           .status(400)
           .json(
             new ApiResponse(
               400,
               {},
-              `User with ID ${userId} is not associated with this business`
+              `User with name ${username} does not exist`
+            )
+          );
+      }
+      const businessUser = await Businessusers.findOne({
+        userId: user._id,
+        businessId,
+      }).session(session);
+      if (!businessUser) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(
+              400,
+              {},
+              `User with name ${username} is not associated with this business`
             )
           );
       }
       if (businessUser.role === "Admin") {
+        await session.abortTransaction();
+        session.endSession();
         return res
           .status(400)
           .json(
@@ -70,11 +109,13 @@ const createParam = asyncHandler(async (req, res) => {
             )
           );
       }
-      validUserIds.push(userId);
-      usersAssigned.push({ userId, name: user.name });
+      validUserIds.push(user._id);
+      usersAssigned.push({ userId: user._id, name: user.name });
     }
 
     if (validUserIds.length === 0) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(400)
         .json(
@@ -97,22 +138,27 @@ const createParam = asyncHandler(async (req, res) => {
     });
 
     // Save the Params document to the database
-    await param.save();
+    await param.save({ session });
 
     // Add the parameter name and id to the business.params array
     business.params.push({ name, paramId: param._id });
 
     // Save the updated Business document
-    await business.save();
+    await business.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
 
     return res
       .status(201)
       .json(new ApiResponse(201, { param }, "Param created successfully"));
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("Error:", error);
     return res
       .status(500)
-      .json(new ApiResponse(500, {}, "Internal Server Error"));
+      .json(new ApiResponse(500, { error }, "Internal Server Error"));
   }
 });
 
