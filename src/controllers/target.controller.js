@@ -54,6 +54,25 @@ const createTarget = asyncHandler(async (req, res) => {
         );
     }
 
+    // Check if a target with the same paramName and businessId already exists
+    const existingTarget = await Target.findOne({
+      paramName,
+      businessId,
+    }).session(session);
+    if (existingTarget) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Target with the same parameter name and business ID already exists"
+          )
+        );
+    }
+
     // Validate userNames, map to userIds, and check associations
     const validUsers = [];
     for (const username of userNames) {
@@ -108,7 +127,6 @@ const createTarget = asyncHandler(async (req, res) => {
       }
       validUsers.push({ userId: user._id, name: user.name });
     }
-    console.log(validUsers.length);
 
     const numericTargetValue = parseFloat(targetValue);
     if (isNaN(numericTargetValue)) {
