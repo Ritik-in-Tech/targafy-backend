@@ -22,50 +22,26 @@ const commonDateConstraints = {
   default: getCurrentIndianTime(),
 };
 
+const userSchema = new Schema(
+  {
+    name: commonStringConstraints,
+    userId: {
+      type: Schema.Types.ObjectId,
+    },
+  },
+  { _id: false }
+);
+
 const targetSchema = new Schema({
-  title: commonStringConstraintsRequired,
-  details: commonStringConstraints,
-  createdBy: {
-    name: commonStringConstraintsRequired,
-    id: {
-      type: Schema.Types.ObjectId,
-    },
+  targetValue: commonStringConstraints,
+  paramName: commonStringConstraints,
+  comment: commonStringConstraints,
+  businessId: {
+    type: Schema.Types.ObjectId,
+    required: true,
   },
-  assignedTo: {
-    name: commonStringConstraintsRequired,
-    id: {
-      type: Schema.Types.ObjectId,
-    },
-  },
-  dailyFinishedTarget: [
-    {
-      finishedDate: {
-        type: Date,
-        default: getCurrentIndianTime(),
-      },
-      target: {
-        type: Number,
-        default: 0,
-      },
-      comment: {
-        type: String,
-      },
-    },
-  ],
+  usersAssigned: [userSchema],
   createdDate: commonDateConstraints,
-  deliveryDate: {
-    type: Date,
-    default: null,
-  },
-  nextFollowUpDate: {
-    type: Date,
-    default: null,
-  },
-  status: {
-    type: String,
-    default: "Pending",
-    trim: true,
-  },
 });
 
 const Target = model("Target", targetSchema);
