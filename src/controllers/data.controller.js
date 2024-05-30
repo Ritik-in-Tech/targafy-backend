@@ -212,6 +212,7 @@ const getParamData = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Invalid token please Log in again"));
     }
+
     const businessId = req.params.businessId;
     const paramName = req.params.paramName;
     if (!businessId || !paramName) {
@@ -237,8 +238,71 @@ const getParamData = asyncHandler(async (req, res) => {
           )
         );
     }
-    
-  } catch (error) {}
+
+    const target = await Target.findOne({
+      paramName: paramName,
+      businessId: businessId,
+    });
+    if (!target) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Target is not set for this business and params"
+          )
+        );
+    }
+
+    let targetValue = parseInt(target.targetValue);
+    const dailyTargetValue = targetValue / 30;
+
+    const userData = await DataAdd.findOne(
+      {
+        businessId: businessId,
+        parameterName: paramName,
+        userId: userId,
+      },
+      "data createdDate"
+    );
+
+    if (!userData || !userData.data) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "No data found for the provided criteria")
+        );
+    }
+
+    const formattedUserData = userData.data.map((item) => [
+      new Date(item.createdDate)
+        .toLocaleDateString("en-GB")
+        .replace(/\//g, "-"),
+      parseFloat(item.todaysdata),
+    ]);
+
+    const dailyTargetEntries = formattedUserData.map(([date]) => [
+      date,
+      dailyTargetValue,
+    ]);
+
+    const response = {
+      userEntries: formattedUserData,
+      dailyTarget: dailyTargetEntries,
+    };
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, response, `${paramName} Data fetched successfully`)
+      );
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, {}, "An error occurred while fetching data"));
+  }
 });
 
-export { addData };
+export { addData, getParamData };
