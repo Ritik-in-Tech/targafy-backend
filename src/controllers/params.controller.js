@@ -12,10 +12,10 @@ const createParam = asyncHandler(async (req, res) => {
   session.startTransaction();
 
   try {
-    const { name, charts, duration, description, usernames } = req.body;
+    const { name, charts, duration, description, userIds } = req.body;
 
     // Validate required fields
-    if (!name || !charts || !duration || !description || !usernames) {
+    if (!name || !charts || !duration || !description || !userIds) {
       await session.abortTransaction();
       session.endSession();
       return res
@@ -64,19 +64,15 @@ const createParam = asyncHandler(async (req, res) => {
     // Validate usernames and map to userIds
     const validUserIds = [];
     const usersAssigned = [];
-    for (const username of usernames) {
-      const user = await User.findOne({ name: username }).session(session);
+    for (const userId of userIds) {
+      const user = await User.findOne({ _id: userId }).session(session);
       if (!user) {
         await session.abortTransaction();
         session.endSession();
         return res
           .status(400)
           .json(
-            new ApiResponse(
-              400,
-              {},
-              `User with name ${username} does not exist`
-            )
+            new ApiResponse(400, {}, `User with id ${userId} does not exist`)
           );
       }
       const businessUser = await Businessusers.findOne({
@@ -92,7 +88,7 @@ const createParam = asyncHandler(async (req, res) => {
             new ApiResponse(
               400,
               {},
-              `User with name ${username} is not associated with this business`
+              `User with id ${userId} is not associated with this business`
             )
           );
       }
