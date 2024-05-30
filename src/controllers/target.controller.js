@@ -12,11 +12,12 @@ const createTarget = asyncHandler(async (req, res) => {
   session.startTransaction();
 
   try {
-    const { targetValue, paramName, comment, userNames } = req.body;
+    const { targetValue, paramName, comment, userIds } = req.body;
     const businessId = req.params.businessId;
+    const userId = req.user._id;
 
     // Validate required fields
-    if (!targetValue || !paramName || !userNames || !Array.isArray(userNames)) {
+    if (!targetValue || !paramName || !userIds || !Array.isArray(userIds)) {
       await session.abortTransaction();
       session.endSession();
       return res
@@ -33,6 +34,25 @@ const createTarget = asyncHandler(async (req, res) => {
         .status(400)
         .json(
           new ApiResponse(400, {}, "Business with the given Id does not exist")
+        );
+    }
+
+    const businessUsers = await Businessusers.findOne({
+      userId: userId,
+      businessId: businessId,
+    }).session(session);
+
+    if (businessUsers.role !== "Admin") {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Only Admin can assign the targets for the params"
+          )
         );
     }
 
@@ -75,8 +95,8 @@ const createTarget = asyncHandler(async (req, res) => {
 
     // Validate userNames, map to userIds, and check associations
     const validUsers = [];
-    for (const username of userNames) {
-      const user = await User.findOne({ name: username }).session(session);
+    for (const userId of userIds) {
+      const user = await User.findOne({ _id: userId }).session(session);
       if (!user) {
         await session.abortTransaction();
         session.endSession();
@@ -86,7 +106,7 @@ const createTarget = asyncHandler(async (req, res) => {
             new ApiResponse(
               400,
               {},
-              `User with name ${username} does not exist`
+              `User with name ${userId.name} does not exist`
             )
           );
       }
@@ -104,7 +124,7 @@ const createTarget = asyncHandler(async (req, res) => {
             new ApiResponse(
               400,
               {},
-              `User with name ${username} is not associated with this business`
+              `User with name ${userId.name} is not associated with this business`
             )
           );
       }
@@ -121,7 +141,7 @@ const createTarget = asyncHandler(async (req, res) => {
             new ApiResponse(
               400,
               {},
-              `User with name ${username} is not assigned to this parameter`
+              `User with name ${userId.name} is not assigned to this parameter`
             )
           );
       }
