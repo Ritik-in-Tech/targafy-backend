@@ -22,6 +22,7 @@ const createParam = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Please provide all required fields"));
     }
+    const userId = req.user._id;
 
     // Validate duration field
     const validDurations = ["1stTo31st", "upto30days", "30days"];
@@ -43,6 +44,24 @@ const createParam = asyncHandler(async (req, res) => {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Please provide a valid businessId"));
+    }
+    const businessUsers = await Businessusers.findOne({
+      userId: userId,
+      businessId: businessId,
+    }).session(session);
+
+    if (businessUsers.role !== "Admin") {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Only Admin can assign the targets for the params"
+          )
+        );
     }
 
     // Check if the param name already exists for the business
