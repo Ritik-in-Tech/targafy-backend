@@ -131,6 +131,62 @@ const createBusiness = asyncHandler(async (req, res) => {
   }
 });
 
+// controller to return the business role
+const buisnessRole = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
+    if (!userId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Invalid token! Please log in again"));
+    }
+    const businessId = req.params.businessId;
+    if (!businessId) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Business Id in not provided in parameters")
+        );
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "User does not exist"));
+    }
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Business does not exist"));
+    }
+    const businessusers = await Businessusers.findOne({
+      userId: userId,
+      businessId: businessId,
+    });
+    if (!businessusers) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "User is not associated with the provided business"
+          )
+        );
+    }
+    const role = businessusers.role;
+    return res
+      .status(200)
+      .json(new ApiResponse(200, { role }, "Role fetched successfully!"));
+  } catch (error) {
+    console.log("Error", error);
+    return res
+      .status(500)
+      .json(new ApiResponse(400, error, "Internal server error"));
+  }
+});
+
 const checkIsUserBusiness = asyncHandler(async (req, res) => {
   try {
     const contactNumber = req.user.contactNumber;
@@ -517,4 +573,5 @@ export {
   updateBusiness,
   joinBusiness,
   checkIsUserBusiness,
+  buisnessRole,
 };
