@@ -216,11 +216,29 @@ const getTargetValues = asyncHandler(async (req, res) => {
         .json(new ApiResponse(404, {}, "Business not found"));
     }
 
-    // Extract target names and values
-    const targetValues = business.targets.map((target) => ({
-      targetName: target.targetName,
-      targetValue: target.targetValue,
-    }));
+    const targets = await Target.find({ businessId: businessId });
+
+    if (!targets || targets.length === 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            404,
+            {},
+            "No targets found for the provided business Id"
+          )
+        );
+    }
+
+    const targetValues = targets.map((target) => {
+      const targetValueNumber = parseFloat(target.targetValue);
+      const numberOfUsersAssigned = target.usersAssigned.length;
+      const totalTargetValue = targetValueNumber * numberOfUsersAssigned;
+      return {
+        targetName: target.paramName,
+        totalTargetValue: totalTargetValue,
+      };
+    });
 
     return res
       .status(200)
