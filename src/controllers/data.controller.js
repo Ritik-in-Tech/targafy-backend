@@ -7,6 +7,7 @@ import { DataAdd } from "../models/dataadd.model.js";
 import mongoose from "mongoose";
 import { User } from "../models/user.model.js";
 import moment from "moment-timezone";
+import { Businessusers } from "../models/businessUsers.model.js";
 
 const addData = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -66,6 +67,17 @@ const addData = asyncHandler(async (req, res) => {
             "Business not found, please check businessId again"
           )
         );
+    }
+
+    const businessusers = await Businessusers.findOne({
+      userId: userId,
+      businessId: businessId,
+    });
+
+    if (businessusers.role !== "User") {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, {}, "Only user can upload the data"));
     }
 
     const paramDetails = await Params.findOne({
@@ -275,18 +287,19 @@ const getParamData = asyncHandler(async (req, res) => {
         );
     }
 
-    const formattedUserData = userData.data.map((item) => [
-      new Date(item.createdDate)
+    const formattedUserData = userData.data.map((item) => {
+      const date = new Date(item.createdDate);
+      const formattedDate = date
         .toLocaleDateString("en-GB")
-        .replace(/\//g, "-"),
-      parseFloat(item.todaysdata),
-    ]);
+        .replace(/\//g, "-");
+      const formattedTime = date.toLocaleTimeString("en-GB");
+      return [`${formattedTime}`, parseFloat(item.todaysdata)];
+    });
 
     const dailyTargetEntries = formattedUserData.map(([date]) => [
       date,
       dailyTargetValue,
     ]);
-
     const response = {
       userEntries: formattedUserData,
       dailyTarget: dailyTargetEntries,
@@ -305,4 +318,143 @@ const getParamData = asyncHandler(async (req, res) => {
   }
 });
 
-export { addData, getParamData };
+const getPreviousData = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
+    if (!userId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Invalid Token, please log in again"));
+    }
+
+    const paramName = req.params.paramName;
+    const businessId = req.params.businessId;
+
+    if (!paramName || !businessId) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Please provide paramName and businessId in req params"
+          )
+        );
+    }
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Provided business ID does not exist"));
+    }
+
+    const businessusers = await Businessusers.findOne({
+      userId: userId,
+      businessId: businessId,
+    });
+
+    if (!businessusers) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Logged in user and provided business ID do not exist in the same business"
+          )
+        );
+    }
+
+    const paramDetails = await Params.findOne({
+      name: paramName,
+      businessId: businessId,
+    });
+    if (!paramDetails) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Provided param name and business ID do not exist simultaneously"
+          )
+        );
+    }
+
+    const target = await Target.findOne({
+      paramName: paramName,
+      businessId: businessId,
+    });
+
+    if (!target) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Target not set for the provided param name")
+        );
+    }
+    console.log(target);
+    console.log(userId);
+
+    const isUserAssignedTarget = target.usersAssigned.some(
+      (user) => user.userId.toString() === userId.toString()
+    );
+
+    console.log(isUserAssignedTarget);
+
+    if (!isUserAssignedTarget) {
+      return res
+        .status(403)
+        .json(
+          new ApiResponse(
+            403,
+            {},
+            "User is not assigned to the target for the provided param name"
+          )
+        );
+    }
+
+    const userData = await DataAdd.find({
+      userId: userId,
+      parameterName: paramName,
+      businessId: businessId,
+    });
+
+    if (!userData || userData.length === 0) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, {}, "No previous data found for the user"));
+    }
+
+    const formattedUserData = userData
+      .map((record) => {
+        return record.data.map((item) => {
+          const date = new Date(item.createdDate);
+          const formattedDate = date
+            .toLocaleDateString("en-GB")
+            .replace(/\//g, "-");
+          const formattedTime = date.toLocaleTimeString("en-GB");
+          return {
+            date: `${formattedDate}`,
+            todaysData: parseFloat(item.todaysdata),
+            comment: item.comment,
+          };
+        });
+      })
+      .flat();
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, formattedUserData, "Data fetched successfully")
+      );
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, {}, "An error occurred while fetching data"));
+  }
+});
+
+export { addData, getParamData, getPreviousData };
