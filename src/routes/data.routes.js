@@ -3,6 +3,7 @@ import { verifyJWT } from "../middleware/auth.middleware.js";
 import {
   addData,
   getParamData,
+  getParamDataSpecificUser,
   getPreviousData,
   getTargetToAddData,
 } from "../controllers/data.controller.js";
@@ -12,8 +13,13 @@ router.use(verifyJWT);
 
 router.route("/add-data/:businessId/:parameterName").post(addData);
 
-// router to get data
-router.route("/get-user-data/:businessId/:paramName").get(getParamData);
+// router to get user specific data
+router
+  .route("/get-user-data/:businessId/:paramName")
+  .get(getParamDataSpecificUser);
+
+// router to get param data for a business
+router.route("/get-param-data/:businessId/:paramName").get(getParamData);
 
 // router to get previus data of user
 router.route("/get-previous-data/:businessId/:paramName").get(getPreviousData);
