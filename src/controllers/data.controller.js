@@ -457,4 +457,80 @@ const getPreviousData = asyncHandler(async (req, res) => {
   }
 });
 
-export { addData, getParamData, getPreviousData };
+const getTargetToAddData = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
+    if (!userId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Invalid Token, please log in again"));
+    }
+
+    const businessId = req.params.businessId;
+    if (!businessId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Business id is not provided"));
+    }
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Business not exist with the provided business Id"
+          )
+        );
+    }
+
+    const targets = await Target.find({ businessId: businessId });
+
+    if (!targets || targets.length === 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            404,
+            {},
+            "No targets found for the provided business Id"
+          )
+        );
+    }
+
+    const userTargets = targets.filter((target) =>
+      target.usersAssigned.some(
+        (user) => user.userId.toString() === userId.toString()
+      )
+    );
+
+    const targetNames = userTargets.map((target) => target.paramName);
+
+    if (targetNames.length == 0) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "No target assigned for this business to the queried user"
+          )
+        );
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, targetNames, "Targets fetched successfully"));
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(500, {}, "An error occurred while fetching targets")
+      );
+  }
+});
+
+export { addData, getParamData, getPreviousData, getTargetToAddData };
