@@ -1,6 +1,7 @@
 import { Router } from "express";
 const router = Router();
 import {
+  buisnessRole,
   checkIsUserBusiness,
   createBusiness,
   deleteBusiness,
@@ -30,6 +31,9 @@ router.use(verifyJWT);
 
 // create business
 router.route("/create").post(createBusiness);
+
+// router to return the business role
+router.route("/get-user-role/:businessId").get(buisnessRole);
 
 // fetchBusiness Details
 router.route("/get-business-details").get(getBusinessUserDetails);
