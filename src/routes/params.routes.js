@@ -7,6 +7,7 @@ import {
   updateParam,
   deleteParam,
   getAssignedParams,
+  getAssignUsers,
 } from "../controllers/params.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 // middlewares which verifies is request from the authorized user
@@ -20,6 +21,9 @@ router.route("/all/:businessId").get(getAllParams);
 
 // router to get params and assigned users for that params in a particular business
 router.route("/get/assigned-parameter/:businessId").get(getAssignedParams);
+
+// router to get assign users for the specific parameter and business id
+router.route("/get-assign-user/:paramName/:businessId").get(getAssignUsers);
 
 router
   .route("/:bid/:pid")
