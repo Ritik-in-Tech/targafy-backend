@@ -222,7 +222,7 @@ const addData = asyncHandler(async (req, res) => {
   }
 });
 
-const getParamData = asyncHandler(async (req, res) => {
+const getParamDataSpecificUser = asyncHandler(async (req, res) => {
   try {
     const userId = req.user._id;
     if (!userId) {
@@ -315,6 +315,127 @@ const getParamData = asyncHandler(async (req, res) => {
       .status(200)
       .json(
         new ApiResponse(200, response, `${paramName} Data fetched successfully`)
+      );
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, {}, "An error occurred while fetching data"));
+  }
+});
+
+const getParamData = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
+    if (!userId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Invalid token, please log in again"));
+    }
+
+    const businessId = req.params.businessId;
+    const paramName = req.params.paramName;
+    if (!businessId || !paramName) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Business Id and param name are not provided"
+          )
+        );
+    }
+
+    const paramDetails = await Params.findOne({
+      name: paramName,
+      businessId: businessId,
+    });
+    if (!paramDetails) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Invalid param name and business id provided"
+          )
+        );
+    }
+
+    const target = await Target.findOne({
+      paramName: paramName,
+      businessId: businessId,
+    });
+    if (!target) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Target is not set for this business and params"
+          )
+        );
+    }
+
+    const numUsersAssigned = target.usersAssigned.length;
+    let targetValue = parseInt(target.targetValue);
+    const totalTargetValue = targetValue * numUsersAssigned;
+    const dailyTargetValue = totalTargetValue / 30;
+
+    const userDataList = await DataAdd.find(
+      {
+        businessId: businessId,
+        parameterName: paramName,
+      },
+      "data createdDate userId"
+    );
+
+    if (!userDataList || userDataList.length === 0) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "No data found for the provided criteria")
+        );
+    }
+
+    // Create a map to store the sum of `todaysdata` for each `createdDate`
+    const dateDataMap = new Map();
+
+    // Iterate over each user's data and sum the values for each date
+    userDataList.forEach((userData) => {
+      userData.data.forEach((item) => {
+        const date = new Date(item.createdDate)
+          .toLocaleDateString("en-GB")
+          .replace(/\//g, "-");
+        const todaysdata = parseFloat(item.todaysdata);
+        if (!dateDataMap.has(date)) {
+          dateDataMap.set(date, 0);
+        }
+        dateDataMap.set(date, dateDataMap.get(date) + todaysdata);
+      });
+    });
+
+    // Convert the dateDataMap to a formatted array
+    const formattedUserData = Array.from(dateDataMap.entries()).map(
+      ([date, sum]) => [date, sum]
+    );
+
+    const dailyTargetEntries = formattedUserData.map(([date]) => [
+      date,
+      dailyTargetValue,
+    ]);
+
+    const response = {
+      userEntries: formattedUserData,
+      dailyTarget: dailyTargetEntries,
+    };
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, response, `${paramName} data fetched successfully`)
       );
   } catch (error) {
     console.error(error);
@@ -539,4 +660,10 @@ const getTargetToAddData = asyncHandler(async (req, res) => {
   }
 });
 
-export { addData, getParamData, getPreviousData, getTargetToAddData };
+export {
+  addData,
+  getParamDataSpecificUser,
+  getPreviousData,
+  getTargetToAddData,
+  getParamData,
+};
