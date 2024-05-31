@@ -237,6 +237,128 @@ const getAssignedParams = asyncHandler(async (req, res) => {
   }
 });
 
+// get user assigned to specific params of a business
+const getAssignUsers = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user._id;
+    if (!userId) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            response,
+            "Token is not valid! Please log in again"
+          )
+        );
+    }
+
+    const paramName = req.params.paramName;
+    const businessId = req.params.businessId;
+
+    if (!paramName || !businessId) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            response,
+            "Please provide paramName and businessId in req params"
+          )
+        );
+    }
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            response,
+            "business with the given Id does not exist"
+          )
+        );
+    }
+
+    // console.log(userId);
+    // console.log(businessId);
+    const businessusers = await Businessusers.findOne({
+      userId: userId,
+      businessId: businessId,
+    });
+
+    if (!businessusers) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Provided business Id and userID are not in the business"
+          )
+        );
+    }
+    // console.log(businessusers);
+    console.log(businessusers.role);
+    if (businessusers.role !== "Admin" && businessusers.role !== "MiniAdmin") {
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            {},
+            "Only Admin and MiniAdmin can allow to access this operation"
+          )
+        );
+    }
+
+    const paramDetails = await Params.findOne({
+      name: paramName,
+      businessId: businessId,
+    });
+
+    if (!paramDetails) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Provided param name and business Id not exist simultaneously"
+          )
+        );
+    }
+
+    // Extract the list of assigned users
+    const assignedUsers = paramDetails.usersAssigned.map((user) => ({
+      name: user.name,
+      userId: user.userId,
+    }));
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          assignedUsers,
+          "Users assigned fetched successfully"
+        )
+      );
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          {},
+          "An error occurred while fetching the assigned users"
+        )
+      );
+  }
+});
+
 // Get param by ID
 const getParamById = asyncHandler(async (req, res) => {
   try {
@@ -333,4 +455,5 @@ export {
   updateParam,
   deleteParam,
   getAssignedParams,
+  getAssignUsers,
 };
