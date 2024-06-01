@@ -401,29 +401,34 @@ const getParamData = asyncHandler(async (req, res) => {
     }
 
     // Create a map to store the sum of `todaysdata` for each `createdDate`
-    const dateDataMap = new Map();
+    const timeDataMap = new Map();
 
-    // Iterate over each user's data and sum the values for each date
+    // Iterate over each user's data and sum the values for each time
     userDataList.forEach((userData) => {
       userData.data.forEach((item) => {
-        const date = new Date(item.createdDate)
-          .toLocaleDateString("en-GB")
-          .replace(/\//g, "-");
+        // Convert createdDate to Indian Standard Time (IST)
+        const dateObj = new Date(item.createdDate);
+        const istDateObj = new Date(dateObj.getTime() + 5.5 * 60 * 60 * 1000); // UTC to IST
+        const time = istDateObj.toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
         const todaysdata = parseFloat(item.todaysdata);
-        if (!dateDataMap.has(date)) {
-          dateDataMap.set(date, 0);
+        if (!timeDataMap.has(time)) {
+          timeDataMap.set(time, 0);
         }
-        dateDataMap.set(date, dateDataMap.get(date) + todaysdata);
+        timeDataMap.set(time, timeDataMap.get(time) + todaysdata);
       });
     });
 
-    // Convert the dateDataMap to a formatted array
-    const formattedUserData = Array.from(dateDataMap.entries()).map(
-      ([date, sum]) => [date, sum]
+    // Convert the timeDataMap to a formatted array
+    const formattedUserData = Array.from(timeDataMap.entries()).map(
+      ([time, sum]) => [time, sum]
     );
 
-    const dailyTargetEntries = formattedUserData.map(([date]) => [
-      date,
+    const dailyTargetEntries = formattedUserData.map(([time]) => [
+      time,
       dailyTargetValue,
     ]);
 
