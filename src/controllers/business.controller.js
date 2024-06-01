@@ -91,15 +91,15 @@ const createBusiness = asyncHandler(async (req, res) => {
       { session: session }
     );
 
-    // const emitData = {
-    //   content: `Congratulation, ${adminName} ${buisnessName} business created successfully`,
-    //   notificationCategory: "business",
-    //   createdDate: getCurrentUTCTime(),
-    //   businessName: buisnessName,
-    //   businessId: business[0]._id,
-    // };
+    const emitData = {
+      content: `Congratulation, ${adminName} ${buisnessName} business created successfully`,
+      notificationCategory: "business",
+      createdDate: getCurrentUTCTime(),
+      businessName: buisnessName,
+      businessId: business[0]._id,
+    };
 
-    // emitNewNotificationEvent(adminId, emitData);
+    emitNewNotificationEvent(adminId, emitData);
 
     if (result.modifiedCount == 0) {
       await session.abortTransaction();
