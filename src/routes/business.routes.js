@@ -26,6 +26,7 @@ import { getBusinessLogo } from "../controllers/business/getBusinessLogo.control
 import { rateUserInBusiness } from "../controllers/business/rateUserInBusiness.controller.js";
 import { updateBusinessParameters } from "../controllers/business/updatebusinessparameters.js";
 import { getBusinessUserDetails } from "../controllers/business/getBusinessDetails.js";
+import { getUserHierarchyData } from "../controllers/business/getuserhierarchy.controller.js";
 
 router.use(verifyJWT);
 
@@ -55,6 +56,9 @@ router.route("/update-parameters/:businessId").patch(updateBusinessParameters);
 
 // add user to business
 router.route("/send/request/:businessCode").post(joinBusiness); // done
+
+// router to get the user Hierarchy
+router.route("/get-user-hierarchy/:businessId").get(getUserHierarchyData);
 
 // accept, request or get all accepted request
 router
