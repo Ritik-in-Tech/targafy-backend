@@ -15,7 +15,7 @@ import ApiError from "../../utils/ApiError.js";
 const joinBusiness = catchAsync(async (req, res, next) => {
   const { businessCode } = req.params;
   const userId = req.user._id;
-  console.log("hello");
+  // console.log("hello");
 
   try {
     if (!businessCode || businessCode.length != 6 || !userId) {
@@ -101,24 +101,24 @@ const joinBusiness = catchAsync(async (req, res, next) => {
 
     await Requests.create(requestedUser);
 
-    // const emitData = {
-    //   content: `New Join Request: ${user.name} is eager to join your business. Act now!`,
-    //   notificationCategory: "business",
-    //   createdDate: getCurrentUTCTime(),
-    //   businessName: businessData.name,
-    //   businessId: businessData._id,
-    // };
+    const emitData = {
+      content: `New Join Request: ${user.name} is eager to join your business. Act now!`,
+      notificationCategory: "business",
+      createdDate: getCurrentUTCTime(),
+      businessName: businessData.name,
+      businessId: businessData._id,
+    };
 
-    // const businessAdmins = await Businessusers.find(
-    //   { businessId, role: "Admin" },
-    //   { name: 1, userId: 1 }
-    // );
+    const businessAdmins = await Businessusers.find(
+      { businessId, role: "Admin" },
+      { name: 1, userId: 1 }
+    );
 
-    // await Promise.all(
-    //   businessAdmins.map(async (admin) => {
-    //     await emitNewNotificationEvent(admin.userId, emitData);
-    //   })
-    // );
+    await Promise.all(
+      businessAdmins.map(async (admin) => {
+        await emitNewNotificationEvent(admin.userId, emitData);
+      })
+    );
 
     return res
       .status(200)
