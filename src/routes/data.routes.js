@@ -9,13 +9,13 @@ import {
 } from "../controllers/data.controller.js";
 const router = Router();
 
-router.use(verifyJWT);
+// router.use(verifyJWT);
 
 router.route("/add-data/:businessId/:parameterName").post(addData);
 
 // router to get user specific data
 router
-  .route("/get-user-data/:businessId/:paramName")
+  .route("/get-user-data/:businessId/:paramName/:userId")
   .get(getParamDataSpecificUser);
 
 // router to get param data for a business
