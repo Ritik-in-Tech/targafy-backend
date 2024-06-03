@@ -415,17 +415,17 @@ const getTargetValues = asyncHandler(async (req, res) => {
 
     const targets = await Target.find({ businessId: businessId });
 
-    if (!targets || targets.length === 0) {
-      return res
-        .status(404)
-        .json(
-          new ApiResponse(
-            404,
-            {},
-            "No targets found for the provided business Id"
-          )
-        );
-    }
+    // if (!targets || targets.length === 0) {
+    //   return res
+    //     .status(404)
+    //     .json(
+    //       new ApiResponse(
+    //         404,
+    //         {},
+    //         "No targets found for the provided business Id"
+    //       )
+    //     );
+    // }
 
     const targetValues = targets.map((target) => {
       const targetValueNumber = parseFloat(target.targetValue);
