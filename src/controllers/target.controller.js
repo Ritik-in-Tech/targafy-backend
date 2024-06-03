@@ -215,6 +215,8 @@ const createTarget = asyncHandler(async (req, res) => {
 
 // controller to add user to existing target
 const addUserToTarget = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { userIds } = req.body;
     if (!userIds || !Array.isArray(userIds)) {
@@ -231,7 +233,7 @@ const addUserToTarget = asyncHandler(async (req, res) => {
       return res
         .status(400)
         .json(
-          new ApiResponse(400, {}, "Token is invalid! Please log in again")
+          new ApiResponse(400, {}, "Session is invalid! Please log in again")
         );
     }
 
@@ -243,7 +245,7 @@ const addUserToTarget = asyncHandler(async (req, res) => {
         );
     }
 
-    const business = await Business.findById(businessId);
+    const business = await Business.findById(businessId).session(session);
 
     // Validate business existence
     if (!business) {
@@ -255,7 +257,7 @@ const addUserToTarget = asyncHandler(async (req, res) => {
     const businessUsers = await Businessusers.findOne({
       userId: userId,
       businessId: businessId,
-    });
+    }).session(session);
 
     if (!businessUsers || businessUsers.role !== "Admin") {
       return res
@@ -265,7 +267,9 @@ const addUserToTarget = asyncHandler(async (req, res) => {
         );
     }
 
-    const param = await Params.findOne({ name: paramName, businessId });
+    const param = await Params.findOne({ name: paramName, businessId }).session(
+      session
+    );
 
     if (!param) {
       return res
@@ -278,7 +282,7 @@ const addUserToTarget = asyncHandler(async (req, res) => {
     const target = await Target.findOne({
       paramName: paramName,
       businessId: businessId,
-    });
+    }).session(session);
 
     if (!target) {
       return res
@@ -288,8 +292,10 @@ const addUserToTarget = asyncHandler(async (req, res) => {
 
     const validUsers = [];
     for (const userId of userIds) {
-      const user = await User.findById(userId);
+      const user = await User.findById(userId).session(session);
       if (!user) {
+        await session.abortTransaction();
+        session.endSession();
         return res
           .status(400)
           .json(
@@ -300,9 +306,11 @@ const addUserToTarget = asyncHandler(async (req, res) => {
       const businessUser = await Businessusers.findOne({
         userId: user._id,
         businessId,
-      });
+      }).session(session);
 
       if (!businessUser) {
+        await session.abortTransaction();
+        session.endSession();
         return res
           .status(400)
           .json(
@@ -315,6 +323,8 @@ const addUserToTarget = asyncHandler(async (req, res) => {
       }
 
       if (!param.usersAssigned.some((u) => u.userId.equals(user._id))) {
+        await session.abortTransaction();
+        session.endSession();
         return res
           .status(400)
           .json(
@@ -327,6 +337,8 @@ const addUserToTarget = asyncHandler(async (req, res) => {
       }
 
       if (target.usersAssigned.some((u) => u.userId.equals(user._id))) {
+        await session.abortTransaction();
+        session.endSession();
         return res
           .status(400)
           .json(
@@ -343,7 +355,7 @@ const addUserToTarget = asyncHandler(async (req, res) => {
 
     // Add valid users to the target's usersAssigned array
     target.usersAssigned.push(...validUsers);
-    await target.save();
+    await target.save({ session });
 
     // Create activity entries for each user
     const activities = validUsers.map((user) => ({
@@ -364,8 +376,11 @@ const addUserToTarget = asyncHandler(async (req, res) => {
 
     if (targetIndex !== -1) {
       business.targets[targetIndex].targetValue = updatedTargetValue;
-      await business.save();
+      await business.save({ session });
     }
+
+    await session.commitTransaction();
+    session.endSession();
 
     return res
       .status(200)
@@ -377,6 +392,8 @@ const addUserToTarget = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("Error:", error);
     return res
       .status(500)
