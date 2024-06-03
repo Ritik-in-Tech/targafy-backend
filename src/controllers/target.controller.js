@@ -6,7 +6,9 @@ import { Business } from "../models/business.model.js";
 import { Params } from "../models/params.model.js";
 import { Businessusers } from "../models/businessUsers.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { Activites } from "../models/activities.model.js";
 
+// controllers to add target
 const createTarget = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -103,11 +105,7 @@ const createTarget = asyncHandler(async (req, res) => {
         return res
           .status(400)
           .json(
-            new ApiResponse(
-              400,
-              {},
-              `User with name ${userId.name} does not exist`
-            )
+            new ApiResponse(400, {}, `User with ID ${userId} does not exist`)
           );
       }
 
@@ -124,7 +122,7 @@ const createTarget = asyncHandler(async (req, res) => {
             new ApiResponse(
               400,
               {},
-              `User with name ${userId.name} is not associated with this business`
+              `User with ID ${userId} is not associated with this business`
             )
           );
       }
@@ -141,7 +139,7 @@ const createTarget = asyncHandler(async (req, res) => {
             new ApiResponse(
               400,
               {},
-              `User with name ${userId.name} is not assigned to this parameter`
+              `User with ID ${userId} is not assigned to this parameter`
             )
           );
       }
@@ -172,6 +170,17 @@ const createTarget = asyncHandler(async (req, res) => {
     // Save the target to the database
     const savedTarget = await target.save({ session });
 
+    // Create activity entries for each user
+    const activities = validUsers.map((user) => ({
+      userId: user.userId,
+      businessId,
+      content: `Assigned target for parameter ${paramName} to ${user.name}`,
+      activityCategory: "Target Assignment",
+    }));
+
+    // Save activities to the database
+    await Activites.insertMany(activities, { session });
+
     // Add the target reference to the business's targets array
     business.targets.push({
       targetId: savedTarget._id,
@@ -197,6 +206,177 @@ const createTarget = asyncHandler(async (req, res) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
+    console.error("Error:", error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, { error }, "Internal Server Error"));
+  }
+});
+
+// controller to add user to existing target
+const addUserToTarget = asyncHandler(async (req, res) => {
+  try {
+    const { userIds } = req.body;
+    if (!userIds || !Array.isArray(userIds)) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Please provide userIds to add"));
+    }
+
+    const userId = req.user._id;
+    const paramName = req.params.name;
+    const businessId = req.params.businessId;
+
+    if (!userId) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Token is invalid! Please log in again")
+        );
+    }
+
+    if (!paramName || !businessId) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Business Id and param name is not provided")
+        );
+    }
+
+    const business = await Business.findById(businessId);
+
+    // Validate business existence
+    if (!business) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Please provide a valid businessId"));
+    }
+
+    const businessUsers = await Businessusers.findOne({
+      userId: userId,
+      businessId: businessId,
+    });
+
+    if (!businessUsers || businessUsers.role !== "Admin") {
+      return res
+        .status(403)
+        .json(
+          new ApiResponse(403, {}, "Only Admin can assign users to the targets")
+        );
+    }
+
+    const param = await Params.findOne({ name: paramName, businessId });
+
+    if (!param) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(404, {}, "Parameter not found for this business")
+        );
+    }
+
+    const target = await Target.findOne({
+      paramName: paramName,
+      businessId: businessId,
+    });
+
+    if (!target) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, {}, "Target is not set for this business"));
+    }
+
+    const validUsers = [];
+    for (const userId of userIds) {
+      const user = await User.findById(userId);
+      if (!user) {
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(400, {}, `User with id ${userId} does not exist`)
+          );
+      }
+
+      const businessUser = await Businessusers.findOne({
+        userId: user._id,
+        businessId,
+      });
+
+      if (!businessUser) {
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(
+              400,
+              {},
+              `User with id ${user.name} is not associated with this business`
+            )
+          );
+      }
+
+      if (!param.usersAssigned.some((u) => u.userId.equals(user._id))) {
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(
+              400,
+              {},
+              `User with id ${user.name} is not assigned to this parameter`
+            )
+          );
+      }
+
+      if (target.usersAssigned.some((u) => u.userId.equals(user._id))) {
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(
+              400,
+              {},
+              `User with id ${user.name} is already assigned to this target`
+            )
+          );
+      }
+
+      validUsers.push({ userId: user._id, name: user.name });
+    }
+
+    // Add valid users to the target's usersAssigned array
+    target.usersAssigned.push(...validUsers);
+    await target.save();
+
+    // Create activity entries for each user
+    const activities = validUsers.map((user) => ({
+      userId: user.userId,
+      businessId,
+      content: `Assigned target for parameter ${paramName} to ${user.name}`,
+      activityCategory: "Target Assignment",
+    }));
+
+    // Save activities to the database
+    await Activites.insertMany(activities, { session });
+
+    // Update the targetValue in the Business table
+    const updatedTargetValue = target.targetValue * target.usersAssigned.length;
+    const targetIndex = business.targets.findIndex((t) =>
+      t.targetId.equals(target._id)
+    );
+
+    if (targetIndex !== -1) {
+      business.targets[targetIndex].targetValue = updatedTargetValue;
+      await business.save();
+    }
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { target },
+          "Users added to the target successfully and targetValue updated in the business table"
+        )
+      );
+  } catch (error) {
     console.error("Error:", error);
     return res
       .status(500)
@@ -407,4 +587,5 @@ export {
   updateTarget,
   deleteTarget,
   getTargetValues,
+  addUserToTarget,
 };
