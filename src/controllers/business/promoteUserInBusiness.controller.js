@@ -3,6 +3,9 @@ import { Businessusers } from "../../models/businessUsers.model.js";
 
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { Business } from "../../models/business.model.js";
+import { emitNewNotificationEvent } from "../../sockets/notification_socket.js";
+import { getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
 
 const promoteUser = asyncHandler(async (req, res, next) => {
   const { role, userIdToPromote } = req.body;
@@ -18,6 +21,11 @@ const promoteUser = asyncHandler(async (req, res, next) => {
           "Provide role , userIdToPromote and businessId"
         )
       );
+  }
+
+  const business = await Business.findById(businessId);
+  if (!business) {
+    return res.status(400).json(new ApiResponse(400, {}, "Business not found"));
   }
 
   if (!userIdToPromote || !role || !["User", "MiniAdmin"].includes(role)) {
@@ -41,6 +49,18 @@ const promoteUser = asyncHandler(async (req, res, next) => {
         );
     }
 
+    if (userToPromote.role == role) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "You have already the same role that you have provided"
+          )
+        );
+    }
+
     if (userToPromote.userId.equals(req.user._id)) {
       return res
         .status(400)
@@ -48,6 +68,7 @@ const promoteUser = asyncHandler(async (req, res, next) => {
           new ApiResponse(400, {}, "Admin or miniadmin cannot self-promote")
         );
     }
+
     const result = await Businessusers.updateOne(
       {
         businessId: new mongoose.Types.ObjectId(businessId),
@@ -69,15 +90,15 @@ const promoteUser = asyncHandler(async (req, res, next) => {
         );
     }
 
-    //   const emitData = {
-    //       "content": `Your role in business ${business.name}is changed now your role is ${role}`,
-    //       "notificationCategory": "business",
-    //       "createdDate": getCurrentUTCTime(),
-    //       "businessName": business.name,
-    //       "businessId": businessId
-    //   };
-    //
-    //   emitNewNotificationEvent(userIdToPromote, emitData);
+    const emitData = {
+      content: `Your role in business ${business.name}is changed now your role is ${role}`,
+      notificationCategory: "business",
+      createdDate: getCurrentUTCTime(),
+      businessName: business.name,
+      businessId: businessId,
+    };
+
+    emitNewNotificationEvent(userIdToPromote, emitData);
 
     return res
       .status(200)
