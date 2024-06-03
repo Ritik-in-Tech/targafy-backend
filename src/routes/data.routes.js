@@ -9,7 +9,7 @@ import {
 } from "../controllers/data.controller.js";
 const router = Router();
 
-// router.use(verifyJWT);
+router.use(verifyJWT);
 
 router.route("/add-data/:businessId/:parameterName").post(addData);
 
