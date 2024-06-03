@@ -6,6 +6,7 @@ import { Target } from "../models/target.model.js";
 import { DataAdd } from "../models/dataadd.model.js";
 import mongoose from "mongoose";
 import { User } from "../models/user.model.js";
+import { Activites } from "../models/activities.model.js";
 import moment from "moment-timezone";
 import { Businessusers } from "../models/businessUsers.model.js";
 
@@ -31,6 +32,7 @@ const addData = asyncHandler(async (req, res) => {
           )
         );
     }
+    // console.log("hello world");
     if (!parameterName || !businessId) {
       await session.abortTransaction();
       session.endSession();
@@ -44,6 +46,8 @@ const addData = asyncHandler(async (req, res) => {
           )
         );
     }
+    // console.log(parameterName);
+    // console.log(businessId);
 
     const userId = req.user._id;
     if (!userId) {
@@ -52,6 +56,14 @@ const addData = asyncHandler(async (req, res) => {
       return res
         .status(401)
         .json(new ApiResponse(401, {}, "Token expired please log in again"));
+    }
+    // console.log(userId);
+
+    const user = await User.findById(userId).session(session);
+    if (!user) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json(new ApiResponse(404, {}, "User not found"));
     }
 
     const business = await Business.findById(businessId).session(session);
@@ -135,6 +147,15 @@ const addData = asyncHandler(async (req, res) => {
         comment,
         createdDate: indianTimeFormatted,
       });
+
+      const activity = new Activites({
+        userId: userId,
+        businessId,
+        content: `${user.name} added the data for ${parameterName} in ${business.name}`,
+        activityCategory: "Data Add",
+      });
+
+      await activity.save({ session });
     } else {
       dataAdd = new DataAdd({
         parameterName,
@@ -145,15 +166,16 @@ const addData = asyncHandler(async (req, res) => {
       });
     }
 
-    await dataAdd.save({ session });
+    const activity = new Activites({
+      userId: userId,
+      businessId,
+      content: `${user.name} added the data for ${parameterName} in ${business.name}`,
+      activityCategory: "Data Add",
+    });
 
-    // Update the user's cumulative sum in the user table
-    const user = await User.findById(userId).session(session);
-    if (!user) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(404).json(new ApiResponse(404, {}, "User not found"));
-    }
+    await activity.save({ session });
+
+    await dataAdd.save({ session });
 
     const targetValue = parseFloat(target.targetValue);
     const todaysDataValue = parseFloat(todaysdata);
@@ -451,7 +473,6 @@ const getParamData = asyncHandler(async (req, res) => {
       .json(new ApiResponse(500, {}, "An error occurred while fetching data"));
   }
 });
-
 
 const getPreviousData = asyncHandler(async (req, res) => {
   try {
