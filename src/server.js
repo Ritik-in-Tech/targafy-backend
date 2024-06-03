@@ -82,6 +82,7 @@ import ApiError from "./utils/ApiError.js";
 import uploadRouter from "./routes/upload.document.js";
 import uploadfileRouter from "./routes/uploadfile.routes.js";
 import addDataRouter from "./routes/data.routes.js";
+import activityRouter from "./routes/activities.routes.js";
 
 app.use("/api/v1/business", businessRoutes);
 app.use("/api/v1/auth", authRoutes);
@@ -92,6 +93,7 @@ app.use("/api/v1/user", userRoutes);
 app.use("/api/v1", uploadRouter);
 app.use("/api/v1", uploadfileRouter);
 app.use("/api/v1/data", addDataRouter);
+app.use("/api/v1/activity", activityRouter);
 
 app.get("*", (req, res) => {
   res.json({
