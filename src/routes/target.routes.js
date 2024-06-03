@@ -7,6 +7,7 @@ import {
   updateTarget,
   deleteTarget,
   getTargetValues,
+  addUserToTarget,
 } from "../controllers/target.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 
@@ -17,6 +18,9 @@ router.route("/add-target/:businessId").post(createTarget);
 
 // router to get parameters and target values
 router.route("/get-target-values/:businessId").get(getTargetValues);
+
+// add user to existing target
+router.route("/add-user-to-target/:businessId/:name").patch(addUserToTarget);
 
 // router to get all targets for specific business
 router.route("/all/:id").get(getAllTargets);
