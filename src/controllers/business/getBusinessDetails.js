@@ -12,24 +12,30 @@ const getBusinessUserDetails = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Token is Invalid!!"));
     }
-    const user = await User.findById(userId);
+
+    const user = await User.findById(userId).select("name avatar businesses");
     if (!user) {
       return res.status(400).json(new ApiResponse(400, {}, "User not found"));
     }
+
     const businessIds = user.businesses.map((business) => business.businessId);
-    if (!businessIds) {
+    if (!businessIds.length) {
       return res
         .status(400)
         .json(
-          new ApiResponse(400, {}, "User have not associated with any business")
+          new ApiResponse(400, {}, "User is not associated with any business")
         );
     }
-    const businesses = await Business.find({ _id: { $in: businessIds } });
-    if (!businesses) {
+
+    const businesses = await Business.find({
+      _id: { $in: businessIds },
+    }).select("-params -targets");
+    if (!businesses.length) {
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "Some error in api creation"));
+        .json(new ApiResponse(400, {}, "No businesses found"));
     }
+
     return res
       .status(200)
       .json(
