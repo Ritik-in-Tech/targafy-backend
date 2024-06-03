@@ -24,33 +24,33 @@ const activitySchema = new Schema({
     type: Date,
     default: getCurrentIndianTime(),
   },
-  issueId: {
-    type: String,
-    required: function () {
-      return this.activityCategory == "issue";
-    },
-  },
+  // issueId: {
+  //   type: String,
+  //   required: function () {
+  //     return this.activityCategory == "issue";
+  //   },
+  // },
 
-  issueTitle: {
-    type: String,
-    required: function () {
-      return this.activityCategory == "issue";
-    },
-  },
+  // issueTitle: {
+  //   type: String,
+  //   required: function () {
+  //     return this.activityCategory == "issue";
+  //   },
+  // },
 
-  groupId: {
-    type: Schema.Types.ObjectId,
-    required: function () {
-      return this.activityCategory == "group";
-    },
-  },
+  // groupId: {
+  //   type: Schema.Types.ObjectId,
+  //   required: function () {
+  //     return this.activityCategory == "group";
+  //   },
+  // },
 
-  groupName: {
-    type: String,
-    required: function () {
-      return this.activityCategory == "group";
-    },
-  },
+  // groupName: {
+  //   type: String,
+  //   required: function () {
+  //     return this.activityCategory == "group";
+  //   },
+  // },
 });
 
 const Activites = model("Activites", activitySchema);
