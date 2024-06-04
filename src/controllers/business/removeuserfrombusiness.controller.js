@@ -7,10 +7,20 @@ import { Acceptedrequests } from "../../models/acceptedRequests.model.js";
 
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { Params } from "../../models/params.model.js";
+import { Target } from "../../models/target.model.js";
+import { Business } from "../../models/business.model.js";
+import { addData } from "../data.controller.js";
 
 const removeUserFromBusiness = asyncHandler(async (req, res, next) => {
   const userToRemoveId = req.params?.userToRemoveId;
   const businessId = req.params?.businessId;
+  const userId = req.user._id;
+  if (!userId) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, {}, "Invalid token please log in again"));
+  }
 
   if (!userToRemoveId || !businessId) {
     return res
@@ -22,6 +32,35 @@ const removeUserFromBusiness = asyncHandler(async (req, res, next) => {
   session.startTransaction();
 
   try {
+    const checkEligibility = await Businessusers.findOne({
+      businessId: businessId,
+      userId: userId,
+    });
+
+    if (!checkEligibility) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Logged in user not associated with the business"
+          )
+        );
+    }
+
+    if (checkEligibility.role !== "Admin") {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Only Admin can remove the user from the business"
+          )
+        );
+    }
+
     const user = await Businessusers.findOne({
       businessId: businessId,
       userId: userToRemoveId,
@@ -85,6 +124,63 @@ const removeUserFromBusiness = asyncHandler(async (req, res, next) => {
       },
       { session }
     );
+
+    // Remove the user from any parameters they are assigned to
+    await Params.updateMany(
+      { businessId: businessId },
+      {
+        $pull: {
+          usersAssigned: { userId: userToRemoveId },
+        },
+      },
+      { session }
+    );
+
+    // Remove the user from any target they are assigned to
+    const targets = await Target.find({
+      businessId: businessId,
+      "usersAssigned.userId": userToRemoveId,
+    }).session(session);
+
+    await Target.updateMany(
+      { businessId: businessId },
+      {
+        $pull: {
+          usersAssigned: { userId: userToRemoveId },
+        },
+      },
+      { session }
+    );
+
+    // Update targetValue in the business table
+    for (const target of targets) {
+      const updatedTarget = await Target.findById(target._id).session(session);
+      const updatedTargetValue =
+        parseFloat(target.targetValue) * updatedTarget.usersAssigned.length;
+
+      await Business.updateMany(
+        { _id: businessId, "targets.targetId": target._id },
+        {
+          $set: { "targets.$.targetValue": updatedTargetValue },
+        },
+        { session }
+      );
+    }
+
+    // Remove user data from AddData table
+    await addData.deleteMany(
+      { businessId: businessId, userId: userToRemoveId },
+      { session }
+    );
+
+    // Remove user data from User table
+    const userDocument = await User.findById(userToRemoveId).session(session);
+    if (userDocument) {
+      userDocument.data = userDocument.data.filter(
+        (dataEntry) => String(dataEntry.businessId) !== businessId
+      );
+      await userDocument.save({ session });
+    }
 
     await User.updateOne(
       { _id: userToRemoveId },
