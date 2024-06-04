@@ -27,6 +27,7 @@ import { rateUserInBusiness } from "../controllers/business/rateUserInBusiness.c
 import { updateBusinessParameters } from "../controllers/business/updatebusinessparameters.js";
 import { getBusinessUserDetails } from "../controllers/business/getBusinessDetails.js";
 import { getUserHierarchyData } from "../controllers/business/getuserhierarchy.controller.js";
+import { changeManager } from "../controllers/business/changemanager.controller.js";
 
 router.use(verifyJWT);
 
@@ -93,6 +94,9 @@ router.route("/promotion/:businessId").patch(promoteUser); // done
 router
   .route("/promote/admin/:businessId/:userIdToPromote")
   .patch(promoteToAdmin); // done
+
+// router to change user manager
+router.route("/change-manager/:businessId/:userId").patch(changeManager);
 
 // get all join business request
 router.route("/get/request/:businessId").get(getBusinessRequests); // done
