@@ -16,7 +16,10 @@ import { removeUserFromBusiness } from "../controllers/business/removeuserfrombu
 import { getUserProfileInBusiness } from "../controllers/business/getuserprofileInbusiness.controller.js";
 import { getBusinessUsers } from "../controllers/business/getbusinessusers.controller.js";
 import { fetchBusinessDetailsAndParams } from "../controllers/business/fetchBusinessDetailsAndParams.controller.js";
-import { promoteUser } from "../controllers/business/promoteUserInBusiness.controller.js";
+import {
+  demoteUser,
+  promoteUser,
+} from "../controllers/business/promoteUserInBusiness.controller.js";
 import { promoteToAdmin } from "../controllers/business/promoteUserToAdmin.controller.js";
 import getBusinessRequests from "../controllers/business/getBusinessRequests.controller.js";
 import { getBusinessAcceptedRequests } from "../controllers/business/getBusinessAcceptedRequests.controller.js";
@@ -89,6 +92,9 @@ router.route("/get/:businessId").get(fetchBusinessDetailsAndParams); // done
 
 // you can admin or miniadmin can promote user to miniadmin or viceversa
 router.route("/promotion/:businessId").patch(promoteUser); // done
+
+// router to demote user from mini admin to user
+router.route("/demote/:businessId").patch(demoteUser);
 
 // only admin can promote use or mini admin to admin
 router
