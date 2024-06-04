@@ -10,7 +10,7 @@ const groupSchema = new Schema({
     type: Schema.Types.ObjectId,
     required: true,
   },
-  name: {
+  groupName: {
     type: String,
     trim: true,
     default: "",
