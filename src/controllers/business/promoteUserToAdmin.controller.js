@@ -13,16 +13,15 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
     const userIdToPromote = req?.params?.userIdToPromote;
     const businessId = req?.params?.businessId;
     const userId = req?.user?._id;
+    if (!userId) {
+      return res.status(401).json(new ApiResponse(401, {}, "Invalid Token"));
+    }
 
-    if (!userIdToPromote || !businessId || !userId) {
+    if (!userIdToPromote || !businessId) {
       return res
         .status(401)
         .json(
-          new ApiResponse(
-            401,
-            {},
-            "Provide role, userIdToPromote, and businessId"
-          )
+          new ApiResponse(401, {}, "Provide  userIdToPromote, and businessId")
         );
     }
 
@@ -146,7 +145,7 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
         new ApiResponse(200, {}, "User role updated to Admin successfully")
       );
   } catch (error) {
-    console.log(error)
+    console.log(error);
     await session.abortTransaction();
     session.endSession();
     return res
