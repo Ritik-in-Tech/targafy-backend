@@ -14,7 +14,7 @@ const createGroup = asyncHandler(async (req, res, next) => {
   try {
     const businessId = req?.params?.businessId;
     const userId = req?.user?._id;
-    const name = req?.body?.name;
+    const groupName = req?.body?.groupName;
     const usersToAddIds = req?.body?.usersToAddIds;
 
     const uniqueUsersToAddIds = new Set(usersToAddIds);
@@ -36,7 +36,7 @@ const createGroup = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(400, {}, "Token is Invalid!!"));
     }
 
-    if (!name) {
+    if (!groupName) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Fill name of group!!"));
@@ -52,7 +52,7 @@ const createGroup = asyncHandler(async (req, res, next) => {
 
     const newGroup = {
       businessId: businessId,
-      name: name,
+      groupName: groupName,
       groupId: newGroupId,
       usersIds: usersToAddIds,
     };
