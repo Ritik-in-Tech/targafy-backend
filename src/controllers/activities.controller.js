@@ -82,13 +82,13 @@ const getAllActivityBusiness = asyncHandler(async (req, res) => {
       activities = await Activites.find({
         userId: { $in: allSubordinateIds },
         businessId: businessId,
-      }).select("content activityCategory");
+      }).select("content activityCategory createdDate");
     } else {
       // Fetch activities for the user
       activities = await Activites.find({
         userId: userId,
         businessId: businessId,
-      }).select("content activityCategory");
+      }).select("content activityCategory createdDate");
     }
 
     return res
