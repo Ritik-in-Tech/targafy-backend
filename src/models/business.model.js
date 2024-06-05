@@ -7,6 +7,16 @@ const commonStringConstraints = {
   default: "",
 };
 
+const groupSchema = new Schema(
+  {
+    name: commonStringConstraints,
+    groupId: { type: Schema.Types.ObjectId },
+  },
+  {
+    _id: false,
+  }
+);
+
 const targetSchema = new Schema(
   {
     targetName: commonStringConstraints,
@@ -59,6 +69,10 @@ const businessSchema = new Schema({
     default: [],
   },
   targets: [targetSchema],
+  groups: {
+    type: [groupSchema],
+    default: [],
+  },
 });
 
 const Business = model("Business", businessSchema);
