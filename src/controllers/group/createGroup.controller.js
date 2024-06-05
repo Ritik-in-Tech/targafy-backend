@@ -292,6 +292,7 @@ const createSubGroup = asyncHandler(async (req, res) => {
     const existingSubGroups = await Group.findOne({
       groupName: subgroupName,
       businessId: businessId,
+      parentGroupId: parentGroupId,
     });
 
     if (existingSubGroups) {
@@ -331,6 +332,7 @@ const createSubGroup = asyncHandler(async (req, res) => {
         groupName: subgroupName,
         logo,
         businessId: businessId,
+        parentGroupId: parentGroupId,
         userAdded: usersIds.map((userId) => ({
           userId: new mongoose.Types.ObjectId(userId), // Use 'new' keyword
           name: parentGroup.userAdded.find(
