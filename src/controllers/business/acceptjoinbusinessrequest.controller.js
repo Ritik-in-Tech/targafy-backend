@@ -180,20 +180,20 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
 
       await Acceptedrequests.create(acceptedRequest);
 
-      //   const emitData = {
-      //     content: `Congratulation, you are added in ${business.name} successfully🥳🥳`,
-      //     notificationCategory: "business",
-      //     createdDate: getCurrentUTCTime(),
-      //     businessName: business.name,
-      //     businessId: businessId,
-      //   };
+      // const emitData = {
+      //   content: `Congratulation, you are added in ${business.name} successfully🥳🥳`,
+      //   notificationCategory: "business",
+      //   createdDate: getCurrentUTCTime(),
+      //   businessName: business.name,
+      //   businessId: businessId,
+      // };
 
-      //   emitNewNotificationAndAddBusinessEvent(
-      //     userId,
-      //     businessId,
-      //     emitData,
-      //     newBusiness
-      //   );
+      // emitNewNotificationAndAddBusinessEvent(
+      //   userId,
+      //   businessId,
+      //   emitData,
+      //   newBusiness
+      // );
 
       await session.commitTransaction();
       session.endSession();
