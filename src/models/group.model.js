@@ -19,12 +19,6 @@ const subordinateGroups = new Schema(
     subordinateGroupId: {
       type: Schema.Types.ObjectId,
     },
-    targetAchieved: {
-      type: Number,
-    },
-    targetAlloted: {
-      type: Number,
-    },
   },
   {
     _id: false,
@@ -57,6 +51,9 @@ const groupSchema = new Schema({
   subordinateGroups: {
     type: [subordinateGroups],
     default: [],
+  },
+  parentGroupId: {
+    type: Schema.Types.ObjectId,
   },
 });
 
