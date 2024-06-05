@@ -2,6 +2,17 @@ import { Schema, model } from "mongoose";
 import { getCurrentIndianTime } from "../utils/helpers/time.helper.js";
 import { commonStringConstraints } from "../utils/helpers/schema.helper.js";
 
+const userAdded = new Schema(
+  {
+    name: commonStringConstraints,
+    userId: {
+      type: Schema.Types.ObjectId,
+    },
+  },
+  {
+    _id: false,
+  }
+);
 const subordinateGroups = new Schema(
   {
     subordinategroupName: commonStringConstraints,
@@ -9,6 +20,9 @@ const subordinateGroups = new Schema(
       type: Schema.Types.ObjectId,
     },
     targetAchieved: {
+      type: Number,
+    },
+    targetAlloted: {
       type: Number,
     },
   },
@@ -19,11 +33,7 @@ const subordinateGroups = new Schema(
 const groupSchema = new Schema({
   businessId: {
     type: Schema.Types.ObjectId,
-    required: [true, "Please enter business Id, this issue belogs to"],
-  },
-  groupId: {
-    type: Schema.Types.ObjectId,
-    required: true,
+    required: [true, "Please enter business Id, this group belogs to"],
   },
   groupName: {
     type: String,
@@ -40,12 +50,14 @@ const groupSchema = new Schema({
     type: Date,
     default: getCurrentIndianTime(),
   },
-  usersIds: [
-    {
-      type: Schema.Types.ObjectId,
-    },
-  ],
-  subordinateGroups: [subordinateGroups],
+  userAdded: {
+    type: [userAdded],
+    default: [],
+  },
+  subordinateGroups: {
+    type: [subordinateGroups],
+    default: [],
+  },
 });
 
 const Group = model("Groups", groupSchema);
