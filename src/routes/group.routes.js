@@ -10,12 +10,17 @@ import {
   createGroup,
   createSubGroup,
 } from "../controllers/group/createGroup.controller.js";
+import { getGroupDataLevel } from "../controllers/group/getdata.group.controller.js";
 
 router.use(verifyJWT);
 
 router.route("/create/:businessId").post(createGroup); // done
 
-router.route("/create-subgroups/:parentGroupId").post(createSubGroup);
+router.route("/create-subgroups/:parentGroupId").post(createSubGroup); //done
+
+router
+  .route("/get-level-data/:businessId/:parentGroupId")
+  .get(getGroupDataLevel);
 
 router.route("/delete/:businessId/:groupId").delete(deleteGroup); // done
 
