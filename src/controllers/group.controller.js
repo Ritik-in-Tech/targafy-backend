@@ -2,45 +2,8 @@ import { Group } from "../models/group.model.js";
 import { Business } from "../models/business.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-
-// Create a new group
-const createGroup = asyncHandler(async (req, res) => {
-  try {
-    const { name, logo, createdDate, usersIds } = req.body;
-
-    // Create a new group
-    const group = new Group({
-      name,
-      logo,
-      createdDate,
-      usersIds,
-    });
-
-    const businessId = req.params.id;
-    console.log(businessId);
-    const business = await Business.findOne({ _id: businessId });
-
-    // Validate required fields
-    if (!business) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Please provide a valid businessId"));
-    }
-
-    business.groups.push(group);
-    // Save the group to the database
-    await business.save();
-
-    return res
-      .status(201)
-      .json(new ApiResponse(201, { group }, "Group created successfully"));
-  } catch (error) {
-    console.error("Error:", error);
-    return res
-      .status(500)
-      .json(new ApiResponse(500, {}, "Internal Server Error"));
-  }
-});
+import { User } from "../models/user.model.js";
+import { Businessusers } from "../models/businessUsers.model.js";
 
 // Get all groups
 const getAllGroups = asyncHandler(async (req, res) => {
