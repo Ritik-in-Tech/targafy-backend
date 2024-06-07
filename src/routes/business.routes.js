@@ -31,11 +31,52 @@ import { updateBusinessParameters } from "../controllers/business/updatebusiness
 import { getBusinessUserDetails } from "../controllers/business/getBusinessDetails.js";
 import { getUserHierarchyData } from "../controllers/business/getuserhierarchy.controller.js";
 import { changeManager } from "../controllers/business/changemanager.controller.js";
+import { getBusinessUserRatings } from "../controllers/business/getbusinessuserratings.controller.js";
 
 router.use(verifyJWT);
 
 // create business
 router.route("/create").post(createBusiness);
+
+// delete business
+router.route("/delete/:businessId").patch(deleteBusiness); //done
+
+// update business Logo
+router.route("/update/logo/:businessId").put(updateBusinessLogo); // done
+
+// add user to business
+router.route("/send/request/:businessCode").post(joinBusiness); // done
+
+// remove user to business
+router
+  .route("/remove/user/:businessId/:userToRemoveId")
+  .delete(removeUserFromBusiness); // done
+
+// update business details
+router.route("/update/:businessId").patch(updateBusinessDetails); // done
+
+// get all users from particular business
+router.route("/get/all/users/:businessId").get(getBusinessUsers); // done
+
+// get user profile in particular business
+router.route("/user/:businessId/:userId").get(getUserProfileInBusiness); // done
+
+// you can admin or miniadmin can promote user to miniadmin or viceversa
+router.route("/promotion/:businessId").patch(promoteUser); // done
+
+// router to demote user from mini admin to user
+router.route("/demote/:businessId").patch(demoteUser);
+
+// only admin can promote use or mini admin to admin
+router
+  .route("/promote/admin/:businessId/:userIdToPromote")
+  .patch(promoteToAdmin); // done
+
+// router to change user manager
+router.route("/change-manager/:businessId/:userId").patch(changeManager);
+
+// rate business user
+router.route("/rate/user/:businessId/:userId").post(rateUserInBusiness); // done
 
 // router to return the business role
 router.route("/get-user-role/:businessId").get(buisnessRole);
@@ -46,20 +87,8 @@ router.route("/get-business-details").get(getBusinessUserDetails);
 //check userHaveBusiness
 router.route("/checkBusiness").get(checkIsUserBusiness);
 
-// delete business
-router.route("/delete/:businessId").patch(deleteBusiness); //done
-
-// update business Logo
-router.route("/update/logo/:businessId").put(updateBusinessLogo); // done
-
-// update business details
-router.route("/update/:businessId").patch(updateBusinessDetails); // done
-
 // update business parameters
 router.route("/update-parameters/:businessId").patch(updateBusinessParameters);
-
-// add user to business
-router.route("/send/request/:businessCode").post(joinBusiness); // done
 
 // router to get the user Hierarchy
 router.route("/get-user-hierarchy/:businessId").get(getUserHierarchyData);
@@ -76,33 +105,8 @@ router
   .post(declineUserJoinRequest)
   .get(getBusinessDeclinedRequests); // done
 
-// remove user to business
-router
-  .route("/remove/user/:businessId/:userToRemoveId")
-  .delete(removeUserFromBusiness); // done
-
-// get all users from particular business
-router.route("/get/all/users/:businessId").get(getBusinessUsers); // done
-
-// get user profile in particular business
-router.route("/user/:businessId/:userId").get(getUserProfileInBusiness); // done
-
 // get all business and its data and users
 router.route("/get/:businessId").get(fetchBusinessDetailsAndParams); // done
-
-// you can admin or miniadmin can promote user to miniadmin or viceversa
-router.route("/promotion/:businessId").patch(promoteUser); // done
-
-// router to demote user from mini admin to user
-router.route("/demote/:businessId").patch(demoteUser);
-
-// only admin can promote use or mini admin to admin
-router
-  .route("/promote/admin/:businessId/:userIdToPromote")
-  .patch(promoteToAdmin); // done
-
-// router to change user manager
-router.route("/change-manager/:businessId/:userId").patch(changeManager);
 
 // get all join business request
 router.route("/get/request/:businessId").get(getBusinessRequests); // done
@@ -113,7 +117,9 @@ router.route("/requests/count/:businessId").get(getPendingRequestCount); // done
 // get business logo
 router.route("/requests/user-business-logo/:businessId").get(getBusinessLogo); // done
 
-// rate business user
-router.route("/rate/user/:businessId/:userId").post(rateUserInBusiness); // done
+// get Business user ratings
+router
+  .route("/get-business-user-rating/:businessId")
+  .get(getBusinessUserRatings);
 
 export default router;
