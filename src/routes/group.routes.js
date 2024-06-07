@@ -18,6 +18,7 @@ import {
   sublevelGroupName,
 } from "../controllers/group/getsubgroups.controller.js";
 import { getAboveGroupUsers } from "../controllers/group/getabovegroupusers.controller.js";
+import { getSubGroupDetails } from "../controllers/group/getsubgroupdetails.controller.js";
 
 router.use(verifyJWT);
 
@@ -42,6 +43,10 @@ router.route("/get-level1-group-names/:businessId").get(level1GroupName);
 router
   .route("/get-sublevel-group-name/:businessId/:aboveLevelGroupName")
   .get(sublevelGroupName);
+
+router
+  .route("/get-subgroup-details/:businessId/:parentId")
+  .get(getSubGroupDetails);
 
 router.route("/delete/:businessId/:groupId").delete(deleteGroup); // done
 
