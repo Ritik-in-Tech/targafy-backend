@@ -8,19 +8,20 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
 import { getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
+import { sendNotification } from "../notification.controller.js";
 
 const rateUserInBusiness = asyncHandler(async (req, res, next) => {
   try {
     const userId = req?.params?.userId;
     const businessId = req?.params?.businessId;
     const userName = req?.body?.userName;
-    let isAnonymous = req?.body?.isAnonymous;
+    let isAnonymous = req.query.isAnonymous;
+    let isFeedback = req.query.isFeedback;
     const { rating, message } = req.body;
     const givenByUserId = req?.user?._id;
-    console.log(req?.body)
-    let givenBy;
 
-    if (isAnonymous == true) {
+    let givenBy;
+    if (isAnonymous == "true") {
       isAnonymous = true;
       givenBy = {
         name: "Unknown",
@@ -34,6 +35,9 @@ const rateUserInBusiness = asyncHandler(async (req, res, next) => {
       };
     }
 
+    // console.log("Given By: ", givenBy);
+
+    // Validate the essential inputs
     if (
       !rating ||
       !message ||
@@ -47,6 +51,7 @@ const rateUserInBusiness = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(400, {}, "Invalid or incomplete data provided"));
     }
 
+    // Check rating bounds
     if (rating > 5) {
       return res
         .status(400)
@@ -61,6 +66,7 @@ const rateUserInBusiness = asyncHandler(async (req, res, next) => {
       givenBy: givenBy,
       createdDate: getCurrentUTCTime(),
     };
+    // console.log("New Rating: ", newRating);
 
     const user = await Businessusers.findOne({
       businessId: businessId,
@@ -85,8 +91,6 @@ const rateUserInBusiness = asyncHandler(async (req, res, next) => {
         (user?.totalRatingsCount + 1);
     }
 
-    console.log(newTotalRating)
-
     const result = await Businessusers.updateOne(
       { businessId: businessId, userId: userId },
       {
@@ -95,6 +99,15 @@ const rateUserInBusiness = asyncHandler(async (req, res, next) => {
         },
         $inc: {
           totalRatingsCount: 1,
+        },
+      }
+    );
+
+    await Businessusers.updateMany(
+      { businessId: businessId },
+      {
+        $inc: {
+          feedbackViewCounter: 1,
         },
       }
     );
@@ -110,8 +123,11 @@ const rateUserInBusiness = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(401, {}, "Unable to rate user!!"));
     }
 
-    // sendNotification(userId, `You received a new rating! Check it out.`);
-    console.log("This is rating data : ", data);
+    sendNotification(
+      userId,
+      `You received a new ${isFeedback ? "feedback" : "rating"}! Check it out.`
+    );
+
     return res
       .status(200)
       .json(new ApiResponse(200, data, "Rate user successfully"));
