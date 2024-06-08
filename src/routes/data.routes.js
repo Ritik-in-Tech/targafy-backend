@@ -2,6 +2,7 @@ import { Router } from "express";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import {
   addData,
+  getDailyTargetValue,
   getParamData,
   getParamDataSpecificUser,
   getPreviousData,
@@ -17,6 +18,10 @@ router.route("/add-data/:businessId/:parameterName").post(addData);
 router
   .route("/get-user-data/:businessId/:paramName/:userId")
   .get(getParamDataSpecificUser);
+
+router
+  .route("/get-daily-target/:businessId/:targetName")
+  .get(getDailyTargetValue);
 
 // router to get param data for a business
 router.route("/get-param-data/:businessId/:paramName").get(getParamData);
