@@ -689,10 +689,47 @@ const getTargetToAddData = asyncHandler(async (req, res) => {
   }
 });
 
+const getDailyTargetValue = asyncHandler(async (req, res) => {
+  try {
+    const businessId = req.params.businessId;
+    const targetName = req.params.targetName;
+    if (!businessId || !targetName) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "BusinessId and target name is not provided")
+        );
+    }
+    const target = await Target.findOne({
+      businessId: businessId,
+      paramName: targetName,
+    });
+    if (!target) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Target not found for the provided details")
+        );
+    }
+    const response = parseInt(target.targetValue) / 30;
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, { response }, "Daily target fetched successfully!")
+      );
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, { error }, "Internal server error"));
+  }
+});
+
 export {
   addData,
   getParamDataSpecificUser,
   getPreviousData,
   getTargetToAddData,
   getParamData,
+  getDailyTargetValue,
 };
