@@ -11,7 +11,10 @@ import {
   createSubGroup,
 } from "../controllers/group/createGroup.controller.js";
 import { getSubGroupDataLevel } from "../controllers/group/getsubgroupdata.controller.js";
-import { getAllGroups } from "../controllers/group/getallgroups.controller.js";
+import {
+  getAllGroups,
+  getGroupId,
+} from "../controllers/group/getallgroups.controller.js";
 import { getGroupUsers } from "../controllers/group/getgroupusers.controller.js";
 import {
   level1GroupName,
@@ -32,6 +35,8 @@ router
   .post(getSubGroupDataLevel);
 
 router.route("/get-main-group-data/:businessId/:groupId").get(getMainGroupData);
+
+router.route("/get-groupId/:businessId/:groupName").get(getGroupId);
 
 router.route("/get-all-groups/:businessId").get(getAllGroups);
 
