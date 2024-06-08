@@ -67,4 +67,46 @@ const getAllGroups = asyncHandler(async (req, res) => {
   }
 });
 
-export { getAllGroups };
+const getGroupId = asyncHandler(async (req, res) => {
+  try {
+    const businessId = req.params.businessId;
+    const groupName = req.params.groupName;
+    if (!businessId || !groupName) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Please provide businessId and group name in params"
+          )
+        );
+    }
+
+    const group = await Group.findOne({
+      businessId: businessId,
+      groupName: groupName,
+    });
+
+    if (!group) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Group not found for the provided deatils")
+        );
+    }
+    const groupId = group._id;
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, { groupId }, "Please provide businessId in params")
+      );
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, { error }, "Internal server error"));
+  }
+});
+
+export { getAllGroups, getGroupId };
