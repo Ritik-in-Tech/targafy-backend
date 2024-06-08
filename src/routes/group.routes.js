@@ -29,7 +29,7 @@ router.route("/create-subgroups/:parentGroupId").post(createSubGroup); //done
 
 router
   .route("/get-level-data/:businessId/:parentGroupId")
-  .get(getSubGroupDataLevel);
+  .post(getSubGroupDataLevel);
 
 router.route("/get-main-group-data/:businessId/:groupId").get(getMainGroupData);
 
