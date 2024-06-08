@@ -10,7 +10,7 @@ import {
   createGroup,
   createSubGroup,
 } from "../controllers/group/createGroup.controller.js";
-import { getGroupDataLevel } from "../controllers/group/getdata.group.controller.js";
+import { getSubGroupDataLevel } from "../controllers/group/getsubgroupdata.controller.js";
 import { getAllGroups } from "../controllers/group/getallgroups.controller.js";
 import { getGroupUsers } from "../controllers/group/getgroupusers.controller.js";
 import {
@@ -19,6 +19,7 @@ import {
 } from "../controllers/group/getsubgroups.controller.js";
 import { getAboveGroupUsers } from "../controllers/group/getabovegroupusers.controller.js";
 import { getSubGroupDetails } from "../controllers/group/getsubgroupdetails.controller.js";
+import { getMainGroupData } from "../controllers/group/getmaingroup.data.controller.js";
 
 router.use(verifyJWT);
 
@@ -28,7 +29,9 @@ router.route("/create-subgroups/:parentGroupId").post(createSubGroup); //done
 
 router
   .route("/get-level-data/:businessId/:parentGroupId")
-  .get(getGroupDataLevel);
+  .get(getSubGroupDataLevel);
+
+router.route("/get-main-group-data/:businessId/:groupId").get(getMainGroupData);
 
 router.route("/get-all-groups/:businessId").get(getAllGroups);
 
