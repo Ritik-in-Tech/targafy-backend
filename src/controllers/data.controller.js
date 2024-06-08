@@ -693,17 +693,24 @@ const getDailyTargetValue = asyncHandler(async (req, res) => {
   try {
     const businessId = req.params.businessId;
     const targetName = req.params.targetName;
+
     if (!businessId || !targetName) {
       return res
         .status(400)
         .json(
-          new ApiResponse(400, {}, "BusinessId and target name is not provided")
+          new ApiResponse(
+            400,
+            {},
+            "BusinessId and target name are not provided"
+          )
         );
     }
+
     const target = await Target.findOne({
       businessId: businessId,
       paramName: targetName,
     });
+
     if (!target) {
       return res
         .status(400)
@@ -711,14 +718,29 @@ const getDailyTargetValue = asyncHandler(async (req, res) => {
           new ApiResponse(400, {}, "Target not found for the provided details")
         );
     }
-    const response = parseInt(target.targetValue) / 30;
+
+    const targetValue = parseInt(target.targetValue);
+
+    if (isNaN(targetValue)) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Target value is not a valid number"));
+    }
+
+    // Calculate the daily target and round it to two decimal places
+    const dailyTarget = (targetValue / 30).toFixed(2);
+
     return res
       .status(200)
       .json(
-        new ApiResponse(200, { response }, "Daily target fetched successfully!")
+        new ApiResponse(
+          200,
+          { dailyTarget: parseFloat(dailyTarget) },
+          "Daily target fetched successfully!"
+        )
       );
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res
       .status(500)
       .json(new ApiResponse(500, { error }, "Internal server error"));
