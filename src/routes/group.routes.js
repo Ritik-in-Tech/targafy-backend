@@ -23,6 +23,7 @@ import {
 import { getAboveGroupUsers } from "../controllers/group/getabovegroupusers.controller.js";
 import { getSubGroupDetails } from "../controllers/group/getsubgroupdetails.controller.js";
 import { getMainGroupData } from "../controllers/group/getmaingroup.data.controller.js";
+import { updateGroupLogo } from "../controllers/group/updategrouplogo.controller.js";
 
 router.use(verifyJWT);
 
@@ -65,5 +66,7 @@ router.route("/add/users/:businessId/:groupId").put(addUsersInGroup); // done
 router.route("/remove/users/:businessId/:groupId").put(removeUsersFromGroup); // done
 
 router.route("/get/:businessId").get(getUserAddedGroups); // done
+
+router.route("/update-logo/:groupId/:businessId").post(updateGroupLogo);
 
 export default router;
