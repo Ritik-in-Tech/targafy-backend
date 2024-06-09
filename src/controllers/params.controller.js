@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Businessusers } from "../models/businessUsers.model.js";
 import mongoose from "mongoose";
+import { Group } from "../models/group.model.js";
 // Create a new param
 
 const createParam = asyncHandler(async (req, res) => {
@@ -111,19 +112,19 @@ const createParam = asyncHandler(async (req, res) => {
             )
           );
       }
-      if (businessUser.role === "Admin") {
-        await session.abortTransaction();
-        session.endSession();
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(
-              400,
-              {},
-              "Admin can't assign itself as a parameters user"
-            )
-          );
-      }
+      // if (businessUser.role === "Admin") {
+      //   await session.abortTransaction();
+      //   session.endSession();
+      //   return res
+      //     .status(400)
+      //     .json(
+      //       new ApiResponse(
+      //         400,
+      //         {},
+      //         "Admin can't assign itself as a parameters user"
+      //       )
+      //     );
+      // }
       validUserIds.push(user._id);
       usersAssigned.push({ userId: user._id, name: user.name });
     }
@@ -154,6 +155,43 @@ const createParam = asyncHandler(async (req, res) => {
 
     // Save the Params document to the database
     await param.save({ session });
+
+    const group = new Group({
+      groupName: name,
+      // logo,
+      businessId: business._id,
+      userAdded: usersAssigned,
+    });
+
+    await group.save({ session });
+
+    business.groups.push({ name: name, groupId: group._id });
+    await business.save({ session });
+
+    const groupData = { groupName: name, groupId: group._id };
+
+    // Update businessusers documents for each user in userAdded array
+    for (const { userId } of usersAssigned) {
+      const businessUser = await Businessusers.findOneAndUpdate(
+        { userId, businessId },
+        { $push: { groupsJoined: groupData } },
+        { new: true, session }
+      );
+
+      if (!businessUser) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(
+              400,
+              {},
+              `User with id ${userId} is not associated with this business`
+            )
+          );
+      }
+    }
 
     // Add the parameter name and id to the business.params array
     business.params.push({ name, paramId: param._id });
