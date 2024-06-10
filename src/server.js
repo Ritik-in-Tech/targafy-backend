@@ -95,6 +95,12 @@ app.use("/api/v1", uploadfileRouter);
 app.use("/api/v1/data", addDataRouter);
 app.use("/api/v1/activity", activityRouter);
 
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, { customSiteTitle: "Targafy API Docs" })
+);
+
 app.get("*", (req, res) => {
   res.json({
     message: "welcome to Targafy API. To see all api's please visit this url: ",
