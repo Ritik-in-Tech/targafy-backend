@@ -48,4 +48,6 @@ jobs:
               -e FCM_API_KEY='${{ secrets.FCM_API_KEY }}' \
               -e AWS_ACCESS_KEY='${{secrets.AWS_ACCESS_KEY}}' \
               -e AWS_SECRET_KEY='${{secrets.AWS_SECRET_KEY}}' \
+              -e HTTPS_PORT='${{secrets.HTTPS_PORT}}' \
+              -e HTTP_PORT='${{secrets.HTTP_PORT}}' \
               ritik819/targafybackend:latest
