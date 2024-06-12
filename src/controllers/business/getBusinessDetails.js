@@ -23,7 +23,11 @@ const getBusinessUserDetails = asyncHandler(async (req, res) => {
       return res
         .status(400)
         .json(
-          new ApiResponse(400, {}, "User is not associated with any business")
+          new ApiResponse(
+            200,
+            { businesses: [], user },
+            "No businesses found, but user details fetched successfully"
+          )
         );
     }
 
