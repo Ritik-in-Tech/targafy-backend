@@ -1,7 +1,8 @@
+// server.js
+
 import express from "express";
 import cookieParser from "cookie-parser";
 import session from "express-session";
-import dotenv from "dotenv";
 import cors from "cors";
 import bodyParser from "body-parser";
 import { createServer } from "http";
@@ -27,8 +28,9 @@ const swaggerDocument = YAML.parse(file);
 import { initializeNotificationSocket } from "./sockets/notification_socket.js";
 
 const app = express();
-const server = createServer(app);
 
+// Socket.IO setup
+const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
@@ -40,26 +42,17 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+initializeNotificationSocket(io); // Initialize the socket
 
-const notificationNamespace = initializeNotificationSocket(io);
-
-// Middleware
+// Middleware setup
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
 // Global middlewares
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST"],
-    credentials: true,
-  })
-);
-
-app.use(bodyParser.json()); // Parse incoming JSON data
+app.use(cors({ origin: "*", methods: ["GET", "POST"], credentials: true }));
+app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
@@ -72,6 +65,7 @@ app.use(
   })
 );
 
+// Routes
 import businessRoutes from "./routes/business.routes.js";
 import authRoutes from "./routes/authentication.routes.js";
 import groupRoutes from "./routes/group.routes.js";
@@ -106,4 +100,5 @@ app.get("*", (req, res) => {
     message: "welcome to Targafy API. To see all api's please visit this url: ",
   });
 });
-export { server };
+
+export default app;
