@@ -21,6 +21,18 @@ const userSchema = new Schema(
   { _id: false }
 );
 
+const subOrdinateGroups = new Schema(
+  {
+    groupName: commonStringConstraints,
+    groupId: {
+      type: Schema.Types.ObjectId,
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const paramsSchema = new Schema({
   name: commonStringConstraints,
   businessId: {
@@ -35,6 +47,7 @@ const paramsSchema = new Schema({
     default: "1stTo31st",
   },
   description: commonStringConstraints,
+  subOrdinateGroups: [subOrdinateGroups],
   createdAt: {
     type: Date,
     default: getCurrentIndianTime(),

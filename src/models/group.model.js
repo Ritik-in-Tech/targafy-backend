@@ -55,6 +55,7 @@ const groupSchema = new Schema({
   parentGroupId: {
     type: Schema.Types.ObjectId,
   },
+  parameterAssigned: commonStringConstraints,
 });
 
 const Group = model("Groups", groupSchema);

@@ -12,6 +12,7 @@ const groupsJoined = new Schema(
     groupId: {
       type: Schema.Types.ObjectId,
     },
+    parameterAssigned: commonStringConstraints,
   },
   {
     _id: false,

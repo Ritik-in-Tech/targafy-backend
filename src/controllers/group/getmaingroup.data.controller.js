@@ -1,12 +1,14 @@
 import { DataAdd } from "../../models/dataadd.model.js";
 import { Group } from "../../models/group.model.js";
+import { Params } from "../../models/params.model.js";
 import { Target } from "../../models/target.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
 const getMainGroupData = asyncHandler(async (req, res) => {
   try {
-    const groupId = req.params.groupId;
+    const paramsId = req.params.paramId;
+    // const groupId = req.params.groupId;
     const businessId = req.params.businessId;
     const loggedInUser = req.user._id;
     if (!loggedInUser) {
@@ -14,21 +16,21 @@ const getMainGroupData = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Invalid token please log in again"));
     }
-    if (!groupId || !businessId) {
+    if (!paramsId || !businessId) {
       return res
         .status(400)
         .json(
-          new ApiResponse(400, {}, "Group ID and business Id is not provided")
+          new ApiResponse(400, {}, "paramsId and business Id is not provided")
         );
     }
-    const groupDetails = await Group.findById(groupId);
-    if (!groupDetails) {
+    const paramDetails = await Params.findById(paramsId);
+    if (!paramDetails) {
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "Invalid group Id provided"));
+        .json(new ApiResponse(400, {}, "Invalid param Id is provided"));
     }
     const target = await Target.findOne({
-      paramName: groupDetails.groupName,
+      paramName: paramDetails.name,
       businessId: businessId,
     });
     if (!target) {
@@ -43,7 +45,7 @@ const getMainGroupData = asyncHandler(async (req, res) => {
         );
     }
 
-    const numUsersAssigned = groupDetails.userAdded.length;
+    const numUsersAssigned = paramDetails.usersAssigned.length;
     console.log(numUsersAssigned);
     let targetValue = parseInt(target.targetValue);
     const totalTargetValue = targetValue * numUsersAssigned;
@@ -51,12 +53,12 @@ const getMainGroupData = asyncHandler(async (req, res) => {
     const dailyTargetValue = totalTargetValue / 30;
     console.log(dailyTargetValue);
 
-    const userIds = groupDetails.userAdded.map((user) => user.userId);
+    const userIds = paramDetails.usersAssigned.map((user) => user.userId);
 
     const userDataList = await DataAdd.find(
       {
         businessId: businessId,
-        parameterName: groupDetails.groupName,
+        parameterName: paramDetails.name,
         userId: { $in: userIds },
       },
       "data createdDate"
@@ -109,7 +111,7 @@ const getMainGroupData = asyncHandler(async (req, res) => {
         new ApiResponse(
           200,
           response,
-          `${groupDetails.groupName} data fetched successfully`
+          `${paramDetails.name} data fetched successfully`
         )
       );
   } catch (error) {
