@@ -25,7 +25,7 @@ const getAllGroups = asyncHandler(async (req, res) => {
     // Fetch groups that belong to the business and do not have a parentGroupId
     const groups = await Group.find(
       { businessId: businessId, parentGroupId: { $exists: false } },
-      { groupName: 1, logo: 1, userAdded: 1, _id: 1 }
+      { groupName: 1, logo: 1, userAdded: 1, _id: 1, parameterAssigned: 1 }
     );
 
     // Check if any groups were found
@@ -47,6 +47,7 @@ const getAllGroups = asyncHandler(async (req, res) => {
       groupName: group.groupName,
       logo: group.logo,
       userAddedLength: group.userAdded.length,
+      assignedParameter: group.parameterAssigned,
     }));
 
     // Send the response
@@ -71,14 +72,15 @@ const getGroupId = asyncHandler(async (req, res) => {
   try {
     const businessId = req.params.businessId;
     const groupName = req.params.groupName;
-    if (!businessId || !groupName) {
+    const parameterAssigned = req.params.parameterAssigned;
+    if (!businessId || !groupName || !parameterAssigned) {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "Please provide businessId and group name in params"
+            "Please provide businessId ,group name and parameterAssigned in params"
           )
         );
     }
@@ -86,6 +88,7 @@ const getGroupId = asyncHandler(async (req, res) => {
     const group = await Group.findOne({
       businessId: businessId,
       groupName: groupName,
+      parameterAssigned: parameterAssigned,
     });
 
     if (!group) {
@@ -109,4 +112,48 @@ const getGroupId = asyncHandler(async (req, res) => {
   }
 });
 
-export { getAllGroups, getGroupId };
+const getGroupDetails = asyncHandler(async (req, res) => {
+  try {
+    const groupId = req.params.groupId;
+    // const businessId = req.params.businessId;
+    // const groupName = req.params.groupName;
+    // const parameterAssigned = req.params.parameterAssigned;
+    // if (!businessId || !groupName || !parameterAssigned) {
+    //   return res
+    //     .status(400)
+    //     .json(
+    //       new ApiResponse(
+    //         400,
+    //         {},
+    //         "Please provide businessId ,group name and parameterAssigned in params"
+    //       )
+    //     );
+    // }
+
+    const groupDetails = await Group.findById(groupId);
+
+    if (!groupDetails) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Group not found for the provided deatils")
+        );
+    }
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { groupDetails },
+          "Group details fetched successfully!"
+        )
+      );
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, { error }, "Internal server error"));
+  }
+});
+
+export { getAllGroups, getGroupId, getGroupDetails };

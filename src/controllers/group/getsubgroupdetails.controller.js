@@ -5,58 +5,65 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 
 const getSubGroupDetails = asyncHandler(async (req, res) => {
   try {
-    const businessId = req.params.businessId;
     const parentGroupId = req.params.parentId;
-    if (!businessId || !parentGroupId) {
+    if (!parentGroupId) {
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "Params all field not provided"));
+        .json(new ApiResponse(400, {}, "Parent group ID not provided"));
     }
-    const business = await Business.findById(businessId);
-    if (!business) {
+
+    // Fetch the parent group by its ID
+    const parentGroup = await Group.findById(parentGroupId);
+    if (!parentGroup) {
       return res
         .status(400)
+        .json(new ApiResponse(400, {}, "Parent group does not exist"));
+    }
+
+    // Extract subordinate group IDs from the parent group's data
+    const subordinateGroupIds = parentGroup.subordinateGroups.map(
+      (group) => group.subordinateGroupId
+    );
+
+    // console.log(subordinateGroupIds);
+
+    if (subordinateGroupIds.length === 0) {
+      return res
+        .status(200)
         .json(
-          new ApiResponse(
-            400,
-            {},
-            "Business does not exist for the provided businessId"
-          )
-        );
-    }
-    const userId = req.user._id;
-    if (!userId) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Invalid token please log in again"));
-    }
-    const parentGroupExistence = await Group.findById(parentGroupId);
-    if (!parentGroupExistence) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            {},
-            "Parent Group does not exist for the provided details"
-          )
+          new ApiResponse(200, { subGroups: [] }, "No subordinate groups found")
         );
     }
 
-    const subGroups = await Group.find({
-      businessId: businessId,
-      parentGroupId: parentGroupId,
+    // Fetch details for each subordinate group by their IDs
+    const subordinateGroups = await Group.find({
+      _id: { $in: subordinateGroupIds },
     });
+
+    // Map to get the required fields from each subordinate group
+    const subGroupsDetails = subordinateGroups.map((subGroup) => ({
+      groupId: subGroup._id,
+      logo: subGroup.logo,
+      groupName: subGroup.groupName,
+      userAddedLength: subGroup.userAdded.length,
+      parameterAssigned: subGroup.parameterAssigned,
+    }));
+
+    // Return the filtered subordinate group details
     return res
       .status(200)
       .json(
-        new ApiResponse(200, { subGroups }, "sub-groups fetched successfully")
+        new ApiResponse(
+          200,
+          { subGroups: subGroupsDetails },
+          "Sub-groups fetched successfully"
+        )
       );
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res
       .status(500)
-      .json(new ApiResponse(500, { error }, "Internal Server error"));
+      .json(new ApiResponse(500, { error }, "Internal Server Error"));
   }
 });
 

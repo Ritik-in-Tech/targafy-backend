@@ -76,13 +76,14 @@ const createGroup = asyncHandler(async (req, res) => {
         );
     }
 
-    const { groupName, logo, usersIds } = req.body;
+    const { groupName, logo, usersIds, parameterAssigned } = req.body;
 
     if (
       !groupName ||
       !logo ||
       !Array.isArray(usersIds) ||
-      usersIds.length === 0
+      usersIds.length === 0 ||
+      !parameterAssigned
     ) {
       await session.abortTransaction();
       session.endSession();
@@ -91,8 +92,8 @@ const createGroup = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Please provide all the fields"));
     }
 
-    const existingParam = await Params.findOne({ name: groupName, businessId });
-    if (!existingParam) {
+    const param = await Params.findOne({ name: parameterAssigned, businessId });
+    if (!param) {
       await session.abortTransaction();
       session.endSession();
       return res
@@ -109,6 +110,7 @@ const createGroup = asyncHandler(async (req, res) => {
     const existingGroup = await Group.findOne({
       groupName: groupName,
       businessId: businessId,
+      parameterAssigned: parameterAssigned,
     });
 
     if (existingGroup) {
@@ -120,7 +122,7 @@ const createGroup = asyncHandler(async (req, res) => {
           new ApiResponse(
             400,
             {},
-            "Already there is a group with the same name and in the same business"
+            "Already there is a group with the same name and in the same business with the same paramter assigned"
           )
         );
     }
@@ -180,14 +182,30 @@ const createGroup = asyncHandler(async (req, res) => {
       logo,
       businessId: business._id,
       userAdded,
+      parameterAssigned,
     });
 
     await group.save({ session });
 
-    business.groups.push({ name: groupName, groupId: group._id });
+    business.groups.push({
+      name: groupName,
+      groupId: group._id,
+      parameterAssigned: parameterAssigned,
+    });
     await business.save({ session });
 
-    const groupData = { groupName: groupName, groupId: group._id };
+    param.subOrdinateGroups.push({
+      groupName: groupName,
+      groupId: group._id,
+    });
+
+    await param.save({ session });
+
+    const groupData = {
+      groupName: groupName,
+      groupId: group._id,
+      parameterAssigned: parameterAssigned,
+    };
 
     // Update businessusers documents for each user in userAdded array
     for (const { userId } of userAdded) {
@@ -331,6 +349,7 @@ const createSubGroup = asyncHandler(async (req, res) => {
       const subGroup = new Group({
         groupName: subgroupName,
         logo,
+        parameterAssigned: parentGroup.parameterAssigned,
         businessId: businessId,
         parentGroupId: parentGroupId,
         userAdded: usersIds.map((userId) => ({
@@ -357,6 +376,7 @@ const createSubGroup = asyncHandler(async (req, res) => {
               groupsJoined: {
                 groupName: subgroupName,
                 groupId: subGroup._id,
+                parameterAssigned: parentGroup.parameterAssigned,
               },
             },
           },

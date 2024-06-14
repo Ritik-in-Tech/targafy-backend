@@ -7,87 +7,79 @@ import { DataAdd } from "../../models/dataadd.model.js";
 
 const getSubGroupDataLevel = asyncHandler(async (req, res) => {
   try {
-    const parentGroupId = req.params.parentGroupId;
-    const businessId = req.params.businessId;
+    const groupId = req.params.groupId;
     const loggedInUser = req.user._id;
     if (!loggedInUser) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Invalid token please log in again"));
     }
-    if (!parentGroupId || !businessId) {
+    if (!groupId) {
       return res
         .status(400)
         .json(
-          new ApiResponse(
-            400,
-            {},
-            "ParentGroup Id and business Id is not provided"
-          )
+          new ApiResponse(400, {}, "groupId and business Id is not provided")
         );
     }
-    const leveluptoDataWants = req.body.groupName;
-    if (!leveluptoDataWants) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "group name not given"));
-    }
+    // const leveluptoDataWants = req.body.groupName;
+    // if (!leveluptoDataWants) {
+    //   return res
+    //     .status(400)
+    //     .json(new ApiResponse(400, {}, "group name not given"));
+    // }
 
-    const parentGroupDetails = await Group.findById(parentGroupId);
-    if (!parentGroupDetails) {
+    const groupDetails = await Group.findById(groupId);
+    if (!groupDetails) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Invalid group Id provided"));
     }
 
+    // console.log(groupDetails.parameterAssigned);
+    // console.log(groupDetails.businessId);
+
     const target = await Target.findOne({
-      paramName: parentGroupDetails.groupName,
-      businessId: businessId,
+      paramName: groupDetails.parameterAssigned,
+      businessId: groupDetails.businessId,
     });
     if (!target) {
       return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            {},
-            "Target is not set for this business and group name"
-          )
-        );
+        .status(200)
+        .json(new ApiResponse(200, { data: [] }, "No data found"));
     }
 
-    const levelDetails = await Group.findOne({
-      businessId: businessId,
-      groupName: leveluptoDataWants,
-      parentGroupId: parentGroupId,
-    });
+    // const levelDetails = await Group.findOne({
+    //   businessId: businessId,
+    //   groupName: leveluptoDataWants,
+    //   parentGroupId: parentGroupId,
+    // });
 
-    console.log(levelDetails);
+    // console.log(levelDetails);
 
-    if (!levelDetails) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            {},
-            "Level for the provided group name in this business does not exist!"
-          )
-        );
-    }
+    // if (!levelDetails) {
+    //   return res
+    //     .status(400)
+    //     .json(
+    //       new ApiResponse(
+    //         400,
+    //         {},
+    //         "Level for the provided group name in this business does not exist!"
+    //       )
+    //     );
+    // }
 
-    const numUsersAssigned = levelDetails.userAdded.length;
+    const numUsersAssigned = groupDetails.userAdded.length;
     console.log(numUsersAssigned);
     let targetValue = parseInt(target.targetValue);
     const totalTargetValue = targetValue * numUsersAssigned;
     const dailyTargetValue = totalTargetValue / 30;
 
-    const userIds = levelDetails.userAdded.map((user) => user.userId);
+    const userIds = groupDetails.userAdded.map((user) => user.userId);
 
     const userDataList = await DataAdd.find(
       {
-        businessId: businessId,
-        parameterName: parentGroupDetails.groupName,
+        businessId: groupDetails.businessId,
+        parameterName: groupDetails.parameterAssigned,
         userId: { $in: userIds },
       },
       "data createdDate"
@@ -143,7 +135,7 @@ const getSubGroupDataLevel = asyncHandler(async (req, res) => {
         new ApiResponse(
           200,
           response,
-          `${leveluptoDataWants} data fetched successfully`
+          `${groupDetails.groupName} data fetched successfully`
         )
       );
   } catch (error) {

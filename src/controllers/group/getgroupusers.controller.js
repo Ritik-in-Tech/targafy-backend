@@ -48,7 +48,7 @@ const getGroupUsers = asyncHandler(async (req, res) => {
 
     const formattedUsers = users.map((user) => ({
       _id: user._id,
-      avatar: user.avatar,
+      avatar: user.avatar || "",
     }));
 
     const formattedBusinessUsers = businessusers.map((user) => ({
