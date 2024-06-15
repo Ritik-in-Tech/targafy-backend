@@ -11,7 +11,6 @@ const groupSchema = new Schema(
   {
     name: commonStringConstraints,
     groupId: { type: Schema.Types.ObjectId },
-    parameterAssigned: commonStringConstraints,
   },
   {
     _id: false,

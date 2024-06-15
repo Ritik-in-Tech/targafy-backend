@@ -8,7 +8,7 @@ import { Params } from "../../models/params.model.js";
 import mongoose from "mongoose";
 
 // Create a new group
-const createGroup = asyncHandler(async (req, res) => {
+const createHeadOffice = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -76,15 +76,9 @@ const createGroup = asyncHandler(async (req, res) => {
         );
     }
 
-    const { groupName, logo, usersIds, parameterAssigned } = req.body;
+    const { headOfficeName, logo, usersIds } = req.body;
 
-    if (
-      !groupName ||
-      !logo ||
-      !Array.isArray(usersIds) ||
-      usersIds.length === 0 ||
-      !parameterAssigned
-    ) {
+    if (!headOfficeName || !Array.isArray(usersIds) || usersIds.length === 0) {
       await session.abortTransaction();
       session.endSession();
       return res
@@ -92,28 +86,27 @@ const createGroup = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Please provide all the fields"));
     }
 
-    const param = await Params.findOne({ name: parameterAssigned, businessId });
-    if (!param) {
-      await session.abortTransaction();
-      session.endSession();
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            {},
-            "The provided groupName does not exist in the params table"
-          )
-        );
-    }
+    // const param = await Params.findOne({ name: parameterAssigned, businessId });
+    // if (!param) {
+    //   await session.abortTransaction();
+    //   session.endSession();
+    //   return res
+    //     .status(400)
+    //     .json(
+    //       new ApiResponse(
+    //         400,
+    //         {},
+    //         "The provided groupName does not exist in the params table"
+    //       )
+    //     );
+    // }
 
-    const existingGroup = await Group.findOne({
-      groupName: groupName,
+    const existingHeadOffice = await Group.findOne({
+      officeName: headOfficeName,
       businessId: businessId,
-      parameterAssigned: parameterAssigned,
     });
 
-    if (existingGroup) {
+    if (existingHeadOffice) {
       await session.abortTransaction();
       session.endSession();
       return res
@@ -122,7 +115,7 @@ const createGroup = asyncHandler(async (req, res) => {
           new ApiResponse(
             400,
             {},
-            "Already there is a group with the same name and in the same business with the same paramter assigned"
+            "Already there is a Head Office with the same name and in the same business"
           )
         );
     }
@@ -178,33 +171,32 @@ const createGroup = asyncHandler(async (req, res) => {
     }
 
     const group = new Group({
-      groupName,
-      logo,
+      officeName: headOfficeName,
+      logo: logo || "",
       businessId: business._id,
       userAdded,
-      parameterAssigned,
     });
 
     await group.save({ session });
 
     business.groups.push({
-      name: groupName,
+      name: headOfficeName,
       groupId: group._id,
-      parameterAssigned: parameterAssigned,
+      // parameterAssigned: parameterAssigned,
     });
     await business.save({ session });
 
-    param.subOrdinateGroups.push({
-      groupName: groupName,
-      groupId: group._id,
-    });
+    // param.subOrdinateGroups.push({
+    //   groupName: groupName,
+    //   groupId: group._id,
+    // });
 
-    await param.save({ session });
+    // await param.save({ session });
 
     const groupData = {
-      groupName: groupName,
+      groupName: headOfficeName,
       groupId: group._id,
-      parameterAssigned: parameterAssigned,
+      // parameterAssigned: parameterAssigned,
     };
 
     // Update businessusers documents for each user in userAdded array
@@ -247,7 +239,7 @@ const createGroup = asyncHandler(async (req, res) => {
 });
 
 // create subgroup
-const createSubGroup = asyncHandler(async (req, res) => {
+const createSubOffices = asyncHandler(async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
     if (!loggedInUserId) {
@@ -295,9 +287,9 @@ const createSubGroup = asyncHandler(async (req, res) => {
         );
     }
 
-    const { subgroupName, logo, usersIds } = req.body;
+    const { subOfficeName, logo, usersIds } = req.body;
     if (
-      !subgroupName ||
+      !subOfficeName ||
       !usersIds ||
       !Array.isArray(usersIds) ||
       usersIds.length === 0
@@ -307,20 +299,20 @@ const createSubGroup = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Please provide all the fields"));
     }
 
-    const existingSubGroups = await Group.findOne({
-      groupName: subgroupName,
+    const existingSubOffice = await Group.findOne({
+      officeName: subOfficeName,
       businessId: businessId,
       parentGroupId: parentGroupId,
     });
 
-    if (existingSubGroups) {
+    if (existingSubOffice) {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "There is already subgroup name with the same name in the business"
+            "There is already suboffice name with the same name in the business"
           )
         );
     }
@@ -347,9 +339,8 @@ const createSubGroup = asyncHandler(async (req, res) => {
 
     try {
       const subGroup = new Group({
-        groupName: subgroupName,
-        logo,
-        parameterAssigned: parentGroup.parameterAssigned,
+        officeName: subOfficeName,
+        logo: logo || "",
         businessId: businessId,
         parentGroupId: parentGroupId,
         userAdded: usersIds.map((userId) => ({
@@ -363,7 +354,7 @@ const createSubGroup = asyncHandler(async (req, res) => {
       await subGroup.save({ session });
 
       parentGroup.subordinateGroups.push({
-        subordinategroupName: subgroupName,
+        subordinategroupName: subOfficeName,
         subordinateGroupId: subGroup._id,
       });
       await parentGroup.save({ session });
@@ -374,9 +365,8 @@ const createSubGroup = asyncHandler(async (req, res) => {
           {
             $push: {
               groupsJoined: {
-                groupName: subgroupName,
+                groupName: subOfficeName,
                 groupId: subGroup._id,
-                parameterAssigned: parentGroup.parameterAssigned,
               },
             },
           },
@@ -405,4 +395,4 @@ const createSubGroup = asyncHandler(async (req, res) => {
   }
 });
 
-export { createGroup, createSubGroup };
+export { createHeadOffice, createSubOffices };

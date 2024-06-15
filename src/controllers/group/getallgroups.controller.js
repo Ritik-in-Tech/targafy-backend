@@ -3,7 +3,7 @@ import { Group } from "../../models/group.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
-const getAllGroups = asyncHandler(async (req, res) => {
+const getAllHeadOffices = asyncHandler(async (req, res) => {
   try {
     const businessId = req.params.businessId;
 
@@ -25,7 +25,7 @@ const getAllGroups = asyncHandler(async (req, res) => {
     // Fetch groups that belong to the business and do not have a parentGroupId
     const groups = await Group.find(
       { businessId: businessId, parentGroupId: { $exists: false } },
-      { groupName: 1, logo: 1, userAdded: 1, _id: 1, parameterAssigned: 1 }
+      { officeName: 1, logo: 1, userAdded: 1, _id: 1 }
     );
 
     // Check if any groups were found
@@ -36,7 +36,7 @@ const getAllGroups = asyncHandler(async (req, res) => {
           new ApiResponse(
             200,
             { groups: [] },
-            "No main groups exist for this business"
+            "No head group exist for this business"
           )
         );
     }
@@ -44,10 +44,9 @@ const getAllGroups = asyncHandler(async (req, res) => {
     // Format the groups as needed
     const formattedGroups = groups.map((group) => ({
       _id: group._id,
-      groupName: group.groupName,
+      headOfficeName: group.officeName,
       logo: group.logo,
       userAddedLength: group.userAdded.length,
-      assignedParameter: group.parameterAssigned,
     }));
 
     // Send the response
@@ -56,8 +55,8 @@ const getAllGroups = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           200,
-          { groups: formattedGroups },
-          "Groups fetched successfully!"
+          { headOffice: formattedGroups },
+          "Head office fetched successfully!"
         )
       );
   } catch (error) {
@@ -156,4 +155,4 @@ const getGroupDetails = asyncHandler(async (req, res) => {
   }
 });
 
-export { getAllGroups, getGroupId, getGroupDetails };
+export { getAllHeadOffices, getGroupId, getGroupDetails };

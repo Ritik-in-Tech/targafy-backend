@@ -49,7 +49,6 @@ const level1GroupName = asyncHandler(async (req, res) => {
     const formattedParams = paramDetails.map((param) => ({
       _id: param._id,
       name: param.name,
-      parameterAssigned: param.name,
     }));
 
     return res
@@ -71,44 +70,27 @@ const level1GroupName = asyncHandler(async (req, res) => {
 
 const level2GroupName = asyncHandler(async (req, res) => {
   try {
-    const groupId = req.params.groupId;
+    const businessId = req.params.businessId;
+    const level2 = await Group.find(
+      { businessId: businessId, parentGroupId: { $exists: false } },
+      { officeName: 1, _id: 1 } // Only fetch officeName and _id fields
+    );
 
-    const level2 = await Params.findById(groupId);
-
-    if (!level2) {
+    if (!level2 || level2.length === 0) {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "level 2 not found for the provided group details"
+            "Level 2 groups not found for the provided business details"
           )
         );
     }
 
-    if (level2.subOrdinateGroups.length === 0) {
-      const formattedUsers = level2.usersAssigned.map((user) => ({
-        name: user.name,
-        userId: user.userId,
-        parameterAssigned: level2.name,
-      }));
-
-      return res
-        .status(200)
-        .json(
-          new ApiResponse(
-            200,
-            { users: formattedUsers },
-            "Users fetched successfully!"
-          )
-        );
-    }
-
-    const levelDetails = level2.subOrdinateGroups.map((group) => ({
-      _id: group.groupId,
-      groupName: group.groupName,
-      parameterAssigned: level2.name,
+    const levelDetails = level2.map((group) => ({
+      _id: group._id,
+      officeName: group.officeName,
     }));
 
     return res
@@ -117,7 +99,7 @@ const level2GroupName = asyncHandler(async (req, res) => {
         new ApiResponse(
           200,
           { level2: levelDetails },
-          "Groups fetched successfully!"
+          "Level 2 groups fetched successfully!"
         )
       );
   } catch (error) {
@@ -131,34 +113,6 @@ const level2GroupName = asyncHandler(async (req, res) => {
 const sublevelGroupName = asyncHandler(async (req, res) => {
   try {
     const aboveLevelGroupId = req.params.aboveLevelGroupId;
-    // const businessId = req.params.businessId;
-    // const aboveLevelGroupName = req.params.aboveLevelGroupName;
-    // const parameterAssigned = req.body.parameterAssigned;
-    // if (!businessId || !aboveLevelGroupName || !parameterAssigned) {
-    //   return res
-    //     .status(400)
-    //     .json(new ApiResponse(400, {}, "Params all field not provided"));
-    // }
-    // console.log(businessId);
-    // console.log(aboveLevelGroupName);
-    // const business = await Business.findById(businessId);
-    // if (!business) {
-    //   return res
-    //     .status(400)
-    //     .json(
-    //       new ApiResponse(
-    //         400,
-    //         {},
-    //         "Business does not exist for the provided businessId"
-    //       )
-    //     );
-    // }
-    // const userId = req.user._id;
-    // if (!userId) {
-    //   return res
-    //     .status(400)
-    //     .json(new ApiResponse(400, {}, "Invalid token please log in again"));
-    // }
     const groupexistence = await Group.findById(aboveLevelGroupId);
     if (!groupexistence) {
       return res
@@ -176,7 +130,6 @@ const sublevelGroupName = asyncHandler(async (req, res) => {
       const formattedUsers = groupexistence.userAdded.map((user) => ({
         name: user.name,
         userId: user.userId,
-        parameterAssigned: groupexistence.parameterAssigned,
       }));
 
       return res
@@ -191,8 +144,7 @@ const sublevelGroupName = asyncHandler(async (req, res) => {
     }
     const formattedGroups = groupexistence.subordinateGroups.map((group) => ({
       _id: group.subordinateGroupId,
-      groupName: group.subordinategroupName,
-      parameterAssigned: groupexistence.parameterAssigned,
+      officeName: group.subordinategroupName,
     }));
 
     return res
@@ -200,7 +152,7 @@ const sublevelGroupName = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           200,
-          { sublevel: formattedGroups },
+          { suboffices: formattedGroups },
           "Groups fetched successfully!"
         )
       );

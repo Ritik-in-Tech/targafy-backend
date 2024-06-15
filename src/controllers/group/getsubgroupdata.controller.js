@@ -8,26 +8,20 @@ import { DataAdd } from "../../models/dataadd.model.js";
 const getSubGroupDataLevel = asyncHandler(async (req, res) => {
   try {
     const groupId = req.params.groupId;
+    const paramName = req.body.paramName;
     const loggedInUser = req.user._id;
     if (!loggedInUser) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Invalid token please log in again"));
     }
-    if (!groupId) {
+    if (!groupId || !paramName) {
       return res
         .status(400)
         .json(
-          new ApiResponse(400, {}, "groupId and business Id is not provided")
+          new ApiResponse(400, {}, "groupId and param name is not provided")
         );
     }
-    // const leveluptoDataWants = req.body.groupName;
-    // if (!leveluptoDataWants) {
-    //   return res
-    //     .status(400)
-    //     .json(new ApiResponse(400, {}, "group name not given"));
-    // }
-
     const groupDetails = await Group.findById(groupId);
     if (!groupDetails) {
       return res
@@ -35,11 +29,8 @@ const getSubGroupDataLevel = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Invalid group Id provided"));
     }
 
-    // console.log(groupDetails.parameterAssigned);
-    // console.log(groupDetails.businessId);
-
     const target = await Target.findOne({
-      paramName: groupDetails.parameterAssigned,
+      paramName: paramName,
       businessId: groupDetails.businessId,
     });
     if (!target) {
@@ -47,26 +38,6 @@ const getSubGroupDataLevel = asyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, { data: [] }, "No data found"));
     }
-
-    // const levelDetails = await Group.findOne({
-    //   businessId: businessId,
-    //   groupName: leveluptoDataWants,
-    //   parentGroupId: parentGroupId,
-    // });
-
-    // console.log(levelDetails);
-
-    // if (!levelDetails) {
-    //   return res
-    //     .status(400)
-    //     .json(
-    //       new ApiResponse(
-    //         400,
-    //         {},
-    //         "Level for the provided group name in this business does not exist!"
-    //       )
-    //     );
-    // }
 
     const numUsersAssigned = groupDetails.userAdded.length;
     console.log(numUsersAssigned);
@@ -79,7 +50,7 @@ const getSubGroupDataLevel = asyncHandler(async (req, res) => {
     const userDataList = await DataAdd.find(
       {
         businessId: groupDetails.businessId,
-        parameterName: groupDetails.parameterAssigned,
+        parameterName: paramName,
         userId: { $in: userIds },
       },
       "data createdDate"
