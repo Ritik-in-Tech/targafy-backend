@@ -35,7 +35,7 @@ router.route("/create-subgroups/:parentGroupId").post(createSubOffices); //done
 
 router.route("/get-group-details/:groupId").get(getGroupDetails); // done
 
-router.route("/get-level-data/:groupId").get(getSubGroupDataLevel); // done
+router.route("/get-level-data/:groupId/:paramName").get(getSubGroupDataLevel); // done
 
 router.route("/get-main-group-data/:businessId/:paramId").get(getMainGroupData); // done
 

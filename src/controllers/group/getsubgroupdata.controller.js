@@ -8,7 +8,7 @@ import { DataAdd } from "../../models/dataadd.model.js";
 const getSubGroupDataLevel = asyncHandler(async (req, res) => {
   try {
     const groupId = req.params.groupId;
-    const paramName = req.body.paramName;
+    const paramName = req.params.paramName;
     const loggedInUser = req.user._id;
     if (!loggedInUser) {
       return res
