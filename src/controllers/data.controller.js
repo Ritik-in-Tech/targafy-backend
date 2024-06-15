@@ -247,8 +247,8 @@ const addData = asyncHandler(async (req, res) => {
 const getParamDataSpecificUser = asyncHandler(async (req, res) => {
   try {
     const businessId = req.params.businessId;
-    const paramName = req.body.paramName;
-    const userId = req.body.userId;
+    const paramName = req.params.paramName;
+    const userId = req.params.userId;
     if (!businessId) {
       return res
         .status(400)
