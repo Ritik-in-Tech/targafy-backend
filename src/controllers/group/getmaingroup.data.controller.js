@@ -1,5 +1,4 @@
 import { DataAdd } from "../../models/dataadd.model.js";
-import { Group } from "../../models/group.model.js";
 import { Params } from "../../models/params.model.js";
 import { Target } from "../../models/target.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
@@ -8,7 +7,6 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 const getMainGroupData = asyncHandler(async (req, res) => {
   try {
     const paramsId = req.params.paramId;
-    // const groupId = req.params.groupId;
     const businessId = req.params.businessId;
     const loggedInUser = req.user._id;
     if (!loggedInUser) {

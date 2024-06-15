@@ -29,7 +29,7 @@ const groupSchema = new Schema({
     type: Schema.Types.ObjectId,
     required: [true, "Please enter business Id, this group belogs to"],
   },
-  groupName: {
+  officeName: {
     type: String,
     trim: true,
     default: "",
@@ -55,7 +55,7 @@ const groupSchema = new Schema({
   parentGroupId: {
     type: Schema.Types.ObjectId,
   },
-  parameterAssigned: commonStringConstraints,
+  // parameterAssigned: commonStringConstraints,
 });
 
 const Group = model("Groups", groupSchema);

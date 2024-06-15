@@ -3,7 +3,7 @@ import { Group } from "../../models/group.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
-const getSubGroupDetails = asyncHandler(async (req, res) => {
+const getSubOfficeDetails = asyncHandler(async (req, res) => {
   try {
     const parentGroupId = req.params.parentId;
     if (!parentGroupId) {
@@ -44,9 +44,8 @@ const getSubGroupDetails = asyncHandler(async (req, res) => {
     const subGroupsDetails = subordinateGroups.map((subGroup) => ({
       groupId: subGroup._id,
       logo: subGroup.logo,
-      groupName: subGroup.groupName,
+      subOfficeName: subGroup.officeName,
       userAddedLength: subGroup.userAdded.length,
-      parameterAssigned: subGroup.parameterAssigned,
     }));
 
     // Return the filtered subordinate group details
@@ -55,8 +54,8 @@ const getSubGroupDetails = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           200,
-          { subGroups: subGroupsDetails },
-          "Sub-groups fetched successfully"
+          { subOffices: subGroupsDetails },
+          "Sub-offices fetched successfully"
         )
       );
   } catch (error) {
@@ -67,4 +66,4 @@ const getSubGroupDetails = asyncHandler(async (req, res) => {
   }
 });
 
-export { getSubGroupDetails };
+export { getSubOfficeDetails };

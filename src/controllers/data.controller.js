@@ -246,23 +246,23 @@ const addData = asyncHandler(async (req, res) => {
 
 const getParamDataSpecificUser = asyncHandler(async (req, res) => {
   try {
-    const userId = req.params.userId;
-    if (!userId) {
+    const businessId = req.params.businessId;
+    const paramName = req.body.paramName;
+    const userId = req.body.userId;
+    if (!businessId) {
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "Invalid token, please log in again"));
+        .json(new ApiResponse(400, {}, "Business ID is not provided"));
     }
 
-    const businessId = req.params.businessId;
-    const paramName = req.params.paramName;
-    if (!businessId || !paramName) {
+    if (!paramName || !userId) {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "Business ID and parameter name are not provided"
+            "Please provide param name and user id in body"
           )
         );
     }
@@ -289,14 +289,8 @@ const getParamDataSpecificUser = asyncHandler(async (req, res) => {
     });
     if (!target) {
       return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            {},
-            "Target is not set for this business and parameter"
-          )
-        );
+        .status(200)
+        .json(new ApiResponse(200, { data: [] }, "Data not found"));
     }
 
     let targetValue = parseInt(target.targetValue);

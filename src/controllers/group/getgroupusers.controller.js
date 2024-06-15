@@ -4,7 +4,7 @@ import { User } from "../../models/user.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
-const getGroupUsers = asyncHandler(async (req, res) => {
+const getOfficeUsers = asyncHandler(async (req, res) => {
   try {
     const groupId = req.params.groupId;
     const businessId = req.params.businessId;
@@ -74,4 +74,4 @@ const getGroupUsers = asyncHandler(async (req, res) => {
   }
 });
 
-export { getGroupUsers };
+export { getOfficeUsers };
