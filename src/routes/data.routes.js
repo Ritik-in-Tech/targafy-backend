@@ -15,7 +15,9 @@ router.use(verifyJWT);
 router.route("/add-data/:businessId/:parameterName").post(addData);
 
 // router to get user specific data
-router.route("/get-user-data/:businessId").get(getParamDataSpecificUser);
+router
+  .route("/get-user-data/:businessId/:userId/:paramName")
+  .get(getParamDataSpecificUser);
 
 router
   .route("/get-daily-target/:businessId/:targetName")
