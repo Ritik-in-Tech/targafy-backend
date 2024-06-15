@@ -71,7 +71,6 @@ const getGroupId = asyncHandler(async (req, res) => {
   try {
     const businessId = req.params.businessId;
     const groupName = req.params.groupName;
-    const parameterAssigned = req.params.parameterAssigned;
     if (!businessId || !groupName || !parameterAssigned) {
       return res
         .status(400)
