@@ -9,8 +9,8 @@ export async function sendNotification(userId, body) {
       return;
     }
 
-    const userInfo = await User.findOne({ _id: userId });
-    console.log(userInfo);
+    // const userInfo = await User.findOne({ _id: userId });
+    // console.log(userInfo);
 
     if (!userInfo.fcmToken) {
       console.log("User have not fcm token!!");
