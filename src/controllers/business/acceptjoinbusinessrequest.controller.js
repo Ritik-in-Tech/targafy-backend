@@ -10,6 +10,7 @@ import { Acceptedrequests } from "../../models/acceptedRequests.model.js";
 // Response and Error handling
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { emitNewNotificationAndAddBusinessEvent } from "../../sockets/notification_socket.js";
 
 const acceptUserJoinRequest = asyncHandler(async (req, res) => {
   const { role, userId, parentId } = req.body;
@@ -178,20 +179,20 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
 
       await Acceptedrequests.create(acceptedRequest);
 
-      // const emitData = {
-      //   content: `Congratulation, you are added in ${business.name} successfully🥳🥳`,
-      //   notificationCategory: "business",
-      //   createdDate: getCurrentUTCTime(),
-      //   businessName: business.name,
-      //   businessId: businessId,
-      // };
+      const emitData = {
+        content: `Congratulation, you are added in ${business.name} successfully🥳🥳`,
+        notificationCategory: "business",
+        createdDate: getCurrentUTCTime(),
+        businessName: business.name,
+        businessId: businessId,
+      };
 
-      // emitNewNotificationAndAddBusinessEvent(
-      //   userId,
-      //   businessId,
-      //   emitData,
-      //   newBusiness
-      // );
+      emitNewNotificationAndAddBusinessEvent(
+        userId,
+        businessId,
+        emitData,
+        newBusiness
+      );
 
       await session.commitTransaction();
       session.endSession();
