@@ -9,7 +9,7 @@ export async function sendNotification(userId, body) {
       return;
     }
 
-    // const userInfo = await User.findOne({ _id: userId });
+    const userInfo = await User.findOne({ _id: userId });
     // console.log(userInfo);
 
     if (!userInfo.fcmToken) {
