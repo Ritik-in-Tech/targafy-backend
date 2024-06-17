@@ -55,7 +55,7 @@ const createBusiness = asyncHandler(async (req, res) => {
           name: buisnessName,
           industryType: industryType,
           city: city,
-          logo: logo,
+          logo: logo || "",
           country: country,
         },
       ],
