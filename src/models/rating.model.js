@@ -1,5 +1,7 @@
 import { Schema, model } from "mongoose";
 import { getCurrentIndianTime } from "../utils/helpers/time.helper.js";
+// import { trim } from "lodash";
+import { commonStringConstraints } from "../utils/helpers/schema.helper.js";
 
 const userRatingSchema = new Schema({
   // In business rating belongs to which user
@@ -25,10 +27,11 @@ const userRatingSchema = new Schema({
     type: String,
     required: true,
   },
+  givenTo: commonStringConstraints,
   givenBy: {
     name: {
       type: String,
-      trim: true,
+      // trim: true,
       default: "Unknown",
     },
     id: {

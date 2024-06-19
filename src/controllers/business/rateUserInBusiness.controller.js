@@ -9,6 +9,7 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 
 import { getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
 import { sendNotification } from "../notification.controller.js";
+import { User } from "../../models/user.model.js";
 
 const rateUserInBusiness = asyncHandler(async (req, res, next) => {
   try {
@@ -19,6 +20,13 @@ const rateUserInBusiness = asyncHandler(async (req, res, next) => {
     let isFeedback = req.query.isFeedback;
     const { rating, message } = req.body;
     const givenByUserId = req?.user?._id;
+
+    const user1 = await User.findById(userId);
+    if (!user1) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "User does not exist"));
+    }
 
     let givenBy;
     if (isAnonymous == "true") {
@@ -64,6 +72,7 @@ const rateUserInBusiness = asyncHandler(async (req, res, next) => {
       rating: rating,
       message: message,
       givenBy: givenBy,
+      givenTo: user1.name,
       createdDate: getCurrentUTCTime(),
     };
     // console.log("New Rating: ", newRating);
