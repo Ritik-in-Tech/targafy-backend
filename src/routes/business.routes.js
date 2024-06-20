@@ -14,7 +14,10 @@ import { joinBusiness } from "../controllers/business/joinbusiness.controller.js
 import { updateBusinessDetails } from "../controllers/business/updatebusinessdetails.controller.js";
 import { removeUserFromBusiness } from "../controllers/business/removeuserfrombusiness.controller.js";
 import { getUserProfileInBusiness } from "../controllers/business/getuserprofileInbusiness.controller.js";
-import { getBusinessUsers } from "../controllers/business/getbusinessusers.controller.js";
+import {
+  getAllsubOrdinatesBusinessUsers,
+  getBusinessUsers,
+} from "../controllers/business/getbusinessusers.controller.js";
 import { fetchBusinessDetailsAndParams } from "../controllers/business/fetchBusinessDetailsAndParams.controller.js";
 import {
   demoteUser,
@@ -57,6 +60,10 @@ router.route("/update/:businessId").patch(updateBusinessDetails); // done
 
 // get all users from particular business
 router.route("/get/all/users/:businessId").get(getBusinessUsers); // done
+
+router
+  .route("/get-all-subordinate-businessusers/:businessId")
+  .get(getAllsubOrdinatesBusinessUsers);
 
 // get user profile in particular business
 router.route("/user/:businessId/:userId").get(getUserProfileInBusiness); // done
