@@ -104,4 +104,96 @@ const getAllActivityBusiness = asyncHandler(async (req, res) => {
   }
 });
 
-export { getAllActivityBusiness };
+const getSubordinateUserActivity = asyncHandler(async (req, res) => {
+  const businessId = req.params.businessId;
+  if (!businessId) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, {}, "Please provide businessId"));
+  }
+  const userId = req.user._id;
+  if (!userId) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, {}, "Token expired please log in again!"));
+  }
+  const business = await Business.findById(businessId);
+  if (!business) {
+    return res.status(404).json(new ApiResponse(404, {}, "Business not found"));
+  }
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json(new ApiResponse(404, {}, "User not found"));
+  }
+  const businessusers = await Businessusers.findOne({
+    businessId: businessId,
+    userId: userId,
+  });
+  if (!businessusers) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          400,
+          {},
+          "logged in user is not associated with the business"
+        )
+      );
+  }
+  const loggedInUserRole = businessusers.role;
+
+  const activities = await Activites.find({ businessId });
+
+  const filteredActivities = await Promise.all(
+    activities.map(async (activity) => {
+      const userDetails = await Businessusers.findOne({
+        userId: activity.userId,
+        businessId,
+      });
+
+      if (!userDetails) {
+        return { message: "User details not found" };
+      }
+
+      const userRole = userDetails.role;
+
+      if (
+        loggedInUserRole === "Admin" ||
+        (loggedInUserRole === "MiniAdmin" &&
+          (userRole === "MiniAdmin" || userRole === "User")) ||
+        (loggedInUserRole === "User" && userRole === "User")
+      ) {
+        return {
+          _id: activity._id,
+          content: activity.content,
+          activityCategory: activity.activityCategory,
+          createdDate: activity.createdDate,
+        };
+      }
+
+      return { message: "Unauthorized to access this activity" };
+    })
+  );
+
+  let responseData;
+  if (filteredActivities.every((activity) => activity.message)) {
+    // If all activities have a message property, return the message
+    responseData = {
+      activities: filteredActivities,
+    };
+  } else {
+    // If some activities have actual data, return the filtered activities
+    const validActivities = filteredActivities.filter(
+      (activity) => !activity.message
+    );
+    responseData = {
+      activities: validActivities,
+    };
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, responseData, "User activities"));
+});
+
+export { getAllActivityBusiness, getSubordinateUserActivity };
