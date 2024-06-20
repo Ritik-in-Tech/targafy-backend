@@ -48,4 +48,6 @@ const getBusinessUsers = asyncHandler(async (req, res, next) => {
   }
 });
 
+const getAllsubOrdinatesBusinessUsers = asyncHandler(async (req, res) => {});
+
 export { getBusinessUsers };
