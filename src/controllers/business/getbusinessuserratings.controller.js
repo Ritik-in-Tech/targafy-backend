@@ -23,10 +23,15 @@ const getBusinessUserRatings = asyncHandler(async (req, res) => {
     let usersRatings = await Usersratings.find({
       businessId: new mongoose.Types.ObjectId(businessId),
     })
-      .populate("userId", "name") // Populate the name field from the User model
+      .populate("userId", "name")
       .lean();
 
-    // No need to map the userId and name properties
+    usersRatings = usersRatings.map((rating) => ({
+      ...rating,
+      userId: rating.userId._id, // Extracting userId
+      name: rating.userId.name, // Extracting name
+    }));
+
     return res
       .status(200)
       .json(
