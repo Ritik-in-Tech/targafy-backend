@@ -86,17 +86,17 @@ const addData = asyncHandler(async (req, res) => {
       businessId: businessId,
     });
 
-    if (businessusers.role === "Admin") {
-      return res
-        .status(404)
-        .json(
-          new ApiResponse(
-            404,
-            {},
-            "Only user and MiniAdmin can upload the data"
-          )
-        );
-    }
+    // if (businessusers.role === "Admin") {
+    //   return res
+    //     .status(404)
+    //     .json(
+    //       new ApiResponse(
+    //         404,
+    //         {},
+    //         "Only user and MiniAdmin can upload the data"
+    //       )
+    //     );
+    // }
 
     const paramDetails = await Params.findOne({
       name: parameterName,
