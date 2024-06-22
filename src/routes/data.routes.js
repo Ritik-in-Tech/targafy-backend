@@ -2,6 +2,7 @@ import { Router } from "express";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import {
   addData,
+  addTestData,
   getDailyTargetValue,
   getParamData,
   getParamDataSpecificUser,
@@ -31,4 +32,6 @@ router.route("/get-previous-data/:businessId/:paramName").get(getPreviousData);
 
 // router to get the target names for the specifc user
 router.route("/get-target-users/:businessId").get(getTargetToAddData);
+
+router.route("/add-test-data/:businessId/:parameterName").post(addTestData);
 export default router;
