@@ -174,7 +174,7 @@ app.use(
 // Routes
 import businessRoutes from "./routes/business.routes.js";
 import authRoutes from "./routes/authentication.routes.js";
-import groupRoutes from "./routes/group.routes.js";
+import officeRoutes from "./routes/office.routes.js";
 import paramsRoutes from "./routes/params.routes.js";
 import targetRoutes from "./routes/target.routes.js";
 import userRoutes from "./routes/user.routes.js";
@@ -186,7 +186,7 @@ import activityRouter from "./routes/activities.routes.js";
 
 app.use("/api/v1/business", businessRoutes);
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/group", groupRoutes);
+app.use("/api/v1/office", officeRoutes);
 app.use("/api/v1/params", paramsRoutes);
 app.use("/api/v1/target", targetRoutes);
 app.use("/api/v1/user", userRoutes);
