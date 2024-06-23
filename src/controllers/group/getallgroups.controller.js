@@ -1,5 +1,6 @@
 import { Business } from "../../models/business.model.js";
 import { Group } from "../../models/group.model.js";
+import { Office } from "../../models/office.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
@@ -23,30 +24,29 @@ const getAllHeadOffices = asyncHandler(async (req, res) => {
     }
 
     // Fetch groups that belong to the business and do not have a parentGroupId
-    const groups = await Group.find(
-      { businessId: businessId, parentGroupId: { $exists: false } },
-      { officeName: 1, logo: 1, userAdded: 1, _id: 1 }
+    const offices = await Office.find(
+      { businessId: businessId, parentOfficeId: { $exists: false } },
+      { officeName: 1, userAdded: 1, _id: 1 }
     );
 
     // Check if any groups were found
-    if (groups.length === 0) {
+    if (offices.length === 0) {
       return res
         .status(200)
         .json(
           new ApiResponse(
             200,
-            { groups: [] },
-            "No head group exist for this business"
+            { office: [] },
+            "No head office exist for this business"
           )
         );
     }
 
     // Format the groups as needed
-    const formattedGroups = groups.map((group) => ({
-      _id: group._id,
-      headOfficeName: group.officeName,
-      logo: group.logo,
-      userAddedLength: group.userAdded.length,
+    const formattedOffices = offices.map((office) => ({
+      _id: office._id,
+      headOfficeName: office.officeName,
+      userAddedLength: office.userAdded.length,
     }));
 
     // Send the response
@@ -55,7 +55,7 @@ const getAllHeadOffices = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           200,
-          { headOffice: formattedGroups },
+          { headOffice: formattedOffices },
           "Head office fetched successfully!"
         )
       );
