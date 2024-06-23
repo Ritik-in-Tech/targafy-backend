@@ -12,19 +12,17 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { emitNewNotificationAndAddBusinessEvent } from "../../sockets/notification_socket.js";
 import { getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
+import { Office } from "../../models/office.model.js";
 
 const acceptUserJoinRequest = asyncHandler(async (req, res) => {
-  const { role, userId, parentId } = req.body;
+  const { role, userId, parentId, officeId } = req.body;
   const businessId = req.params.businessId;
-  // console.log(businessId);
-  // const parentId = req.user._id;
-  // console.log(parentId);
   const acceptedByName = req.user.name;
-  // console.log(acceptedByName);
+
   if (!acceptedByName) {
     return res
       .status(400)
-      .json(new ApiResponse(400, {}, "Token expired you have to Log in again"));
+      .json(new ApiResponse(400, {}, "Token expired. Please log in again."));
   }
 
   try {
@@ -34,19 +32,17 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Business Id is not found in params"));
     }
-    if (!role || !userId || !parentId) {
+    if (!role || !userId || !parentId || !officeId) {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "Fill role, userId, and parentId in req.body!!"
+            "Fill role, userId, parentId, and officeId in req.body!"
           )
         );
     }
-
-    // console.log(role);
 
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -91,8 +87,8 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
           .json(new ApiResponse(400, {}, "The user to add no longer exists!"));
       }
 
-      const userContactNumber = user?.contactNumber;
-      const userName = user?.name;
+      const userContactNumber = user.contactNumber;
+      const userName = user.name;
 
       if (!userContactNumber || !userName) {
         await session.abortTransaction();
@@ -104,13 +100,26 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
 
       const business = await Business.findOne({ _id: businessId });
 
-      if (!business || !business?.name) {
+      if (!business || !business.name) {
         await session.abortTransaction();
         session.endSession();
         return res
           .status(401)
           .json(new ApiResponse(401, {}, "The business does not exist!"));
       }
+
+      const office = await Office.findById(officeId);
+
+      if (!office) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(401)
+          .json(new ApiResponse(401, {}, "The office does not exist!"));
+      }
+
+      office.userAdded.push({ name: user.name, userId: userId });
+      await office.save({ session });
 
       const newUser = {
         role,
@@ -122,12 +131,12 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         userType: "Insider",
         subordinates: [],
         allSubordinates: [],
-        groupsJoined: [],
+        officeJoined: [],
         activityViewCounter: 0,
       };
 
       const newBusiness = {
-        name: business?.name,
+        name: business.name,
         userType: "Insider",
         businessId: businessId,
       };
@@ -143,11 +152,11 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         },
       };
 
-      await Businessusers.create(newUser);
+      await Businessusers.create([newUser], { session });
 
       // Step 4: Update parent user and business entities
       const updateQuery =
-        parentUser.role == "Admin"
+        parentUser.role === "Admin"
           ? { businessId: businessId, role: "Admin" }
           : { businessId: businessId, userId: parentId };
 
@@ -178,10 +187,10 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         { session }
       );
 
-      await Acceptedrequests.create(acceptedRequest);
+      await Acceptedrequests.create([acceptedRequest], { session });
 
       const emitData = {
-        content: `Congratulation, you are added in ${business.name} successfully🥳🥳`,
+        content: `Congratulations, you have been added to ${business.name} successfully! 🥳🥳`,
         notificationCategory: "business",
         createdDate: getCurrentUTCTime(),
         businessName: business.name,
@@ -195,8 +204,26 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         newBusiness
       );
 
+      // Commit the transaction
       await session.commitTransaction();
       session.endSession();
+
+      // Update the newly added user's officeJoined after committing the transaction
+      const newBusinessUser = await Businessusers.findOne({
+        businessId: businessId,
+        userId: userId,
+      });
+
+      if (newBusinessUser) {
+        const officeData = {
+          officeName: office.officeName,
+          officeId: officeId,
+        };
+
+        newBusinessUser.officeJoined.push(officeData);
+
+        await newBusinessUser.save();
+      }
 
       return res
         .status(200)
@@ -216,5 +243,6 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
       .json(new ApiResponse(500, {}, "Internal Server Error"));
   }
 });
+
 
 export { acceptUserJoinRequest };
