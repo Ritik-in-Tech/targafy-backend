@@ -533,7 +533,7 @@ const getParamDataSpecificUser = asyncHandler(async (req, res) => {
       "data createdDate"
     );
 
-    if (!userData || !userData.data) {
+    if (!userData || !userData.data || userData.data.length === 0) {
       return res
         .status(400)
         .json(
@@ -541,24 +541,63 @@ const getParamDataSpecificUser = asyncHandler(async (req, res) => {
         );
     }
 
-    let accumulatedData = 0;
-    let accumulatedTarget = 0;
-    const formattedUserData = userData.data.map((item) => {
+    // Sort userData.data by createdDate
+    userData.data.sort(
+      (a, b) => new Date(a.createdDate) - new Date(b.createdDate)
+    );
+
+    // Get the first and last day of the month from the first data entry
+    const firstDataDate = new Date(userData.data[0].createdDate);
+    const firstDayOfMonth = new Date(
+      firstDataDate.getFullYear(),
+      firstDataDate.getMonth(),
+      1
+    );
+    console.log(firstDayOfMonth);
+    const lastDayOfMonth = new Date(
+      firstDataDate.getFullYear(),
+      firstDataDate.getMonth() + 1,
+      0
+    );
+    console.log(lastDayOfMonth);
+
+    // Get the last date the user entered data
+    const lastEnteredDate = new Date(
+      userData.data[userData.data.length - 1].createdDate
+    );
+
+    // Create a map to store user data by date
+    const userDataMap = new Map();
+    userData.data.forEach((item) => {
       const date = new Date(item.createdDate);
       const formattedDate = date
         .toLocaleDateString("en-GB")
         .replace(/\//g, "-");
-
-      accumulatedData += parseFloat(item.todaysdata);
-      accumulatedTarget += dailyTargetValue;
-
-      return [formattedDate, accumulatedData];
+      userDataMap.set(formattedDate, parseFloat(item.todaysdata));
     });
 
-    const dailyTargetEntries = formattedUserData.map(([date], index) => [
-      date,
-      (index + 1) * dailyTargetValue,
-    ]);
+    let accumulatedData = 0;
+    const formattedUserData = [];
+    const dailyTargetEntries = [];
+
+    // Iterate through all days of the month
+    for (
+      let d = new Date(firstDayOfMonth);
+      d <= lastDayOfMonth;
+      d.setDate(d.getDate() + 1)
+    ) {
+      const formattedDate = d.toLocaleDateString("en-GB").replace(/\//g, "-");
+
+      // Only add user data up to the last entered date
+      if (d <= lastEnteredDate) {
+        const dayData = userDataMap.get(formattedDate) || 0;
+        accumulatedData += dayData;
+        formattedUserData.push([formattedDate, accumulatedData]);
+      }
+
+      // Always add daily target for the entire month
+      dailyTargetEntries.push([formattedDate, dailyTargetValue * d.getDate()]);
+    }
 
     const response = {
       userEntries: formattedUserData,
@@ -628,8 +667,7 @@ const getParamData = asyncHandler(async (req, res) => {
 
     const numUsersAssigned = target.usersAssigned.length;
     let targetValue = parseInt(target.targetValue);
-    const totalTargetValue = targetValue * numUsersAssigned;
-    const dailyTargetValue = totalTargetValue / 30;
+    const dailyTargetValue = (targetValue * numUsersAssigned) / 30;
 
     const userDataList = await DataAdd.find(
       {
@@ -663,6 +701,47 @@ const getParamData = asyncHandler(async (req, res) => {
       });
     });
 
+    // Get the range of dates in the month based on user data
+    const dates = Array.from(dateDataMap.keys()).sort();
+    const firstDateStr = dates[0];
+
+    // Parse the date string and create a Date object in UTC
+    const firstDate = new Date(firstDateStr + "T00:00:00Z");
+
+    // Calculate the first day of the month
+    const firstDayOfMonth = new Date(
+      Date.UTC(firstDate.getUTCFullYear(), firstDate.getUTCMonth(), 1)
+    );
+
+    // Calculate the last day of the month
+    const lastDayOfMonth = new Date(
+      Date.UTC(firstDate.getUTCFullYear(), firstDate.getUTCMonth() + 1, 0)
+    );
+
+    console.log(
+      "First day of month:",
+      firstDayOfMonth.toISOString().split("T")[0]
+    );
+    console.log(
+      "Last day of month:",
+      lastDayOfMonth.toISOString().split("T")[0]
+    );
+
+    // Calculate the cumulative daily target values
+    let accumulatedDailyTarget = 0;
+    const cumulativeDailyTargets = [];
+    for (
+      let date = new Date(firstDayOfMonth);
+      date <= lastDayOfMonth;
+      date.setUTCDate(date.getUTCDate() + 1)
+    ) {
+      accumulatedDailyTarget += dailyTargetValue;
+      cumulativeDailyTargets.push([
+        date.toISOString().split("T")[0],
+        accumulatedDailyTarget,
+      ]);
+    }
+
     // Convert the dateDataMap to a cumulative formatted array
     let accumulatedData = 0;
     const formattedUserData = Array.from(dateDataMap.entries()).map(
@@ -672,15 +751,9 @@ const getParamData = asyncHandler(async (req, res) => {
       }
     );
 
-    let accumulatedTarget = 0;
-    const dailyTargetEntries = formattedUserData.map(([date], index) => {
-      accumulatedTarget += dailyTargetValue;
-      return [date, accumulatedTarget];
-    });
-
     const response = {
       userEntries: formattedUserData,
-      dailyTarget: dailyTargetEntries,
+      dailyTargetAccumulated: cumulativeDailyTargets,
     };
 
     return res
