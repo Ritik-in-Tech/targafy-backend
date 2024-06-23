@@ -6,6 +6,7 @@ import { User } from "../../models/user.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { Params } from "../../models/params.model.js";
 import mongoose from "mongoose";
+import { Office } from "../../models/office.model.js";
 
 // Create a new group
 const createHeadOffice = asyncHandler(async (req, res) => {
@@ -240,158 +241,211 @@ const createHeadOffice = asyncHandler(async (req, res) => {
 
 // create subgroup
 const createSubOffices = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const loggedInUserId = req.user._id;
-    if (!loggedInUserId) {
+    const businessId = req.params.businessId;
+    const { officesArray } = req.body;
+
+    // Validate request body
+    if (
+      !officesArray ||
+      !Array.isArray(officesArray) ||
+      officesArray.length === 0
+    ) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "officesArray must be a non-empty array")
+        );
+    }
+
+    const isValidOfficesArray = officesArray.every(
+      (office) =>
+        Array.isArray(office) &&
+        office.length === 2 &&
+        typeof office[0] === "string" &&
+        office[0].trim() !== "" &&
+        typeof office[1] === "string"
+    );
+
+    if (!isValidOfficesArray) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "officesArray must contain pairs of [office, parent office], where office is a non-empty string and parent office is a string"
+          )
+        );
+    }
+
+    // Validate businessId
+    if (!businessId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Please provide businessId in params"));
+    }
+
+    // Fetch the business
+    const business = await Business.findById(businessId).session(session);
+    if (!business) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Business does not exist"));
+    }
+
+    const userId = req.user._id;
+    if (!userId) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Invalid token please log in again"));
     }
 
-    const parentGroupId = req.params.parentGroupId;
-    if (!parentGroupId) {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "User does not exist"));
+    }
+
+    const businessusers = await Businessusers.findOne({
+      businessId: businessId,
+      userId: userId,
+    });
+    // console.log(businessusers.role);
+
+    if (!businessusers) {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "Please provide parent group Id in req.params"
+            "Logged in user is not associated with the business"
           )
         );
     }
 
-    const parentGroup = await Group.findById(parentGroupId);
-    if (!parentGroup) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Parent group does not exist"));
-    }
-
-    const businessId = parentGroup.businessId;
-    if (!businessId) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Business ID not found"));
-    }
-
-    const businessuser = await Businessusers.findOne({
-      userId: loggedInUserId,
-      businessId: businessId,
-    });
-    if (businessuser.role === "User") {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(400, {}, "You do not have permission to do this!")
-        );
-    }
-
-    const { subOfficeName, logo, usersIds } = req.body;
-    if (
-      !subOfficeName ||
-      !usersIds ||
-      !Array.isArray(usersIds) ||
-      usersIds.length === 0
-    ) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Please provide all the fields"));
-    }
-
-    const existingSubOffice = await Group.findOne({
-      officeName: subOfficeName,
-      businessId: businessId,
-      parentGroupId: parentGroupId,
-    });
-
-    if (existingSubOffice) {
+    if (businessusers.role !== "Admin" && businessusers.role !== "MiniAdmin") {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "There is already suboffice name with the same name in the business"
+            "Only admin and miniadmin have access to create offices"
           )
         );
     }
-    // Validate if users exist in the parent group
-    const parentGroupUserIds = parentGroup.userAdded.map((user) =>
-      user.userId.toString()
-    );
-    for (const userId of usersIds) {
-      if (!parentGroupUserIds.includes(userId)) {
+
+    const createdOffices = [];
+
+    for (const [officeName, parentOfficeName] of officesArray) {
+      // Check if the office already exists for this business
+      const existingOffice = await Office.findOne({
+        businessId: businessId,
+        officeName: officeName,
+      }).session(session);
+
+      if (existingOffice) {
+        await session.abortTransaction();
+        session.endSession();
         return res
           .status(400)
           .json(
             new ApiResponse(
               400,
               {},
-              `User with id ${userId} does not exist in the parent group`
+              `Office '${officeName}' already exists for this business`
             )
           );
       }
-    }
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
+      let parentOfficeId = null;
+      let parentOffice;
+      if (parentOfficeName) {
+        // Find the parent office
+        parentOffice = await Office.findOne({
+          businessId: businessId,
+          officeName: parentOfficeName,
+        }).session(session);
 
-    try {
-      const subGroup = new Group({
-        officeName: subOfficeName,
-        logo: logo || "",
-        businessId: businessId,
-        parentGroupId: parentGroupId,
-        userAdded: usersIds.map((userId) => ({
-          userId: new mongoose.Types.ObjectId(userId), // Use 'new' keyword
-          name: parentGroup.userAdded.find(
-            (user) => user.userId.toString() === userId
-          ).name,
-        })),
-      });
+        if (!parentOffice) {
+          await session.abortTransaction();
+          session.endSession();
+          return res
+            .status(400)
+            .json(
+              new ApiResponse(
+                400,
+                {},
+                `Parent office '${parentOfficeName}' not found`
+              )
+            );
+        }
 
-      await subGroup.save({ session });
-
-      parentGroup.subordinateGroups.push({
-        subordinategroupName: subOfficeName,
-        subordinateGroupId: subGroup._id,
-      });
-      await parentGroup.save({ session });
-
-      for (const userId of usersIds) {
-        await Businessusers.findOneAndUpdate(
-          { userId: userId, businessId },
-          {
-            $push: {
-              groupsJoined: {
-                groupName: subOfficeName,
-                groupId: subGroup._id,
-              },
-            },
-          },
-          { session }
-        );
+        parentOfficeId = parentOffice._id;
       }
+      // console.log(parentOfficeId);
 
-      await session.commitTransaction();
-      session.endSession();
+      // Create the new office
+      const newOffice = new Office({
+        officeName: officeName,
+        businessId: businessId,
+        parentOfficeId: parentOfficeId,
+      });
+      // console.log(newOffice);
 
-      return res
-        .status(201)
-        .json(
-          new ApiResponse(201, { subGroup }, "Subgroup created successfully")
-        );
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
-      throw error;
+      await newOffice.save({ session });
+
+      if (parentOffice) {
+        parentOffice.subordinateOffice.push({
+          subordinateofficeName: newOffice.officeName,
+          subordinateOfficeId: newOffice._id,
+        });
+        parentOffice.allsubordinateOffices.push({
+          subordinateofficeName: newOffice.officeName,
+          subordinateOfficeId: newOffice._id,
+        });
+        await parentOffice.save({ session });
+
+        // Update all ancestors' allSubordinates
+        let currentParent = parentOffice;
+        while (currentParent.parentOfficeId) {
+          currentParent = await Office.findById(
+            currentParent.parentOfficeId
+          ).session(session);
+          currentParent.allsubordinateOffices.push({
+            subordinateofficeName: newOffice.officeName,
+            subordinateOfficeId: newOffice._id,
+          });
+          await currentParent.save({ session });
+        }
+      }
+      createdOffices.push(newOffice);
     }
+
+    // If we've reached this point, all offices were created successfully
+    await session.commitTransaction();
+    session.endSession();
+
+    return res
+      .status(201)
+      .json(
+        new ApiResponse(201, { createdOffices }, "Offices created successfully")
+      );
   } catch (error) {
-    console.error("Error:", error);
+    // Abort the transaction in case of error
+    await session.abortTransaction();
+    session.endSession();
+    console.log(error);
+
     return res
       .status(500)
-      .json(new ApiResponse(500, {}, "Internal Server Error"));
+      .json(new ApiResponse(500, { error }, "Internal server error"));
   }
 });
 
