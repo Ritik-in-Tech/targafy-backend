@@ -8,11 +8,13 @@ import { Businessusers } from "../models/businessUsers.model.js";
 import { startSession } from "mongoose";
 import { emitNewNotificationEvent } from "../sockets/notification_socket.js";
 import { getCurrentUTCTime } from "../utils/helpers/time.helper.js";
+import { Office } from "../models/office.model.js";
+
 const createBusiness = asyncHandler(async (req, res) => {
   const session = await startSession();
   session.startTransaction();
   try {
-    const { buisnessName, logo, industryType, city, country } = req.body;
+    const { businessName, logo, industryType, city, country } = req.body;
 
     // Validation: Check if admin name and contact number are provided
     const adminId = req.user._id;
@@ -20,7 +22,7 @@ const createBusiness = asyncHandler(async (req, res) => {
     const adminContactNumber = req.user.contactNumber;
     // console.log(adminId);
     // console.log(adminContactNumber);
-    console.log(adminName);
+    // console.log(adminName);
 
     if (!adminContactNumber) {
       return res
@@ -28,7 +30,7 @@ const createBusiness = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Token is Invalid!!"));
     }
 
-    if (!buisnessName || !adminId || !adminName) {
+    if (!businessName || !adminId || !adminName) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Fill name and admin of business!!"));
@@ -52,7 +54,7 @@ const createBusiness = asyncHandler(async (req, res) => {
       [
         {
           businessCode: businessCode,
-          name: buisnessName,
+          name: businessName,
           industryType: industryType,
           city: city,
           logo: logo || "",
@@ -82,7 +84,7 @@ const createBusiness = asyncHandler(async (req, res) => {
       {
         $push: {
           businesses: {
-            name: buisnessName,
+            name: businessName,
             businessId: business[0]._id,
             userType: "Insider",
           },
@@ -91,11 +93,43 @@ const createBusiness = asyncHandler(async (req, res) => {
       { session: session }
     );
 
+    // Below code is to create Head Office
+    const existingHeadOffice = await Office.findOne({
+      businessId: business[0]._id,
+      officeName: businessName,
+    });
+
+    if (existingHeadOffice) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Already there is a Head Office with the same name and in the same business"
+          )
+        );
+    }
+
+    const office = new Office({
+      officeName: businessName,
+      businessId: business[0]._id,
+    });
+
+    await office.save({ session });
+
+    business[0].offices.push({
+      name: businessName,
+      officeId: office._id,
+    });
+
+    await business[0].save({ session });
+
     const emitData = {
-      content: `Congratulation, ${adminName} ${buisnessName} business created successfully`,
+      content: `Congratulation, ${adminName} ${businessName} business created successfully`,
       notificationCategory: "business",
       createdDate: getCurrentUTCTime(),
-      businessName: buisnessName,
+      businessName: businessName,
       businessId: business[0]._id,
     };
 
