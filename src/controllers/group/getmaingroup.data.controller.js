@@ -4,7 +4,7 @@ import { Target } from "../../models/target.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
-const getMainGroupData = asyncHandler(async (req, res) => {
+const getParamData = asyncHandler(async (req, res) => {
   try {
     const paramsId = req.params.paramId;
     const businessId = req.params.businessId;
@@ -84,6 +84,48 @@ const getMainGroupData = asyncHandler(async (req, res) => {
       });
     });
 
+    // Get the range of dates in the month based on user data
+    const dates = Array.from(dateDataMap.keys()).sort();
+    const firstDateStr = dates[0];
+
+    // Parse the date string and create a Date object in UTC
+    const firstDate = new Date(firstDateStr + "T00:00:00Z");
+
+    // Calculate the first day of the month
+    const firstDayOfMonth = new Date(
+      Date.UTC(firstDate.getUTCFullYear(), firstDate.getUTCMonth(), 1)
+    );
+
+    // Calculate the last day of the month
+    const lastDayOfMonth = new Date(
+      Date.UTC(firstDate.getUTCFullYear(), firstDate.getUTCMonth() + 1, 0)
+    );
+
+    console.log(
+      "First day of month:",
+      firstDayOfMonth.toISOString().split("T")[0]
+    );
+    console.log(
+      "Last day of month:",
+      lastDayOfMonth.toISOString().split("T")[0]
+    );
+
+    // Calculate the cumulative daily target values
+    let accumulatedDailyTarget = 0;
+    const cumulativeDailyTargets = [];
+    for (
+      let date = new Date(firstDayOfMonth);
+      date <= lastDayOfMonth;
+      date.setUTCDate(date.getUTCDate() + 1)
+    ) {
+      accumulatedDailyTarget += dailyTargetValue;
+      cumulativeDailyTargets.push([
+        date.toISOString().split("T")[0],
+        accumulatedDailyTarget,
+      ]);
+    }
+
+    // Convert the dateDataMap to a cumulative formatted array
     let accumulatedData = 0;
     const formattedUserData = Array.from(dateDataMap.entries()).map(
       ([date, sum]) => {
@@ -92,25 +134,15 @@ const getMainGroupData = asyncHandler(async (req, res) => {
       }
     );
 
-    let accumulatedTarget = 0;
-    const dailyTargetEntries = formattedUserData.map(([date], index) => {
-      accumulatedTarget += dailyTargetValue;
-      return [date, accumulatedTarget];
-    });
-
     const response = {
       userEntries: formattedUserData,
-      dailyTarget: dailyTargetEntries,
+      dailyTargetAccumulated: cumulativeDailyTargets,
     };
 
     return res
       .status(200)
       .json(
-        new ApiResponse(
-          200,
-          response,
-          `${paramDetails.name} data fetched successfully`
-        )
+        new ApiResponse(200, response, `${paramName} data fetched successfully`)
       );
   } catch (error) {
     console.error(error);
@@ -120,4 +152,4 @@ const getMainGroupData = asyncHandler(async (req, res) => {
   }
 });
 
-export { getMainGroupData };
+export { getParamData };

@@ -7,10 +7,10 @@ const commonStringConstraints = {
   default: "",
 };
 
-const groupSchema = new Schema(
+const officeSchema = new Schema(
   {
     name: commonStringConstraints,
-    groupId: { type: Schema.Types.ObjectId },
+    officeId: { type: Schema.Types.ObjectId },
   },
   {
     _id: false,
@@ -69,8 +69,8 @@ const businessSchema = new Schema({
     default: [],
   },
   targets: [targetSchema],
-  groups: {
-    type: [groupSchema],
+  offices: {
+    type: [officeSchema],
     default: [],
   },
 });

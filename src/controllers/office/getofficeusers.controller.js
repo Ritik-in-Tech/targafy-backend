@@ -1,5 +1,5 @@
 import { Businessusers } from "../../models/businessUsers.model.js";
-import { Group } from "../../models/group.model.js";
+import { Office } from "../../models/office.model.js";
 import { User } from "../../models/user.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
@@ -19,7 +19,7 @@ const getOfficeUsers = asyncHandler(async (req, res) => {
           )
         );
     }
-    const office = await Group.findById(officeId);
+    const office = await Office.findById(officeId);
     if (!office) {
       return res
         .status(400)
