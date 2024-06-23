@@ -1,55 +1,62 @@
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/ApiResponse.js";
-import { Target } from "../../models/target.model.js";
 import { DataAdd } from "../../models/dataadd.model.js";
-import { Office } from "../../models/office.model.js";
+import { Params } from "../../models/params.model.js";
+import { Target } from "../../models/target.model.js";
+import { ApiResponse } from "../../utils/ApiResponse.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 
-const getSubOfficeDataLevel = asyncHandler(async (req, res) => {
+const getParamData = asyncHandler(async (req, res) => {
   try {
-    const officeId = req.params.officeId;
-    const paramName = req.params.paramName;
+    const paramsId = req.params.paramId;
+    const businessId = req.params.businessId;
     const loggedInUser = req.user._id;
     if (!loggedInUser) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Invalid token please log in again"));
     }
-    if (!officeId || !paramName) {
+    if (!paramsId || !businessId) {
       return res
         .status(400)
         .json(
-          new ApiResponse(400, {}, "officeId and param name is not provided")
+          new ApiResponse(400, {}, "paramsId and business Id is not provided")
         );
     }
-    const officeDetails = await Office.findById(officeId);
-    if (!officeDetails) {
+    const paramDetails = await Params.findById(paramsId);
+    if (!paramDetails) {
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "Invalid office Id provided"));
+        .json(new ApiResponse(400, {}, "Invalid param Id is provided"));
     }
-
     const target = await Target.findOne({
-      paramName: paramName,
-      businessId: officeDetails.businessId,
+      paramName: paramDetails.name,
+      businessId: businessId,
     });
     if (!target) {
       return res
-        .status(200)
-        .json(new ApiResponse(200, { data: [] }, "No data found"));
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Target is not set for this business and group name"
+          )
+        );
     }
 
-    const numUsersAssigned = officeDetails.userAdded.length;
+    const numUsersAssigned = paramDetails.usersAssigned.length;
     console.log(numUsersAssigned);
     let targetValue = parseInt(target.targetValue);
     const totalTargetValue = targetValue * numUsersAssigned;
+    console.log(totalTargetValue);
     const dailyTargetValue = totalTargetValue / 30;
+    console.log(dailyTargetValue);
 
-    const userIds = officeDetails.userAdded.map((user) => user.userId);
+    const userIds = paramDetails.usersAssigned.map((user) => user.userId);
 
     const userDataList = await DataAdd.find(
       {
-        businessId: officeDetails.businessId,
-        parameterName: paramName,
+        businessId: businessId,
+        parameterName: paramDetails.name,
         userId: { $in: userIds },
       },
       "data createdDate"
@@ -63,14 +70,12 @@ const getSubOfficeDataLevel = asyncHandler(async (req, res) => {
         );
     }
 
-    // Create a map to store the cumulative sum of `todaysdata` for each `createdDate`
     const dateDataMap = new Map();
 
-    // Iterate over each user's data and sum the values for each date
     userDataList.forEach((userData) => {
       userData.data.forEach((item) => {
         const dateObj = new Date(item.createdDate);
-        const date = dateObj.toISOString().split("T")[0]; // Get only the date part
+        const date = dateObj.toISOString().split("T")[0];
         const todaysdata = parseFloat(item.todaysdata);
         if (!dateDataMap.has(date)) {
           dateDataMap.set(date, 0);
@@ -140,15 +145,17 @@ const getSubOfficeDataLevel = asyncHandler(async (req, res) => {
         new ApiResponse(
           200,
           response,
-          `${officeDetails.officeName} data fetched successfully`
+          `${paramDetails.name} data fetched successfully`
         )
       );
   } catch (error) {
     console.error(error);
     return res
       .status(500)
-      .json(new ApiResponse(500, {}, "An error occurred while fetching data"));
+      .json(
+        new ApiResponse(500, { error }, "An error occurred while fetching data")
+      );
   }
 });
 
-export { getSubOfficeDataLevel };
+export { getParamData };

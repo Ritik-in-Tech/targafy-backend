@@ -6,10 +6,10 @@ import {
 import { AvailableUserRolesEnum } from "../utils/constants.js";
 import { getCurrentUTCTime } from "../utils/helpers/time.helper.js";
 
-const groupsJoined = new Schema(
+const officeJoined = new Schema(
   {
-    groupName: commonStringConstraints,
-    groupId: {
+    officeName: commonStringConstraints,
+    officeId: {
       type: Schema.Types.ObjectId,
     },
   },
@@ -73,8 +73,8 @@ const businessUsersSchema = new Schema({
     },
   },
 
-  groupsJoined: {
-    type: [groupsJoined],
+  officeJoined: {
+    type: [officeJoined],
     default: [],
   },
 
