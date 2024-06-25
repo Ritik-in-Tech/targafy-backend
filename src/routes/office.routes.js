@@ -25,6 +25,7 @@ import { getSubOfficeDetails } from "../controllers/group/getsubgroupdetails.con
 import { updateGroupLogo } from "../controllers/group/updategrouplogo.controller.js";
 import { getParamData } from "../controllers/office/getparamdata.controller.js";
 import { getOfficeInBusiness } from "../controllers/office/getofficeinbusiness.contoller.js";
+import { getOfficeHierarchy } from "../controllers/office/getofficehierarchy.controller.js";
 
 router.use(verifyJWT);
 
@@ -57,6 +58,8 @@ router
   .get(sublevelOfficeName); // done
 
 router.route("/get-office-business/:businessId").get(getOfficeInBusiness);
+
+router.route("/get-office-hierarchy/:businessId").get(getOfficeHierarchy);
 
 // router.route("/get-subgroup-details/:parentId").get(getSubOfficeDetails); // done
 
