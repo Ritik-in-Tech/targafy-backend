@@ -11,39 +11,55 @@ const getOfficeHierarchy = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Token is Invalid!!"));
     }
+
     const businessId = req.params.businessId;
     if (!businessId) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Business ID is not provided"));
     }
+
     const business = await Business.findById(businessId);
     if (!business) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Business not found"));
     }
+
     const offices = await Office.find(
       { businessId: businessId },
-      { subordinateOffice: 1, officeName: 1, _id: 1 }
+      {
+        subordinateOffice: 1,
+        officeName: 1,
+        _id: 1,
+        userAdded: 1,
+      }
     );
 
     let nodes = [];
     let edges = [];
 
     for (const record of offices) {
+      // Prepare userAdded details for the node
+      const userLabels = record.userAdded.map((user) => ({
+        name: user.name,
+        userId: user.userId,
+      }));
+
       let nodeItem = {
         id: record._id,
         label: {
           office: record.officeName,
           officeId: record._id,
+          users: userLabels, // Including userAdded details
         },
       };
+
       nodes = [...nodes, nodeItem];
 
-      let subordinates = record.subordinateOffice;
-      for (let sub of subordinates) {
-        let edgeItem = { from: record._id, to: sub };
+      // Add edges for subordinate offices
+      for (let sub of record.subordinateOffice) {
+        let edgeItem = { from: record._id, to: sub.subordinateOfficeId };
         edges = [...edges, edgeItem];
       }
     }
@@ -52,11 +68,12 @@ const getOfficeHierarchy = asyncHandler(async (req, res) => {
       nodes: nodes,
       edges: edges,
     };
+
     return res
       .status(200)
       .json(new ApiResponse(200, { data }, "Hierarchy fetched successfully"));
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res
       .status(500)
       .json(new ApiResponse(500, { error }, "Internal server error"));
