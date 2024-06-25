@@ -9,6 +9,8 @@ import { User } from "../models/user.model.js";
 import { Activites } from "../models/activities.model.js";
 import moment from "moment-timezone";
 import { Businessusers } from "../models/businessUsers.model.js";
+import { startOfMonth, endOfMonth, eachDayOfInterval, format } from "date-fns";
+import { randomInt } from "crypto";
 
 const addData = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -1039,6 +1041,200 @@ const getDailyTargetValue = asyncHandler(async (req, res) => {
     return res
       .status(500)
       .json(new ApiResponse(500, { error }, "Internal server error"));
+  }
+});
+
+const generateRandomData = () => randomInt(50, 71); // Generates a random integer between 50 and 70 inclusive
+
+const formatDate = (Date) => format(Date, "yyyy/MM/dd");
+
+export const addTestDataForMonth = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { parameterName, businessId } = req.params;
+    const userId = req.user._id;
+
+    if (!userId) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(401)
+        .json(new ApiResponse(401, {}, "Token expired, please log in again"));
+    }
+
+    // Validate presence of required params
+    if (!parameterName || !businessId) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Missing parameterName or businessId in params"
+          )
+        );
+    }
+
+    // Validate user, business, and parameter
+    const user = await User.findById(userId).session(session);
+    if (!user) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json(new ApiResponse(404, {}, "User not found"));
+    }
+
+    const business = await Business.findById(businessId).session(session);
+    if (!business) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(404)
+        .json(new ApiResponse(404, {}, "Business not found"));
+    }
+
+    const paramDetails = await Params.findOne({
+      name: parameterName,
+      businessId,
+    }).session(session);
+    if (!paramDetails) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json(new ApiResponse(404, {}, "Param not found"));
+    }
+
+    const target = await Target.findOne({
+      paramName: parameterName,
+      businessId,
+    }).session(session);
+    if (!target) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json(new ApiResponse(404, {}, "Target not found"));
+    }
+
+    const userAssigned = target.usersAssigned.some((user) =>
+      user.userId.equals(userId)
+    );
+    if (!userAssigned) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(403)
+        .json(
+          new ApiResponse(403, {}, "User is not assigned to this parameter")
+        );
+    }
+
+    // Get all days of the current month
+    const today = new Date();
+    const monthStart = startOfMonth(today);
+    const monthEnd = endOfMonth(today);
+    const allDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+    for (const day of allDays) {
+      const formattedDate = formatDate(day);
+      const todaysdata = generateRandomData().toString();
+      const comment = `Data for ${formattedDate}`;
+
+      let dataAdd = await DataAdd.findOne({
+        parameterName,
+        userId,
+        businessId,
+      }).session(session);
+
+      if (dataAdd) {
+        dataAdd.data.push({
+          todaysdata,
+          comment,
+          createdDate: formattedDate,
+        });
+
+        const activity = new Activites({
+          userId: userId,
+          businessId,
+          content: `${user.name} added the data for ${parameterName} on ${formattedDate}`,
+          activityCategory: "Data Add",
+        });
+
+        await activity.save({ session });
+      } else {
+        dataAdd = new DataAdd({
+          parameterName,
+          data: [{ todaysdata, comment, createdDate: formattedDate }],
+          userId,
+          businessId,
+          createdDate: formattedDate,
+        });
+      }
+
+      await dataAdd.save({ session });
+
+      const targetValue = parseFloat(target.targetValue);
+      const todaysDataValue = parseFloat(todaysdata);
+
+      let userDataEntry = user.data.find(
+        (entry) =>
+          entry.name === parameterName && entry.dataId.equals(dataAdd._id)
+      );
+
+      if (userDataEntry) {
+        if (userDataEntry.targetDone + todaysDataValue > targetValue) {
+          await session.abortTransaction();
+          session.endSession();
+          return res
+            .status(400)
+            .json(
+              new ApiResponse(
+                400,
+                {},
+                "Cumulative data exceeds the threshold value"
+              )
+            );
+        }
+        userDataEntry.targetDone += todaysDataValue;
+      } else {
+        if (todaysDataValue > targetValue) {
+          await session.abortTransaction();
+          session.endSession();
+          return res
+            .status(400)
+            .json(
+              new ApiResponse(
+                400,
+                {},
+                "Cumulative data exceeds the threshold value"
+              )
+            );
+        }
+        user.data.push({
+          name: parameterName,
+          dataId: dataAdd._id,
+          targetDone: todaysDataValue,
+        });
+      }
+
+      await user.save({ session });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res
+      .status(201)
+      .json(
+        new ApiResponse(201, {}, "Test data for the month added successfully")
+      );
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Error:", error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, {}, "Internal Server Error"));
   }
 });
 

@@ -49,7 +49,14 @@ const verifyloginOTP = asyncHandler(async (req, res) => {
       number == "7777777777" ||
       number == "8888888888" ||
       number == "9999999999" ||
-      number == "9111111111"
+      number == "9111111111" ||
+      number == "9222222222" ||
+      number == "9333333333" ||
+      number == "9444444444" ||
+      number == "9555555555" ||
+      number == "9666666666" ||
+      number == "9777777777" ||
+      number == "9888888888"
     ) {
       if (number == "1111111111" && otp !== "1111") {
         return res
@@ -92,6 +99,46 @@ const verifyloginOTP = asyncHandler(async (req, res) => {
           .json(new ApiResponse(400, {}, "Please enter correct test otp"));
       }
       if (number == "9999999999" && otp !== "9999") {
+        return res
+          .status(400)
+          .json(new ApiResponse(400, {}, "Please enter correct test otp"));
+      }
+      if (number == "9111111111" && otp !== "9111") {
+        return res
+          .status(400)
+          .json(new ApiResponse(400, {}, "Please enter correct test otp"));
+      }
+      if (number == "9222222222" && otp !== "9222") {
+        return res
+          .status(400)
+          .json(new ApiResponse(400, {}, "Please enter correct test otp"));
+      }
+      if (number == "9333333333" && otp !== "9333") {
+        return res
+          .status(400)
+          .json(new ApiResponse(400, {}, "Please enter correct test otp"));
+      }
+      if (number == "9444444444" && otp !== "9444") {
+        return res
+          .status(400)
+          .json(new ApiResponse(400, {}, "Please enter correct test otp"));
+      }
+      if (number == "9555555555" && otp !== "9555") {
+        return res
+          .status(400)
+          .json(new ApiResponse(400, {}, "Please enter correct test otp"));
+      }
+      if (number == "9666666666" && otp !== "9666") {
+        return res
+          .status(400)
+          .json(new ApiResponse(400, {}, "Please enter correct test otp"));
+      }
+      if (number == "9777777777" && otp !== "97777") {
+        return res
+          .status(400)
+          .json(new ApiResponse(400, {}, "Please enter correct test otp"));
+      }
+      if (number == "9888888888" && otp !== "9888") {
         return res
           .status(400)
           .json(new ApiResponse(400, {}, "Please enter correct test otp"));
