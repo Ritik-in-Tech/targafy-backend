@@ -9,8 +9,7 @@ import { User } from "../models/user.model.js";
 import { Activites } from "../models/activities.model.js";
 import moment from "moment-timezone";
 import { Businessusers } from "../models/businessUsers.model.js";
-import { startOfMonth, endOfMonth, eachDayOfInterval, format } from "date-fns";
-import { randomInt } from "crypto";
+moment.tz.setDefault("Asia/Kolkata");
 
 const addData = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -133,9 +132,9 @@ const addData = asyncHandler(async (req, res) => {
         );
     }
 
-    const indianTimeFormatted = moment()
-      .tz("Asia/Kolkata")
-      .format("YYYY-MM-DD HH:mm:ss");
+    // const indianTimeFormatted = moment()
+    //   .tz("Asia/Kolkata")
+    //   .format("YYYY-MM-DD HH:mm:ss");
 
     let dataAdd = await DataAdd.findOne({
       parameterName,
@@ -147,7 +146,7 @@ const addData = asyncHandler(async (req, res) => {
       dataAdd.data.push({
         todaysdata,
         comment,
-        createdDate: indianTimeFormatted,
+        createdDate: new Date(),
       });
 
       const activity = new Activites({
@@ -161,10 +160,10 @@ const addData = asyncHandler(async (req, res) => {
     } else {
       dataAdd = new DataAdd({
         parameterName,
-        data: [{ todaysdata, comment, createdDate: indianTimeFormatted }],
+        data: [{ todaysdata, comment, createdDate: new Date() }],
         userId,
         businessId,
-        createdDate: indianTimeFormatted,
+        createdDate: new Date(),
       });
     }
 
@@ -548,35 +547,31 @@ const getParamDataSpecificUser = asyncHandler(async (req, res) => {
       (a, b) => new Date(a.createdDate) - new Date(b.createdDate)
     );
 
-    // Get the first and last day of the month from the first data entry
-    const firstDataDate = new Date(userData.data[0].createdDate);
-    const firstDayOfMonth = new Date(
-      firstDataDate.getFullYear(),
-      firstDataDate.getMonth(),
-      1
+    const firstDataDate = moment(userData.data[0].createdDate).tz(
+      "Asia/Kolkata"
     );
-    console.log(firstDayOfMonth);
-    const lastDayOfMonth = new Date(
-      firstDataDate.getFullYear(),
-      firstDataDate.getMonth() + 1,
-      0
-    );
-    console.log(lastDayOfMonth);
+    console.log("FirstDataDate (IST):", firstDataDate.format());
+
+    const firstDayOfMonth = firstDataDate.clone().startOf("month");
+    console.log("firstDayOfMonth (IST):", firstDayOfMonth.format());
+
+    const lastDayOfMonth = firstDataDate.clone().endOf("month");
+    console.log("lastDayOfMonth (IST):", lastDayOfMonth.format());
 
     // Get the last date the user entered data
-    const lastEnteredDate = new Date(
+    const lastEnteredDate = moment(
       userData.data[userData.data.length - 1].createdDate
-    );
+    ).tz("Asia/Kolkata");
 
     // Create a map to store user data by date
     const userDataMap = new Map();
     userData.data.forEach((item) => {
-      const date = new Date(item.createdDate);
-      const formattedDate = date
-        .toLocaleDateString("en-GB")
-        .replace(/\//g, "-");
+      const date = moment(item.createdDate).tz("Asia/Kolkata");
+      const formattedDate = date.format("YYYY-MM-DD");
       userDataMap.set(formattedDate, parseFloat(item.todaysdata));
     });
+
+    console.log(userDataMap);
 
     let accumulatedData = 0;
     const formattedUserData = [];
@@ -584,21 +579,21 @@ const getParamDataSpecificUser = asyncHandler(async (req, res) => {
 
     // Iterate through all days of the month
     for (
-      let d = new Date(firstDayOfMonth);
-      d <= lastDayOfMonth;
-      d.setDate(d.getDate() + 1)
+      let d = firstDayOfMonth.clone();
+      d.isSameOrBefore(lastDayOfMonth);
+      d.add(1, "days")
     ) {
-      const formattedDate = d.toLocaleDateString("en-GB").replace(/\//g, "-");
+      const formattedDate = d.format("YYYY-MM-DD");
 
       // Only add user data up to the last entered date
-      if (d <= lastEnteredDate) {
+      if (d.isSameOrBefore(lastEnteredDate)) {
         const dayData = userDataMap.get(formattedDate) || 0;
         accumulatedData += dayData;
         formattedUserData.push([formattedDate, accumulatedData]);
       }
 
       // Always add daily target for the entire month
-      dailyTargetEntries.push([formattedDate, dailyTargetValue * d.getDate()]);
+      dailyTargetEntries.push([formattedDate, dailyTargetValue * d.date()]);
     }
 
     const response = {
@@ -693,8 +688,9 @@ const getParamData = asyncHandler(async (req, res) => {
     // Iterate over each user's data and sum the values for each date
     userDataList.forEach((userData) => {
       userData.data.forEach((item) => {
-        const dateObj = new Date(item.createdDate);
-        const date = dateObj.toISOString().split("T")[0]; // Get only the date part
+        const date = moment(item.createdDate)
+          .tz("Asia/Kolkata")
+          .format("YYYY-MM-DD");
         const todaysdata = parseFloat(item.todaysdata);
         if (!dateDataMap.has(date)) {
           dateDataMap.set(date, 0);
@@ -703,55 +699,55 @@ const getParamData = asyncHandler(async (req, res) => {
       });
     });
 
+    console.log(dateDataMap);
+
     // Get the range of dates in the month based on user data
     const dates = Array.from(dateDataMap.keys()).sort();
     const firstDateStr = dates[0];
 
-    // Parse the date string and create a Date object in UTC
-    const firstDate = new Date(firstDateStr + "T00:00:00Z");
+    // Parse the date string and create a Date object in IST
+    const firstDate = moment.tz(firstDateStr, "Asia/Kolkata");
 
-    // Calculate the first day of the month
-    const firstDayOfMonth = new Date(
-      Date.UTC(firstDate.getUTCFullYear(), firstDate.getUTCMonth(), 1)
-    );
+    // Calculate the first day of the month in IST
+    const firstDayOfMonth = firstDate.clone().startOf("month");
+    console.log("First day of month:", firstDayOfMonth.format("YYYY-MM-DD"));
 
-    // Calculate the last day of the month
-    const lastDayOfMonth = new Date(
-      Date.UTC(firstDate.getUTCFullYear(), firstDate.getUTCMonth() + 1, 0)
-    );
+    // Calculate the last day of the month in IST
+    const lastDayOfMonth = firstDate.clone().endOf("month");
+    console.log("Last day of month:", lastDayOfMonth.format("YYYY-MM-DD"));
 
-    console.log(
-      "First day of month:",
-      firstDayOfMonth.toISOString().split("T")[0]
-    );
-    console.log(
-      "Last day of month:",
-      lastDayOfMonth.toISOString().split("T")[0]
-    );
+    const lastUserDateStr = dates[dates.length - 1];
+    const lastUserDate = moment.tz(lastUserDateStr, "Asia/Kolkata");
+    console.log("Last User Date of data: ", lastUserDate);
 
-    // Calculate the cumulative daily target values
+    // Initialize the cumulative target array and user data array
     let accumulatedDailyTarget = 0;
     const cumulativeDailyTargets = [];
-    for (
-      let date = new Date(firstDayOfMonth);
-      date <= lastDayOfMonth;
-      date.setUTCDate(date.getUTCDate() + 1)
-    ) {
-      accumulatedDailyTarget += dailyTargetValue;
-      cumulativeDailyTargets.push([
-        date.toISOString().split("T")[0],
-        accumulatedDailyTarget,
-      ]);
-    }
-
-    // Convert the dateDataMap to a cumulative formatted array
     let accumulatedData = 0;
-    const formattedUserData = Array.from(dateDataMap.entries()).map(
-      ([date, sum]) => {
-        accumulatedData += sum;
-        return [date, accumulatedData];
+    const formattedUserData = [];
+
+    // Iterate through each day in the month
+    for (
+      let date = firstDayOfMonth.clone();
+      date.isSameOrBefore(lastDayOfMonth);
+      date.add(1, "days")
+    ) {
+      const formattedDate = date.format("YYYY-MM-DD");
+
+      // Add daily target value
+      accumulatedDailyTarget += dailyTargetValue;
+      cumulativeDailyTargets.push([formattedDate, accumulatedDailyTarget]);
+
+      // Check if the date is up to the last user date for data accumulation
+      if (date.isSameOrBefore(lastUserDate)) {
+        const dayData = dateDataMap.get(formattedDate) || 0;
+        accumulatedData += dayData;
       }
-    );
+
+      if (date.isSameOrBefore(lastUserDate)) {
+        formattedUserData.push([formattedDate, accumulatedData]);
+      }
+    }
 
     const response = {
       userEntries: formattedUserData,
@@ -1044,11 +1040,12 @@ const getDailyTargetValue = asyncHandler(async (req, res) => {
   }
 });
 
-const generateRandomData = () => randomInt(50, 71); // Generates a random integer between 50 and 70 inclusive
+// Generate random integer between min and max (inclusive)
+const generateRandomData = () => Math.floor(Math.random() * (71 - 50 + 1)) + 50;
 
-const formatDate = (Date) => format(Date, "yyyy/MM/dd");
+const formatDate = (date) => date.format("YYYY-MM-DD");
 
-export const addTestDataForMonth = asyncHandler(async (req, res) => {
+const addTestDataForMonth = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -1129,47 +1126,67 @@ export const addTestDataForMonth = asyncHandler(async (req, res) => {
         );
     }
 
-    // Get all days of the current month
-    const today = new Date();
-    const monthStart = startOfMonth(today);
-    const monthEnd = endOfMonth(today);
-    const allDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    const now = moment().tz("Asia/Kolkata");
+    const monthStart = now.clone().startOf("month").startOf("day");
+    const monthEnd = now.clone().endOf("month").startOf("day");
+    const allDays = [];
+
+    let currentDate = monthStart.clone();
+    while (currentDate.isSameOrBefore(monthEnd)) {
+      allDays.push(currentDate.clone());
+      currentDate.add(1, "day");
+    }
+
+    console.log("First day of the month:", formatDate(allDays[0]));
+    console.log(
+      "Last day of the month:",
+      formatDate(allDays[allDays.length - 1])
+    );
+
+    let dataAdd = await DataAdd.findOne({
+      parameterName,
+      userId,
+      businessId,
+    }).session(session);
+
+    if (!dataAdd) {
+      dataAdd = new DataAdd({
+        parameterName,
+        userId,
+        businessId,
+        data: [],
+      });
+    }
 
     for (const day of allDays) {
       const formattedDate = formatDate(day);
       const todaysdata = generateRandomData().toString();
       const comment = `Data for ${formattedDate}`;
 
-      let dataAdd = await DataAdd.findOne({
-        parameterName,
-        userId,
+      // Create a new Date object at noon IST, which is 6:30 UTC
+      const adjustedDate = day
+        .clone()
+        .hour(12)
+        .minute(0)
+        .second(0)
+        .millisecond(0)
+        .utc()
+        .toDate();
+
+      dataAdd.data.push({
+        todaysdata,
+        comment,
+        createdDate: adjustedDate,
+      });
+
+      const activity = new Activites({
+        userId: userId,
         businessId,
-      }).session(session);
+        content: `${user.name} added the data for ${parameterName} on ${formattedDate}`,
+        activityCategory: "Data Add",
+      });
 
-      if (dataAdd) {
-        dataAdd.data.push({
-          todaysdata,
-          comment,
-          createdDate: formattedDate,
-        });
-
-        const activity = new Activites({
-          userId: userId,
-          businessId,
-          content: `${user.name} added the data for ${parameterName} on ${formattedDate}`,
-          activityCategory: "Data Add",
-        });
-
-        await activity.save({ session });
-      } else {
-        dataAdd = new DataAdd({
-          parameterName,
-          data: [{ todaysdata, comment, createdDate: formattedDate }],
-          userId,
-          businessId,
-          createdDate: formattedDate,
-        });
-      }
+      await activity.save({ session });
 
       await dataAdd.save({ session });
 
@@ -1220,6 +1237,18 @@ export const addTestDataForMonth = asyncHandler(async (req, res) => {
       await user.save({ session });
     }
 
+    await dataAdd.save({ session });
+    await user.save({ session });
+    console.log(
+      "Data to be saved:",
+      dataAdd.data.map((d) => ({
+        date: d.createdDate,
+        formatted: moment(d.createdDate)
+          .tz("Asia/Kolkata")
+          .format("YYYY-MM-DD HH:mm:ss"),
+      }))
+    );
+
     await session.commitTransaction();
     session.endSession();
 
@@ -1246,4 +1275,5 @@ export {
   getParamData,
   getDailyTargetValue,
   addTestData,
+  addTestDataForMonth,
 };
