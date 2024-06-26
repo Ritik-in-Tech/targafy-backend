@@ -10,7 +10,7 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import { Params } from "../../models/params.model.js";
 import { Target } from "../../models/target.model.js";
 import { Business } from "../../models/business.model.js";
-import { addData } from "../data.controller.js";
+import { AddData } from "../../controllers/data/adddata.controller.js";
 
 const removeUserFromBusiness = asyncHandler(async (req, res, next) => {
   const userToRemoveId = req.params?.userToRemoveId;
@@ -168,7 +168,7 @@ const removeUserFromBusiness = asyncHandler(async (req, res, next) => {
     }
 
     // Remove user data from AddData table
-    await addData.deleteMany(
+    await AddData.deleteMany(
       { businessId: businessId, userId: userToRemoveId },
       { session }
     );
