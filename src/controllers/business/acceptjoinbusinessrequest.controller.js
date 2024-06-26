@@ -15,7 +15,7 @@ import { getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
 import { Office } from "../../models/office.model.js";
 
 const acceptUserJoinRequest = asyncHandler(async (req, res) => {
-  const { role, userId, parentId, officeId } = req.body;
+  const { role, userId, parentId } = req.body;
   const businessId = req.params.businessId;
   const acceptedByName = req.user.name;
 
@@ -32,15 +32,11 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Business Id is not found in params"));
     }
-    if (!role || !userId || !parentId || !officeId) {
+    if (!role || !userId || !parentId) {
       return res
         .status(400)
         .json(
-          new ApiResponse(
-            400,
-            {},
-            "Fill role, userId, parentId, and officeId in req.body!"
-          )
+          new ApiResponse(400, {}, "Fill role, userId, parentId  in req.body!")
         );
     }
 
@@ -108,18 +104,18 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
           .json(new ApiResponse(401, {}, "The business does not exist!"));
       }
 
-      const office = await Office.findById(officeId);
+      // const office = await Office.findById(officeId);
 
-      if (!office) {
-        await session.abortTransaction();
-        session.endSession();
-        return res
-          .status(401)
-          .json(new ApiResponse(401, {}, "The office does not exist!"));
-      }
+      // if (!office) {
+      //   await session.abortTransaction();
+      //   session.endSession();
+      //   return res
+      //     .status(401)
+      //     .json(new ApiResponse(401, {}, "The office does not exist!"));
+      // }
 
-      office.userAdded.push({ name: user.name, userId: userId });
-      await office.save({ session });
+      // office.userAdded.push({ name: user.name, userId: userId });
+      // await office.save({ session });
 
       const newUser = {
         role,
@@ -131,7 +127,7 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         userType: "Insider",
         subordinates: [],
         allSubordinates: [],
-        officeJoined: [],
+        // officeJoined: [],
         activityViewCounter: 0,
       };
 
@@ -209,21 +205,21 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
       session.endSession();
 
       // Update the newly added user's officeJoined after committing the transaction
-      const newBusinessUser = await Businessusers.findOne({
-        businessId: businessId,
-        userId: userId,
-      });
+      // const newBusinessUser = await Businessusers.findOne({
+      //   businessId: businessId,
+      //   userId: userId,
+      // });
 
-      if (newBusinessUser) {
-        const officeData = {
-          officeName: office.officeName,
-          officeId: officeId,
-        };
+      // if (newBusinessUser) {
+      //   const officeData = {
+      //     officeName: office.officeName,
+      //     officeId: officeId,
+      //   };
 
-        newBusinessUser.officeJoined.push(officeData);
+      //   newBusinessUser.officeJoined.push(officeData);
 
-        await newBusinessUser.save();
-      }
+      //   await newBusinessUser.save();
+      // }
 
       return res
         .status(200)
@@ -243,6 +239,5 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
       .json(new ApiResponse(500, {}, "Internal Server Error"));
   }
 });
-
 
 export { acceptUserJoinRequest };
