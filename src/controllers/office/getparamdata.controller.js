@@ -75,6 +75,7 @@ const getParamData = asyncHandler(async (req, res) => {
     userDataList.forEach((userData) => {
       userData.data.forEach((item) => {
         const dateObj = new Date(item.createdDate);
+        // console.log(dateObj);
         const date = dateObj.toISOString().split("T")[0];
         const todaysdata = parseFloat(item.todaysdata);
         if (!dateDataMap.has(date)) {
@@ -86,7 +87,9 @@ const getParamData = asyncHandler(async (req, res) => {
 
     // Get the range of dates in the month based on user data
     const dates = Array.from(dateDataMap.keys()).sort();
+    console.log(dates);
     const firstDateStr = dates[0];
+    console.log(firstDateStr);
 
     // Parse the date string and create a Date object in UTC
     const firstDate = new Date(firstDateStr + "T00:00:00Z");
