@@ -9,6 +9,7 @@ import {
   getAssignedParams,
   getAssignUsers,
   addUserToParam,
+  getParamId,
 } from "../controllers/params.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 // middlewares which verifies is request from the authorized user
@@ -28,6 +29,8 @@ router.route("/get-assign-user/:paramName/:businessId").get(getAssignUsers);
 
 //router to add users to the existing params
 router.route("/add-user-to-param/:businessId/:name").patch(addUserToParam);
+
+router.route("/get-param-id/:businessId").get(getParamId);
 
 router
   .route("/:bid/:pid")

@@ -624,6 +624,70 @@ const deleteParam = asyncHandler(async (req, res) => {
   }
 });
 
+const getParamId = asyncHandler(async (req, res) => {
+  try {
+    const businessId = req.params.businessId;
+    if (!businessId) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Business Id is not provided in the params")
+        );
+    }
+    const userId = req.user._id;
+    if (!userId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Invalid token! Please log in again"));
+    }
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Business not exist for the provided business Id"
+          )
+        );
+    }
+    const paramDetails = await Params.find({ businessId: businessId });
+    if (paramDetails.length === 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            404,
+            {},
+            "No params found for the provided business Id"
+          )
+        );
+    }
+    // console.log(paramDetails);
+
+    const formattedParams = paramDetails.map((param) => ({
+      _id: param._id,
+      name: param.name,
+    }));
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { params: formattedParams },
+          "Params fetched successfully!"
+        )
+      );
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, { error }, "Internal server error"));
+  }
+});
+
 export {
   createParam,
   getAllParams,
@@ -633,4 +697,5 @@ export {
   getAssignedParams,
   getAssignUsers,
   addUserToParam,
+  getParamId,
 };
