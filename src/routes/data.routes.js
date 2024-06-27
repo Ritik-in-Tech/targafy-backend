@@ -10,6 +10,7 @@ import { AddData } from "../controllers/data/adddata.controller.js";
 import { GetParamDataSpecificUser } from "../controllers/data/getdataspecificuser.controller.js";
 import { GetParamData } from "../controllers/data/getparamdata.controller.js";
 import { AddTestDataForMonth } from "../controllers/data/addtestdatamonth.controller.js";
+import { getLevelDataController } from "../controllers/data/getleveldatacontroller.js";
 const router = Router();
 
 router.use(verifyJWT);
@@ -37,6 +38,10 @@ router.route("/get-target-users/:businessId").get(getTargetToAddData);
 router
   .route("/add-test-data/:businessId/:parameterName")
   .post(AddTestDataForMonth);
+
+router
+  .route("/get-level-data/:businessId/:userId/:paramName")
+  .get(getLevelDataController);
 
 // router.route("/add-")
 export default router;
