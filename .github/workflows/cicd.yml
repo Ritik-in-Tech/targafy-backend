@@ -28,13 +28,18 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
-      - name: Pull Image from Docker Hub
-        run: sudo docker pull ritik819/targafybackend:latest
-
       - name: Stop and Remove Existing Container (if exists)
         run: |
           sudo docker stop targafy-backend-container || true
           sudo docker rm targafy-backend-container || true
+
+      - name: Remove old images
+        run: |
+          sudo docker image prune -af --filter "label=com.docker.compose.project=targafybackend"
+          sudo docker rmi ritik819/targafybackend:latest || true
+
+      - name: Pull Image from Docker Hub
+        run: sudo docker pull ritik819/targafybackend:latest
 
       - name: Run Docker Container
         run: |
@@ -50,3 +55,6 @@ jobs:
               -e HTTPS_PORT='${{secrets.HTTPS_PORT}}' \
               -e HTTP_PORT='${{secrets.HTTP_PORT}}' \
               ritik819/targafybackend:latest
+
+      - name: Clean up old images
+        run: sudo docker image prune -af
