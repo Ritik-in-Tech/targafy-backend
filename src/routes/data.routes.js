@@ -11,6 +11,7 @@ import { GetParamDataSpecificUser } from "../controllers/data/getdataspecificuse
 import { GetParamData } from "../controllers/data/getparamdata.controller.js";
 import { AddTestDataForMonth } from "../controllers/data/addtestdatamonth.controller.js";
 import { getLevelDataController } from "../controllers/data/getleveldatacontroller.js";
+import { getPieChartData } from "../controllers/data/getdatapiechart.controller.js";
 const router = Router();
 
 router.use(verifyJWT);
@@ -42,6 +43,10 @@ router
 router
   .route("/get-level-data/:businessId/:userId/:paramName")
   .get(getLevelDataController);
+
+router
+  .route("/get-pie-chart-data/:businessId/:userId/:paramName")
+  .get(getPieChartData);
 
 // router.route("/add-")
 export default router;
