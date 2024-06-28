@@ -188,38 +188,8 @@ const AddData = asyncHandler(async (req, res) => {
     );
 
     if (userDataEntry) {
-      // Check if adding the new data would exceed the threshold
-      if (userDataEntry.targetDone + todaysDataValue > targetValue) {
-        await session.abortTransaction();
-        session.endSession();
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(
-              400,
-              {},
-              "Cumulative data exceeds the threshold value"
-            )
-          );
-      }
-      // Update the existing entry
       userDataEntry.targetDone += todaysDataValue;
     } else {
-      // Check if the new data exceeds the threshold
-      if (todaysDataValue > targetValue) {
-        await session.abortTransaction();
-        session.endSession();
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(
-              400,
-              {},
-              "Cumulative data exceeds the threshold value"
-            )
-          );
-      }
-      // Create a new entry
       user.data.push({
         name: parameterName,
         dataId: dataAdd._id,
