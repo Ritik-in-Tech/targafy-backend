@@ -10,7 +10,7 @@ import { Activites } from "../../models/activities.model.js";
 import moment from "moment-timezone";
 moment.tz.setDefault("Asia/Kolkata");
 
-const generateRandomData = () => Math.floor(Math.random() * (71 - 50 + 1)) + 50;
+const generateRandomData = () => Math.floor(Math.random() * 133);
 
 const formatDate = (date) => date.format("YYYY-MM-DD");
 
@@ -166,44 +166,16 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
         (entry) =>
           entry.name === parameterName && entry.dataId.equals(dataAdd._id)
       );
-
       if (userDataEntry) {
-        if (userDataEntry.targetDone + todaysDataValue > targetValue) {
-          await session.abortTransaction();
-          session.endSession();
-          return res
-            .status(400)
-            .json(
-              new ApiResponse(
-                400,
-                {},
-                "Cumulative data exceeds the threshold value"
-              )
-            );
-        }
         userDataEntry.targetDone += todaysDataValue;
       } else {
-        if (todaysDataValue > targetValue) {
-          await session.abortTransaction();
-          session.endSession();
-          return res
-            .status(400)
-            .json(
-              new ApiResponse(
-                400,
-                {},
-                "Cumulative data exceeds the threshold value"
-              )
-            );
-        }
         user.data.push({
           name: parameterName,
           dataId: dataAdd._id,
           targetDone: todaysDataValue,
         });
+        await user.save({ session });
       }
-
-      await user.save({ session });
     }
 
     await dataAdd.save({ session });
