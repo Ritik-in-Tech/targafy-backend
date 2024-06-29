@@ -1,14 +1,12 @@
 import { Router } from "express";
 const router = Router();
-import {
-  createTarget,
-  getAllTargets,
-  getTargetById,
-  updateTarget,
-  deleteTarget,
-  getTargetValues,
-  addUserToTarget,
-} from "../controllers/target.controller.js";
+import { createTarget } from "../controllers/target/createtarget.controller.js";
+import { getAllTargets } from "../controllers/target/getalltargets.controller.js";
+import { getTargetValues } from "../controllers/target/gettargetvalues.controller.js";
+import { addUserToTarget } from "../controllers/target/addusertotarget.controller.js";
+import { getTargetById } from "../controllers/target/gettargetbyid.controller.js";
+import { updateTarget } from "../controllers/target/updatetarget.controller.js";
+import { deleteTarget } from "../controllers/target/deletetarget.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 
 // router to verify that jwt token is still valid
