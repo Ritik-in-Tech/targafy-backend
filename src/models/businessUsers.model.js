@@ -6,17 +6,17 @@ import {
 import { AvailableUserRolesEnum } from "../utils/constants.js";
 import { getCurrentUTCTime } from "../utils/helpers/time.helper.js";
 
-const officeJoined = new Schema(
-  {
-    officeName: commonStringConstraints,
-    officeId: {
-      type: Schema.Types.ObjectId,
-    },
-  },
-  {
-    _id: false,
-  }
-);
+// const officeJoined = new Schema(
+//   {
+//     officeName: commonStringConstraints,
+//     officeId: {
+//       type: Schema.Types.ObjectId,
+//     },
+//   },
+//   {
+//     _id: false,
+//   }
+// );
 const businessUsersSchema = new Schema({
   userId: {
     type: Schema.Types.ObjectId,
@@ -73,11 +73,6 @@ const businessUsersSchema = new Schema({
     },
   },
 
-  officeJoined: {
-    type: [officeJoined],
-    default: [],
-  },
-
   activityViewCounter: {
     type: Number,
     default: 0,
@@ -107,6 +102,14 @@ const businessUsersSchema = new Schema({
     required: function () {
       return this.userType !== "Outsider"; // Only required if userType is not "outsider"
     },
+  },
+  registrationDate: {
+    type: Date,
+    default: getCurrentUTCTime,
+  },
+  feedbackViewCounter: {
+    type: Number,
+    default: 0,
   },
 });
 

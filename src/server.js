@@ -132,11 +132,12 @@ const file = fs.readFileSync(
 const swaggerDocument = YAML.parse(file);
 
 import { initializeNotificationSocket } from "./sockets/notification_socket.js";
+import "./utils/helpers/aggregrate.cron.js";
 
 const app = express();
-
-// Socket.IO setup
 const server = createServer(app);
+
+// socket io setup
 const io = new Server(server, {
   cors: {
     origin: [
@@ -183,6 +184,7 @@ import uploadRouter from "./routes/upload.document.js";
 import uploadfileRouter from "./routes/uploadfile.routes.js";
 import addDataRouter from "./routes/data.routes.js";
 import activityRouter from "./routes/activities.routes.js";
+import adminRouter from "./routes/admin.routes.js";
 
 app.use("/api/v1/business", businessRoutes);
 app.use("/api/v1/auth", authRoutes);
@@ -194,6 +196,7 @@ app.use("/api/v1", uploadRouter);
 app.use("/api/v1", uploadfileRouter);
 app.use("/api/v1/data", addDataRouter);
 app.use("/api/v1/activity", activityRouter);
+app.use("/api/v1/admin", adminRouter);
 
 app.use(
   "/api-docs",

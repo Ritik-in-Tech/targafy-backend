@@ -80,6 +80,7 @@ const userSchema = new Schema({
     default: 0,
     type: Number,
   },
+
   email: {
     type: String,
     trim: true,

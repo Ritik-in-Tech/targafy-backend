@@ -49,7 +49,7 @@ import { connectDB } from "./db/index.js";
 dotenv.config();
 
 const majorNodeVersion = +process.env.NODE_VERSION?.split(".")[0] || 0;
-const PORT = process.env.PORT || 4000;
+// const PORT = process.env.PORT || 4000;
 
 // Get the current directory name from import.meta.url
 const __filename = fileURLToPath(import.meta.url);

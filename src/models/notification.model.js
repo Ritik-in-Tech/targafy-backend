@@ -15,15 +15,13 @@ const notificationSchema = new Schema({
     required: true,
   },
   notificationCategory: {
-    type: String, // business , user
+    type: String,
     required: true,
   },
   createdDate: {
     type: Date,
     default: getCurrentUTCTime(),
   },
-
-  // i dont think it is useful if not necessary in future remove this
   businessName: {
     type: String,
     required: function () {
