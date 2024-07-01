@@ -5,9 +5,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Businessusers } from "../models/businessUsers.model.js";
 import mongoose from "mongoose";
-import { Group } from "../models/group.model.js";
-// Create a new param
 
+// Create a new param
 const createParam = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -215,144 +214,6 @@ const createParam = asyncHandler(async (req, res) => {
   }
 });
 
-// controllers to add users to exisiting params
-const addUserToParam = asyncHandler(async (req, res) => {
-  try {
-    const { userIds } = req.body;
-    if (!userIds || !Array.isArray(userIds)) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Please provide userIds to add"));
-    }
-    const userId = req.user._id;
-    const paramName = req.params.name;
-    const businessId = req.params.businessId;
-
-    if (!userId) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(400, {}, "Token is invalid! Please log in again")
-        );
-    }
-
-    if (!paramName || !businessId) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(400, {}, "Business Id and param name is not provided")
-        );
-    }
-
-    const business = await Business.findById(businessId);
-
-    // Validate business existence
-    if (!business) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Please provide a valid businessId"));
-    }
-
-    const businessUsers = await Businessusers.findOne({
-      userId: userId,
-      businessId: businessId,
-    });
-
-    if (!businessUsers || businessUsers.role !== "Admin") {
-      return res
-        .status(403)
-        .json(
-          new ApiResponse(403, {}, "Only Admin can assign users to the params")
-        );
-    }
-
-    const param = await Params.findOne({ name: paramName, businessId });
-
-    if (!param) {
-      return res
-        .status(404)
-        .json(
-          new ApiResponse(404, {}, "Parameter not found for this business")
-        );
-    }
-
-    const validUsers = [];
-    for (const userId of userIds) {
-      const user = await User.findById(userId);
-      if (!user) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(400, {}, `User with id ${userId} does not exist`)
-          );
-      }
-
-      const businessUser = await Businessusers.findOne({
-        userId: user._id,
-        businessId,
-      });
-
-      if (!businessUser) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(
-              400,
-              {},
-              `User with id ${user.name} is not associated with this business`
-            )
-          );
-      }
-
-      if (businessUser.role === "Admin") {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(
-              400,
-              {},
-              `Admin user with id ${user.name} cannot be assigned to a parameter`
-            )
-          );
-      }
-
-      if (param.usersAssigned.some((u) => u.userId.equals(user._id))) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(
-              400,
-              {},
-              `User with id ${user.name} is already assigned to this parameter`
-            )
-          );
-      }
-
-      validUsers.push({ userId: user._id, name: user.name });
-    }
-
-    // Add valid users to the parameter's usersAssigned array
-    param.usersAssigned.push(...validUsers);
-
-    await param.save();
-
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          { param },
-          "Users added to the parameter successfully"
-        )
-      );
-  } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json(new ApiResponse(500, { error }, "Internal server error"));
-  }
-});
-
 // Get all params
 const getAllParams = asyncHandler(async (req, res) => {
   try {
@@ -392,8 +253,13 @@ const getAssignedParams = asyncHandler(async (req, res) => {
 
     // Construct the response
     const response = paramsDetails.map((param) => ({
+      id: param._id,
       name: param.name,
       assignedUsersCount: param.usersAssigned.length,
+      usersAssigned: param.usersAssigned.map((user) => ({
+        name: user.name,
+        userId: user.userId,
+      })),
     }));
 
     return res
@@ -696,6 +562,5 @@ export {
   deleteParam,
   getAssignedParams,
   getAssignUsers,
-  addUserToParam,
   getParamId,
 };

@@ -61,11 +61,11 @@ export async function emitNewNotificationEvent(userId, eventData) {
 
     let data = await NotificationModel.create({ ...eventData, userId });
 
-    console.log("this is data ", data);
+    // console.log("this is data ", data);
 
     //  console.log(result);
 
-    console.log("This is userid where notification is sent : ", userId);
+    // console.log("This is userid where notification is sent : ", userId);
 
     issueNsp.to(userId).emit("new-notification", eventData);
 

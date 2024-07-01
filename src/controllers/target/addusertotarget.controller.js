@@ -20,8 +20,7 @@ const addUserToTarget = asyncHandler(async (req, res) => {
     }
 
     const userId = req.user._id;
-    const paramName = req.params.name;
-    const businessId = req.params.businessId;
+    const targetId = req.params.targetId;
 
     if (!userId) {
       return res
@@ -31,22 +30,22 @@ const addUserToTarget = asyncHandler(async (req, res) => {
         );
     }
 
-    if (!paramName || !businessId) {
+    const target = await Target.findById(targetId).session(session);
+    if (!target) {
       return res
         .status(400)
         .json(
-          new ApiResponse(400, {}, "Business Id and param name is not provided")
+          new ApiResponse(
+            400,
+            {},
+            "Target not found please check provided target id again"
+          )
         );
     }
 
-    const business = await Business.findById(businessId).session(session);
+    const businessId = target.businessId;
 
-    // Validate business existence
-    if (!business) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Please provide a valid businessId"));
-    }
+    const business = await Business.findById(businessId).session(session);
 
     const businessUsers = await Businessusers.findOne({
       userId: userId,
@@ -61,9 +60,10 @@ const addUserToTarget = asyncHandler(async (req, res) => {
         );
     }
 
-    const param = await Params.findOne({ name: paramName, businessId }).session(
-      session
-    );
+    const param = await Params.findOne({
+      name: target.paramName,
+      businessId,
+    }).session(session);
 
     if (!param) {
       return res
@@ -71,17 +71,6 @@ const addUserToTarget = asyncHandler(async (req, res) => {
         .json(
           new ApiResponse(404, {}, "Parameter not found for this business")
         );
-    }
-
-    const target = await Target.findOne({
-      paramName: paramName,
-      businessId: businessId,
-    }).session(session);
-
-    if (!target) {
-      return res
-        .status(404)
-        .json(new ApiResponse(404, {}, "Target is not set for this business"));
     }
 
     const validUsers = [];
@@ -155,7 +144,7 @@ const addUserToTarget = asyncHandler(async (req, res) => {
     const activities = validUsers.map((user) => ({
       userId: user.userId,
       businessId,
-      content: `Assigned target for parameter ${paramName} to ${user.name}`,
+      content: `Assigned target for parameter ${target.paramName} to ${user.name}`,
       activityCategory: "Target Assignment",
     }));
 
@@ -192,6 +181,8 @@ const addUserToTarget = asyncHandler(async (req, res) => {
     return res
       .status(500)
       .json(new ApiResponse(500, { error }, "Internal Server Error"));
+  } finally {
+    session.endSession();
   }
 });
 
