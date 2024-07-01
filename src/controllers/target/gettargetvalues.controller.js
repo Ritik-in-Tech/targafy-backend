@@ -33,6 +33,7 @@ const getTargetValues = asyncHandler(async (req, res) => {
       const numberOfUsersAssigned = target.usersAssigned.length;
       const totalTargetValue = targetValueNumber * numberOfUsersAssigned;
       return {
+        targetId: target._id,
         targetName: target.paramName,
         totalTargetValue: totalTargetValue,
       };

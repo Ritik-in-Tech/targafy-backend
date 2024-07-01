@@ -8,9 +8,9 @@ import {
   deleteParam,
   getAssignedParams,
   getAssignUsers,
-  addUserToParam,
   getParamId,
 } from "../controllers/params.controller.js";
+import { addUserToParam } from "../controllers/params/addusertoparam.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 // middlewares which verifies is request from the authorized user
 router.use(verifyJWT);
@@ -28,7 +28,7 @@ router.route("/get/assigned-parameter/:businessId").get(getAssignedParams);
 router.route("/get-assign-user/:paramName/:businessId").get(getAssignUsers);
 
 //router to add users to the existing params
-router.route("/add-user-to-param/:businessId/:name").patch(addUserToParam);
+router.route("/add-user-to-param/:paramId").post(addUserToParam);
 
 router.route("/get-param-id/:businessId").get(getParamId);
 

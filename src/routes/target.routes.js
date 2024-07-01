@@ -18,7 +18,7 @@ router.route("/add-target/:businessId").post(createTarget);
 router.route("/get-target-values/:businessId").get(getTargetValues);
 
 // add user to existing target
-router.route("/add-user-to-target/:businessId/:name").patch(addUserToTarget);
+router.route("/add-user-to-target/:targetId").post(addUserToTarget);
 
 // router to get all targets for specific business
 router.route("/all/:id").get(getAllTargets);
