@@ -36,6 +36,10 @@ const getTargetValues = asyncHandler(async (req, res) => {
         targetId: target._id,
         targetName: target.paramName,
         totalTargetValue: totalTargetValue,
+        userAssigned: target.usersAssigned.map((user) => ({
+          name: user.name,
+          userId: user.userId,
+        })),
       };
     });
 
