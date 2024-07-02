@@ -13,18 +13,43 @@ const getLevelDataController = asyncHandler(async (req, res) => {
     const userId = req.params.userId;
     const businessId = req.params.businessId;
     const paramName = req.params.paramName;
+    const monthValue = req.params.monthValue;
 
-    if (!userId || !businessId || !paramName) {
+    if (!userId || !businessId || !paramName || !monthValue) {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "Please provide businessId, userId, and paramName in params"
+            "Please provide businessId, userId, paramName, and monthValue in params"
           )
         );
     }
+
+    // Validate and parse month name and year
+    const year = moment().year(); // You can modify this to get the year dynamically if required
+    const month = parseInt(monthValue, 10);
+
+    if (isNaN(month) || month < 1 || month > 12) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Invalid month value provided. Must be between 1 and 12"
+          )
+        );
+    }
+
+    const startDate = moment.tz(
+      `${year}-${month.toString().padStart(2, "0")}-01`,
+      "Asia/Kolkata"
+    );
+    const endDate = startDate.clone().endOf("month");
+    console.log("Start Date:", startDate.format("YYYY-MM-DD"));
+    console.log("End Date:", endDate.format("YYYY-MM-DD"));
 
     const user = await User.findById(userId);
     if (!user) {
@@ -110,13 +135,18 @@ const getLevelDataController = asyncHandler(async (req, res) => {
     const numUsersAssigned = userIds.length;
     console.log(numUsersAssigned);
     let targetValue = parseInt(target.targetValue); // 2000*9
-    const dailyTargetValue = (targetValue * numUsersAssigned) / 30;
+    const dailyTargetValue =
+      (targetValue * numUsersAssigned) / startDate.daysInMonth();
 
     const userDataList = await DataAdd.find(
       {
         businessId: businessId,
         parameterName: paramName,
         userId: { $in: userIds },
+        createdDate: {
+          $gte: startDate.toDate(),
+          $lte: endDate.toDate(),
+        },
       },
       "data createdDate"
     );
@@ -148,7 +178,6 @@ const getLevelDataController = asyncHandler(async (req, res) => {
 
     console.log(dateDataMap);
 
-    // Get the range of dates in the month based on user data
     const dates = Array.from(dateDataMap.keys()).sort();
     const firstDateStr = dates[0];
 
@@ -173,10 +202,10 @@ const getLevelDataController = asyncHandler(async (req, res) => {
     let accumulatedData = 0;
     const formattedUserData = [];
 
-    // Iterate through each day in the month
+    // Iterate through each day in the specified month
     for (
-      let date = firstDayOfMonth.clone();
-      date.isSameOrBefore(lastDayOfMonth);
+      let date = startDate.clone();
+      date.isSameOrBefore(endDate);
       date.add(1, "days")
     ) {
       const formattedDate = date.format("YYYY-MM-DD");
@@ -185,7 +214,7 @@ const getLevelDataController = asyncHandler(async (req, res) => {
       accumulatedDailyTarget += dailyTargetValue;
       cumulativeDailyTargets.push([formattedDate, accumulatedDailyTarget]);
 
-      // Check if the date is up to the last user date for data accumulation
+      // Check if the date has data and add to the accumulated data
       if (date.isSameOrBefore(lastUserDate)) {
         const dayData = dateDataMap.get(formattedDate) || 0;
         accumulatedData += dayData;

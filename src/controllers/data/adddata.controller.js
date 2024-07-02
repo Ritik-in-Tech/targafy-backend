@@ -33,7 +33,7 @@ const AddData = asyncHandler(async (req, res) => {
           )
         );
     }
-    // console.log("hello world");
+
     if (!parameterName || !businessId) {
       await session.abortTransaction();
       session.endSession();
@@ -47,8 +47,6 @@ const AddData = asyncHandler(async (req, res) => {
           )
         );
     }
-    // console.log(parameterName);
-    // console.log(businessId);
 
     const userId = req.user._id;
     if (!userId) {
@@ -58,7 +56,6 @@ const AddData = asyncHandler(async (req, res) => {
         .status(401)
         .json(new ApiResponse(401, {}, "Token expired please log in again"));
     }
-    // console.log(userId);
 
     const user = await User.findById(userId).session(session);
     if (!user) {
@@ -86,18 +83,6 @@ const AddData = asyncHandler(async (req, res) => {
       userId: userId,
       businessId: businessId,
     });
-
-    // if (businessusers.role === "Admin") {
-    //   return res
-    //     .status(404)
-    //     .json(
-    //       new ApiResponse(
-    //         404,
-    //         {},
-    //         "Only user and MiniAdmin can upload the data"
-    //       )
-    //     );
-    // }
 
     const paramDetails = await Params.findOne({
       name: parameterName,
@@ -136,17 +121,29 @@ const AddData = asyncHandler(async (req, res) => {
     //   .tz("Asia/Kolkata")
     //   .format("YYYY-MM-DD HH:mm:ss");
 
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
     let dataAdd = await DataAdd.findOne({
       parameterName,
       userId,
       businessId,
+      $expr: {
+        $and: [
+          { $eq: [{ $month: "$createdDate" }, currentMonth + 1] },
+          { $eq: [{ $year: "$createdDate" }, currentYear] },
+        ],
+      },
     }).session(session);
+
+    // console.log(dataAdd);
 
     if (dataAdd) {
       dataAdd.data.push({
         todaysdata,
         comment,
-        createdDate: new Date(),
+        createdDate: currentDate,
       });
 
       const activity = new Activites({
@@ -160,10 +157,10 @@ const AddData = asyncHandler(async (req, res) => {
     } else {
       dataAdd = new DataAdd({
         parameterName,
-        data: [{ todaysdata, comment, createdDate: new Date() }],
+        data: [{ todaysdata, comment, createdDate: currentDate }],
         userId,
         businessId,
-        createdDate: new Date(),
+        createdDate: currentDate,
       });
     }
 
@@ -184,7 +181,10 @@ const AddData = asyncHandler(async (req, res) => {
     // Find the data entry for the parameterName
     let userDataEntry = user.data.find(
       (entry) =>
-        entry.name === parameterName && entry.dataId.equals(dataAdd._id)
+        entry.name === parameterName &&
+        entry.dataId.equals(dataAdd._id) &&
+        entry.createdDate.getMonth() === currentMonth &&
+        entry.createdDate.getFullYear() === currentYear
     );
 
     if (userDataEntry) {
@@ -194,9 +194,18 @@ const AddData = asyncHandler(async (req, res) => {
         name: parameterName,
         dataId: dataAdd._id,
         targetDone: todaysDataValue,
+        createdDate: currentDate,
       });
     }
 
+    // Sort the data array to keep the most recent entries first
+    user.data.sort((a, b) => b.createdDate - a.createdDate);
+
+    // Optionally, limit the number of entries to keep (e.g., last 12 months)
+    const MAX_ENTRIES = 12;
+    if (user.data.length > MAX_ENTRIES) {
+      user.data = user.data.slice(0, MAX_ENTRIES);
+    }
     await user.save({ session });
 
     await session.commitTransaction();

@@ -28,7 +28,9 @@ router
   .get(getDailyTargetValue);
 
 // router to get param data for a business
-router.route("/get-param-data/:businessId/:paramName").get(GetParamData);
+router
+  .route("/get-param-data/:businessId/:paramName/:monthValue")
+  .get(GetParamData);
 
 // router to get previus data of user
 router.route("/get-previous-data/:businessId/:paramName").get(getPreviousData);
@@ -41,11 +43,11 @@ router
   .post(AddTestDataForMonth);
 
 router
-  .route("/get-level-data/:businessId/:userId/:paramName")
+  .route("/get-level-data/:businessId/:userId/:paramName/:monthValue")
   .get(getLevelDataController);
 
 router
-  .route("/get-pie-chart-data/:businessId/:userId/:paramName")
+  .route("/get-pie-chart-data/:businessId/:userId/:paramName/:monthValue")
   .get(getPieChartData);
 
 // router.route("/add-")

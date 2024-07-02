@@ -4,6 +4,11 @@ import {
   contactNumberSchema,
   commonStringConstraints,
 } from "../utils/helpers/schema.helper.js";
+import moment from "moment-timezone";
+
+function convertToIST(date) {
+  return moment(date).tz("Asia/Kolkata").toDate();
+}
 
 const businessSchema = new Schema(
   {
@@ -29,9 +34,17 @@ const dataSchema = new Schema(
     targetDone: {
       type: Number,
     },
+    createdDate: {
+      type: Date,
+      default: Date.now,
+      get: convertToIST,
+      set: convertToIST,
+    },
   },
   {
     _id: false,
+    toJSON: { getters: true },
+    toObject: { getters: true },
   }
 );
 
