@@ -3,8 +3,6 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 import { User } from "../../models/user.model.js";
 import { Business } from "../../models/business.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
-import { Target } from "../../models/target.model.js";
-import { DataAdd } from "../../models/dataadd.model.js";
 import moment from "moment-timezone";
 moment.tz.setDefault("Asia/Kolkata");
 
@@ -13,15 +11,16 @@ const getPieChartData = asyncHandler(async (req, res) => {
     const userId = req.params.userId;
     const businessId = req.params.businessId;
     const paramName = req.params.paramName;
+    const monthValue = req.params.monthValue;
 
-    if (!userId || !businessId || !paramName) {
+    if (!userId || !businessId || !paramName || !monthValue) {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "Please provide businessId, userId, and paramName in params"
+            "Please provide businessId, userId, paramName and month value in params"
           )
         );
     }
@@ -30,6 +29,7 @@ const getPieChartData = asyncHandler(async (req, res) => {
     if (!user) {
       return res.status(400).json(new ApiResponse(400, {}, "User not found"));
     }
+
     const business = await Business.findById(businessId);
     if (!business) {
       return res
@@ -54,6 +54,30 @@ const getPieChartData = asyncHandler(async (req, res) => {
         );
     }
 
+    // Extract target done value for the specific user, parameter, and month
+    const targetMonth = moment()
+      .month(parseInt(monthValue) - 1)
+      .startOf("month");
+    const userTargetDone = user.data.find(
+      (item) =>
+        item.name === paramName &&
+        moment(item.createdDate).isSame(targetMonth, "month")
+    );
+
+    if (!userTargetDone) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            `No data found for user ${user.name} for parameter ${paramName} in the specified month`
+          )
+        );
+    }
+
+    const userTargetDoneValue = userTargetDone.targetDone;
+
     if (!Array.isArray(businessuser.subordinates)) {
       return res
         .status(400)
@@ -73,54 +97,57 @@ const getPieChartData = asyncHandler(async (req, res) => {
       .filter(Boolean);
 
     const userDataMap = new Map();
-    let totalSum = 0;
+    let totalSum = userTargetDoneValue; // Initialize with the main user's value
 
-    for (const userIds of Subordinates) {
-      const user = await User.findById(userIds);
-      if (!user) {
-        console.log(`User not found for ID: ${userIds}`);
+    userDataMap.set(user.name, userTargetDoneValue);
+
+    for (const subordinateId of Subordinates) {
+      const subordinate = await User.findById(subordinateId);
+      if (!subordinate) {
+        console.log(`User not found for ID: ${subordinateId}`);
         continue;
       }
-      const userName = user.name;
 
-      const businessuser = await Businessusers.findOne({
+      const subordinateBusinessuser = await Businessusers.findOne({
         businessId: businessId,
-        userId: userIds,
+        userId: subordinateId,
       });
 
-      if (!businessuser) {
-        console.log(`Business user not found for userId: ${userIds}`);
+      if (!subordinateBusinessuser) {
+        console.log(`Business user not found for userId: ${subordinateId}`);
         continue;
       }
 
-      if (!Array.isArray(businessuser.allSubordinates)) {
-        console.log(`No subordinates found for user: ${userIds}`);
+      if (!Array.isArray(subordinateBusinessuser.allSubordinates)) {
+        console.log(`No subordinates found for user: ${subordinateId}`);
         continue;
       }
 
-      const allSubordinates = businessuser.allSubordinates
+      const allSubordinates = subordinateBusinessuser.allSubordinates
         .map((sub) =>
           sub && sub._id ? sub._id.toString() : sub ? sub.toString() : undefined
         )
         .filter(Boolean);
 
-      const newUserIds = [userIds, ...allSubordinates];
+      const newUserIds = [subordinateId, ...allSubordinates];
 
       let sumData = 0;
       for (const newUserId of newUserIds) {
-        const user = await User.findById(newUserId);
-        if (user && user.data && user.data[0]) {
-          const userdata = user.data[0].targetDone || 0;
-          sumData += userdata;
+        const subUser = await User.findById(newUserId);
+        if (subUser && subUser.data) {
+          const subUserData = subUser.data.find(
+            (item) =>
+              item.name === paramName &&
+              moment(item.createdDate).isSame(targetMonth, "month")
+          );
+          if (subUserData) {
+            sumData += subUserData.targetDone;
+          }
         }
       }
 
-      userDataMap.set(userName, {
-        data: sumData,
-      });
-
+      userDataMap.set(subordinate.name, sumData);
       totalSum += sumData;
-      userDataMap.set(user.name, sumData);
     }
 
     const percentageData = Array.from(userDataMap).map(([name, value]) => {
@@ -151,4 +178,5 @@ const getPieChartData = asyncHandler(async (req, res) => {
       .json(new ApiResponse(500, { error }, "Internal server error"));
   }
 });
+
 export { getPieChartData };

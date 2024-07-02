@@ -19,7 +19,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
   session.startTransaction();
 
   try {
-    const { parameterName, businessId } = req.params;
+    const { parameterName, businessId, monthName } = req.params;
     const userId = req.user._id;
 
     if (!userId) {
@@ -31,7 +31,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
     }
 
     // Validate presence of required params
-    if (!parameterName || !businessId) {
+    if (!parameterName || !businessId || !monthName) {
       await session.abortTransaction();
       session.endSession();
       return res
@@ -40,7 +40,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
           new ApiResponse(
             400,
             {},
-            "Missing parameterName or businessId in params"
+            "Missing parameterName, businessId, or monthName in params"
           )
         );
     }
@@ -95,9 +95,21 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
         );
     }
 
-    const now = moment().tz("Asia/Kolkata");
-    const monthStart = now.clone().startOf("month").startOf("day");
-    const monthEnd = now.clone().endOf("month").startOf("day");
+    const currentYear = moment().year();
+    const monthStart = moment()
+      .year(currentYear)
+      .month(monthName)
+      .startOf("month");
+    const monthEnd = monthStart.clone().endOf("month");
+
+    if (!monthStart.isValid()) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Invalid month name provided"));
+    }
+
     const allDays = [];
 
     let currentDate = monthStart.clone();
@@ -116,6 +128,12 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
       parameterName,
       userId,
       businessId,
+      $expr: {
+        $and: [
+          { $eq: [{ $month: "$createdDate" }, monthStart.month() + 1] },
+          { $eq: [{ $year: "$createdDate" }, currentYear] },
+        ],
+      },
     }).session(session);
 
     if (!dataAdd) {
@@ -124,6 +142,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
         userId,
         businessId,
         data: [],
+        createdDate: monthStart.toDate(),
       });
     }
 
@@ -157,15 +176,17 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
 
       await activity.save({ session });
 
-      await dataAdd.save({ session });
-
       const targetValue = parseFloat(target.targetValue);
       const todaysDataValue = parseFloat(todaysdata);
 
       let userDataEntry = user.data.find(
         (entry) =>
-          entry.name === parameterName && entry.dataId.equals(dataAdd._id)
+          entry.name === parameterName &&
+          entry.dataId.equals(dataAdd._id) &&
+          entry.createdDate.getMonth() === currentMonth &&
+          entry.createdDate.getFullYear() === currentYear
       );
+
       if (userDataEntry) {
         userDataEntry.targetDone += todaysDataValue;
       } else {
@@ -173,9 +194,20 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
           name: parameterName,
           dataId: dataAdd._id,
           targetDone: todaysDataValue,
+          createdDate: currentDate,
         });
-        await user.save({ session });
       }
+
+      // Sort the data array to keep the most recent entries first
+      user.data.sort((a, b) => b.createdDate - a.createdDate);
+
+      // Optionally, limit the number of entries to keep (e.g., last 12 months)
+      const MAX_ENTRIES = 12;
+      if (user.data.length > MAX_ENTRIES) {
+        user.data = user.data.slice(0, MAX_ENTRIES);
+      }
+
+      await user.save({ session });
     }
 
     await dataAdd.save({ session });

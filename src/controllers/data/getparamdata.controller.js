@@ -12,14 +12,15 @@ const GetParamData = asyncHandler(async (req, res) => {
   try {
     const businessId = req.params.businessId;
     const paramName = req.params.paramName;
-    if (!businessId || !paramName) {
+    const monthValue = req.params.monthValue;
+    if (!businessId || !paramName || !monthValue) {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "Business ID and parameter name are not provided"
+            "Business ID , parameter name and month value  are not provided"
           )
         );
     }
@@ -55,6 +56,28 @@ const GetParamData = asyncHandler(async (req, res) => {
           )
         );
     }
+    const year = moment().year();
+    const month = parseInt(monthValue, 10);
+
+    if (isNaN(month) || month < 1 || month > 12) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Invalid month value provided. Must be between 1 and 12"
+          )
+        );
+    }
+
+    const startDate = moment.tz(
+      `${year}-${month.toString().padStart(2, "0")}-01`,
+      "Asia/Kolkata"
+    );
+    const endDate = startDate.clone().endOf("month");
+    console.log("Start Date:", startDate.format("YYYY-MM-DD"));
+    console.log("End Date:", endDate.format("YYYY-MM-DD"));
 
     const numUsersAssigned = target.usersAssigned.length;
     let targetValue = parseInt(target.targetValue);
@@ -64,6 +87,10 @@ const GetParamData = asyncHandler(async (req, res) => {
       {
         businessId: businessId,
         parameterName: paramName,
+        createdDate: {
+          $gte: startDate.toDate(),
+          $lte: endDate.toDate(),
+        },
       },
       "data createdDate"
     );
