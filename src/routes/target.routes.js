@@ -5,7 +5,7 @@ import { getAllTargets } from "../controllers/target/getalltargets.controller.js
 import { getTargetValues } from "../controllers/target/gettargetvalues.controller.js";
 import { addUserToTarget } from "../controllers/target/addusertotarget.controller.js";
 import { getTargetById } from "../controllers/target/gettargetbyid.controller.js";
-import { updateTarget } from "../controllers/target/updatetarget.controller.js";
+import { updateUserTarget } from "../controllers/target/updatetarget.controller.js";
 import { deleteTarget } from "../controllers/target/deletetarget.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 
@@ -18,16 +18,18 @@ router.route("/add-target/:businessId").post(createTarget);
 router.route("/get-target-values/:businessId").get(getTargetValues);
 
 // add user to existing target
-router.route("/add-user-to-target/:targetId").post(addUserToTarget);
+router
+  .route("/add-user-to-target/:businessId/:paramName")
+  .post(addUserToTarget);
 
 // router to get all targets for specific business
 router.route("/all/:id").get(getAllTargets);
 
-// router to get the target by id , update and delete the target
 router
-  .route("/:bid/:tid")
-  .get(getTargetById)
-  .put(updateTarget)
-  .delete(deleteTarget);
+  .route("/update-user-target/:businessId/:paramName")
+  .put(updateUserTarget);
+
+// router to get the target by id , update and delete the target
+router.route("/:bid/:tid").get(getTargetById).delete(deleteTarget);
 
 export default router;

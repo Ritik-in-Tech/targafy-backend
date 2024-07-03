@@ -98,9 +98,20 @@ const AddData = asyncHandler(async (req, res) => {
       return res.status(404).json(new ApiResponse(404, {}, "Param not found"));
     }
 
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    console.log(typeof currentMonth);
+    console.log(currentYear);
+
+    let ongoingMonth = currentMonth + 1;
+    ongoingMonth = ongoingMonth.toString();
+
     const target = await Target.findOne({
       paramName: parameterName,
       businessId,
+      userId: userId,
+      monthIndex: ongoingMonth,
     }).session(session);
     if (!target) {
       await session.abortTransaction();
@@ -108,28 +119,9 @@ const AddData = asyncHandler(async (req, res) => {
       return res.status(404).json(new ApiResponse(404, {}, "Target not found"));
     }
 
-    const userAssigned = target.usersAssigned.some((user) =>
-      user.userId.equals(userId)
-    );
-    if (!userAssigned) {
-      await session.abortTransaction();
-      session.endSession();
-      return res
-        .status(403)
-        .json(
-          new ApiResponse(403, {}, "User is not assigned to this parameter")
-        );
-    }
-
     // const indianTimeFormatted = moment()
     //   .tz("Asia/Kolkata")
     //   .format("YYYY-MM-DD HH:mm:ss");
-
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
-    console.log(currentMonth);
-    console.log(currentYear);
 
     let dataAdd = await DataAdd.findOne({
       parameterName,
@@ -170,16 +162,15 @@ const AddData = asyncHandler(async (req, res) => {
         businessId,
         createdDate: currentDate,
       });
+      const activity = new Activites({
+        userId: userId,
+        businessId,
+        content: `${user.name} added the data for ${parameterName} in ${business.name}`,
+        activityCategory: "Data Add",
+      });
+
+      await activity.save({ session });
     }
-
-    const activity = new Activites({
-      userId: userId,
-      businessId,
-      content: `${user.name} added the data for ${parameterName} in ${business.name}`,
-      activityCategory: "Data Add",
-    });
-
-    await activity.save({ session });
 
     await dataAdd.save({ session });
     console.log(dataAdd.createdDate);

@@ -16,42 +16,39 @@ const getTargetValues = asyncHandler(async (req, res) => {
 
     const targets = await Target.find({ businessId: businessId });
 
-    // if (!targets || targets.length === 0) {
-    //   return res
-    //     .status(404)
-    //     .json(
-    //       new ApiResponse(
-    //         404,
-    //         {},
-    //         "No targets found for the provided business Id"
-    //       )
-    //     );
-    // }
+    if (!targets.length) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, {}, "No targets found for this business"));
+    }
 
-    const targetValues = targets.map((target) => {
-      const targetValueNumber = parseFloat(target.targetValue);
-      const numberOfUsersAssigned = target.usersAssigned.length;
-      const totalTargetValue = targetValueNumber * numberOfUsersAssigned;
-      return {
-        targetId: target._id,
-        targetName: target.paramName,
-        totalTargetValue: totalTargetValue,
-        userAssigned: target.usersAssigned.map((user) => ({
-          name: user.name,
-          userId: user.userId,
-        })),
-      };
-    });
+    const groupedTargets = targets.reduce((acc, target) => {
+      const key = `${target.paramName}-${target.monthIndex}`;
+      if (!acc[key]) {
+        acc[key] = {
+          targetName: target.paramName,
+          totalTargetValue: 0,
+          monthIndex: target.monthIndex,
+          userAssigned: [],
+        };
+      }
 
+      acc[key].totalTargetValue += Number(target.targetValue);
+      acc[key].userAssigned.push({
+        name: target.assignedto,
+        userId: target.userId.toString(),
+      });
+
+      return acc;
+    }, {});
+
+    // Convert the grouped targets object into an array
+    const result = Object.values(groupedTargets);
+
+    // Respond with the formatted data
     return res
       .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          targetValues,
-          "Target values retrieved successfully"
-        )
-      );
+      .json(new ApiResponse(200, result, "Targets fetched successfully"));
   } catch (error) {
     console.error("Error:", error);
     return res

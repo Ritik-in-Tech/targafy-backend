@@ -17,21 +17,6 @@ const officeSchema = new Schema(
   }
 );
 
-const targetSchema = new Schema(
-  {
-    targetName: commonStringConstraints,
-    targetValue: {
-      type: Number,
-    },
-    targetId: {
-      type: Schema.Types.ObjectId,
-    },
-  },
-  {
-    _id: false,
-  }
-);
-
 const paramSchema = new Schema(
   {
     name: {
@@ -68,7 +53,6 @@ const businessSchema = new Schema({
     type: [paramSchema],
     default: [],
   },
-  targets: [targetSchema],
   offices: {
     type: [officeSchema],
     default: [],

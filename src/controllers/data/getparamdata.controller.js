@@ -5,6 +5,7 @@ import { Target } from "../../models/target.model.js";
 import { DataAdd } from "../../models/dataadd.model.js";
 
 import moment from "moment-timezone";
+import { GetTargetAssignedUsers } from "../../utils/helpers/gettargetassignedusers.js";
 
 moment.tz.setDefault("Asia/Kolkata");
 
@@ -44,6 +45,7 @@ const GetParamData = asyncHandler(async (req, res) => {
     const target = await Target.findOne({
       paramName: paramName,
       businessId: businessId,
+      monthIndex: monthValue,
     });
     if (!target) {
       return res
@@ -78,11 +80,22 @@ const GetParamData = asyncHandler(async (req, res) => {
     const endDate = startDate.clone().endOf("month");
     console.log("Start Date:", startDate.format("YYYY-MM-DD"));
     console.log("End Date:", endDate.format("YYYY-MM-DD"));
+    const lastDayOfMonth1 = endDate.date();
 
-    const numUsersAssigned = target.usersAssigned.length;
-    let targetValue = parseInt(target.targetValue);
-    let dailyTargetValue = (targetValue * numUsersAssigned) / 30;
-    dailyTargetValue = Math.floor(dailyTargetValue);
+    const dailyTargetValue = await GetTargetAssignedUsers(
+      paramName,
+      monthValue,
+      businessId,
+      lastDayOfMonth1
+    );
+    console.log("hello");
+
+    console.log(dailyTargetValue);
+
+    // const numUsersAssigned = target.usersAssigned.length;
+    // let targetValue = parseInt(target.targetValue);
+    // let dailyTargetValue = (targetValue * numUsersAssigned) / 30;
+    // dailyTargetValue = Math.floor(dailyTargetValue);
 
     const userDataList = await DataAdd.find(
       {

@@ -12,17 +12,49 @@ const addUserToTarget = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { userIds } = req.body;
-    if (!userIds || !Array.isArray(userIds)) {
+    const { userIds, monthIndex } = req.body;
+    if (!userIds || !Array.isArray(userIds) || !monthIndex) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "Please provide userIds to add"));
+        .json(
+          new ApiResponse(400, {}, "Please provide userIds and monthIndex")
+        );
     }
 
-    const userId = req.user._id;
-    const targetId = req.params.targetId;
+    const month = parseInt(monthIndex, 10);
 
-    if (!userId) {
+    if (isNaN(month) || month < 1 || month > 12) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Invalid month value provided. Must be between 1 and 12"
+          )
+        );
+    }
+
+    const { paramName, businessId } = req.params;
+    if (!paramName || !businessId) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Please provide param name and businessId")
+        );
+    }
+
+    const loggedInuserId = req.user._id;
+
+    if (!loggedInuserId) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(400)
         .json(
@@ -30,38 +62,38 @@ const addUserToTarget = asyncHandler(async (req, res) => {
         );
     }
 
-    const target = await Target.findById(targetId).session(session);
-    if (!target) {
+    const loggedInUser = await User.findById(loggedInuserId);
+
+    const business = await Business.findById(businessId).session(session);
+    if (!business) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(400)
+        .json(new ApiResponse(400, {}, "Business not found"));
+    }
+
+    const businessUsers = await Businessusers.findOne({
+      userId: loggedInuserId,
+      businessId: businessId,
+    }).session(session);
+
+    if (!businessUsers || businessUsers.role === "User") {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(403)
         .json(
           new ApiResponse(
-            400,
+            403,
             {},
-            "Target not found please check provided target id again"
+            "Only Admin and MiniAdmin can assign users to the targets"
           )
         );
     }
 
-    const businessId = target.businessId;
-
-    const business = await Business.findById(businessId).session(session);
-
-    const businessUsers = await Businessusers.findOne({
-      userId: userId,
-      businessId: businessId,
-    }).session(session);
-
-    if (!businessUsers || businessUsers.role !== "Admin") {
-      return res
-        .status(403)
-        .json(
-          new ApiResponse(403, {}, "Only Admin can assign users to the targets")
-        );
-    }
-
     const param = await Params.findOne({
-      name: target.paramName,
+      name: paramName,
       businessId,
     }).session(session);
 
@@ -73,7 +105,6 @@ const addUserToTarget = asyncHandler(async (req, res) => {
         );
     }
 
-    const validUsers = [];
     for (const userId of userIds) {
       const user = await User.findById(userId).session(session);
       if (!user) {
@@ -119,7 +150,13 @@ const addUserToTarget = asyncHandler(async (req, res) => {
           );
       }
 
-      if (target.usersAssigned.some((u) => u.userId.equals(user._id))) {
+      const target = await Target.find({
+        paramName: paramName,
+        monthIndex: monthIndex,
+        businessId: businessId,
+      });
+
+      if (!target || target.length === 0) {
         await session.abortTransaction();
         session.endSession();
         return res
@@ -128,38 +165,51 @@ const addUserToTarget = asyncHandler(async (req, res) => {
             new ApiResponse(
               400,
               {},
-              `User with id ${user.name} is already assigned to this target`
+              `There is not any target with the provided details`
             )
           );
       }
 
-      validUsers.push({ userId: user._id, name: user.name });
-    }
+      // console.log(target);
+      const userExistsInTarget = target.some((t) => t.userId.equals(user._id));
+      // console.log(userExistsInTarget);
 
-    // Add valid users to the target's usersAssigned array
-    target.usersAssigned.push(...validUsers);
-    await target.save({ session });
+      // console.log(target[0].targetValue);
+      if (userExistsInTarget) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(
+              400,
+              {},
+              `User with name ${user.name} is already in the target`
+            )
+          );
+      }
 
-    // Create activity entries for each user
-    const activities = validUsers.map((user) => ({
-      userId: user.userId,
-      businessId,
-      content: `Assigned target for parameter ${target.paramName} to ${user.name}`,
-      activityCategory: "Target Assignment",
-    }));
+      const newtarget = new Target({
+        targetValue: target[0].targetValue,
+        paramName: paramName,
+        businessId: business._id,
+        comment: target[0].comment,
+        userId: user._id,
+        monthIndex: monthIndex,
+        assignedBy: loggedInUser.name,
+        assignedto: user.name,
+      });
 
-    // Save activities to the database
-    await Activites.insertMany(activities, { session });
+      await newtarget.save({ session });
 
-    // Update the targetValue in the Business table
-    const updatedTargetValue = target.targetValue * target.usersAssigned.length;
-    const targetIndex = business.targets.findIndex((t) =>
-      t.targetId.equals(target._id)
-    );
+      const activity = new Activites({
+        userId: user._id,
+        businessId,
+        content: `Assigned target for parameter ${paramName} to ${user.name}`,
+        activityCategory: "Target Assignment",
+      });
 
-    if (targetIndex !== -1) {
-      business.targets[targetIndex].targetValue = updatedTargetValue;
-      await business.save({ session });
+      await activity.save({ session });
     }
 
     await session.commitTransaction();
@@ -168,11 +218,7 @@ const addUserToTarget = asyncHandler(async (req, res) => {
     return res
       .status(200)
       .json(
-        new ApiResponse(
-          200,
-          { target },
-          "Users added to the target successfully and targetValue updated in the business table"
-        )
+        new ApiResponse(200, {}, "Users added to the target successfully ")
       );
   } catch (error) {
     await session.abortTransaction();
