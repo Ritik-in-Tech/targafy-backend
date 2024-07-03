@@ -1,7 +1,10 @@
 import { User } from "../../src/models/user.model.js";
 import NotificationModel from "../../src/models/notification.model.js";
 
-import { sendNotification, sendNotification1 } from "../controllers/notification.controller.js";
+import {
+  sendNotification,
+  sendNotification1,
+} from "../controllers/notification.controller.js";
 
 let issueNsp;
 
@@ -69,7 +72,7 @@ export async function emitNewNotificationEvent(userId, eventData) {
 
     issueNsp.to(userId).emit("new-notification", eventData);
 
-    await sendNotification1(userId, eventData.content);
+    await sendNotification(userId, eventData.content);
   } else {
     throw new Error(
       "Socket.io not initialized. Call initializeActivitySocket(server) first."

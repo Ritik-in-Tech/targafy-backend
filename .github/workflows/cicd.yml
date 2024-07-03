@@ -46,6 +46,7 @@ jobs:
           sudo docker run -d -p 443:443 -p 80:80 --name targafy-backend-container \
               -e MONGODB_PASS='${{ secrets.MONGODB_PASS }}' \
               -e NODE_ENV='${{ secrets.NODE_ENV }}' \
+              -e FCM_ACCESS_TOKEN='${{ secrets.FCM_ACCESS_TOKEN }}' \
               -e ACCESS_TOKEN_SECRET='${{ secrets.ACCESS_TOKEN_SECRET }}' \
               -e ACCESS_TOKEN_EXPIRY='${{ secrets.ACCESS_TOKEN_EXPIRY }}' \
               -e AUTHKEY='${{ secrets.AUTHKEY }}' \
