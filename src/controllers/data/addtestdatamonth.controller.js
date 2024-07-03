@@ -18,7 +18,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
   session.startTransaction();
 
   try {
-    const { parameterName, businessId, monthName } = req.params;
+    const { paramName, businessId, monthName } = req.params;
     const userId = req.user._id;
 
     if (!userId) {
@@ -30,7 +30,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
     }
 
     // Validate presence of required params
-    if (!parameterName || !businessId || !monthName) {
+    if (!paramName || !businessId || !monthName) {
       await session.abortTransaction();
       session.endSession();
       return res
@@ -39,7 +39,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
           new ApiResponse(
             400,
             {},
-            "Missing parameterName, businessId, or monthName in params"
+            "Missing paramName, businessId, or monthName in params"
           )
         );
     }
@@ -62,7 +62,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
     }
 
     const paramDetails = await Params.findOne({
-      name: parameterName,
+      name: paramName,
       businessId,
     }).session(session);
     if (!paramDetails) {
@@ -71,9 +71,29 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
       return res.status(404).json(new ApiResponse(404, {}, "Param not found"));
     }
 
+    const currentYear = moment().year();
+    const monthStart = moment()
+      .year(currentYear)
+      .month(monthName)
+      .startOf("month");
+    if (!monthStart.isValid()) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Invalid month name provided"));
+    }
+    const monthEnd = monthStart.clone().endOf("month");
+    console.log(monthStart.month() + 1);
+
+    console.log(userId);
+    console.log(businessId);
+
     const target = await Target.findOne({
-      paramName: parameterName,
+      paramName: paramName,
       businessId,
+      userId: userId,
+      monthIndex: monthStart.month() + 1,
     }).session(session);
     if (!target) {
       await session.abortTransaction();
@@ -83,34 +103,6 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
 
     let targetValue = target.targetValue;
     targetValue = parseInt(targetValue);
-
-    const userAssigned = target.usersAssigned.some((user) =>
-      user.userId.equals(userId)
-    );
-    if (!userAssigned) {
-      await session.abortTransaction();
-      session.endSession();
-      return res
-        .status(403)
-        .json(
-          new ApiResponse(403, {}, "User is not assigned to this parameter")
-        );
-    }
-
-    const currentYear = moment().year();
-    const monthStart = moment()
-      .year(currentYear)
-      .month(monthName)
-      .startOf("month");
-    const monthEnd = monthStart.clone().endOf("month");
-
-    if (!monthStart.isValid()) {
-      await session.abortTransaction();
-      session.endSession();
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Invalid month name provided"));
-    }
 
     const allDays = [];
 
@@ -130,7 +122,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
     console.log(monthStart.month() + 1);
 
     let dataAdd = await DataAdd.findOne({
-      parameterName,
+      paramName,
       userId,
       businessId,
       $expr: {
@@ -162,7 +154,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
     if (!dataAdd) {
       console.log("Data added not found");
       dataAdd = new DataAdd({
-        parameterName,
+        parameterName: paramName,
         userId,
         addedBy: user.name,
         monthIndex: currentMonth,
@@ -206,7 +198,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
       const activity = new Activites({
         userId: userId,
         businessId,
-        content: `${user.name} added the data for ${parameterName} on ${formattedDate}`,
+        content: `${user.name} added the data for ${paramName} on ${formattedDate}`,
         activityCategory: "Data Add",
       });
 
@@ -219,7 +211,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
 
       let userDataEntry = user.data.find(
         (entry) =>
-          entry.name === parameterName &&
+          entry.name === paramName &&
           entry.dataId.equals(dataAdd._id) &&
           entry.createdDate.getMonth() + 1 === currentMonth &&
           entry.createdDate.getFullYear() === currentYear
@@ -231,7 +223,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
       } else {
         console.log("Not Found");
         user.data.push({
-          name: parameterName,
+          name: paramName,
           dataId: dataAdd._id,
           targetDone: todaysDataValue,
           createdDate: adjustedDate,
