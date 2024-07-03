@@ -81,7 +81,8 @@ const GetParamData = asyncHandler(async (req, res) => {
 
     const numUsersAssigned = target.usersAssigned.length;
     let targetValue = parseInt(target.targetValue);
-    const dailyTargetValue = (targetValue * numUsersAssigned) / 30;
+    let dailyTargetValue = (targetValue * numUsersAssigned) / 30;
+    dailyTargetValue = Math.floor(dailyTargetValue);
 
     const userDataList = await DataAdd.find(
       {
