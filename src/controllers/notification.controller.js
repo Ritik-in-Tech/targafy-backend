@@ -6,43 +6,41 @@ import path from "path";
 
 export async function sendNotification(userId, body) {
   try {
-    // console.log("This is userID " , userId , " this is body : " , body);
     if (!userId || !body) {
       console.log("Provide complete information!!");
       return;
     }
 
     const userInfo = await User.findOne({ _id: userId });
-    // console.log(userInfo);
 
-    if (!userInfo.fcmToken) {
-      console.log("User have not fcm token!!");
+    if (!userInfo || !userInfo.fcmToken) {
+      console.log("User does not have an FCM token!!");
       return;
     }
 
     let token = userInfo.fcmToken;
-
-    // console.log("Hiii");
-
-    let serverKey = process.env.FCM_API_KEY;
-    // console.log(serverKey);
+    let accessToken = process.env.FCM_ACCESS_TOKEN;
+    // console.log("The token is:", token);
+    // console.log("The access token is :", accessToken);
 
     const data = JSON.stringify({
-      to: token,
-      notification: {
-        title: "Targafy",
-        body: body,
+      message: {
+        token: token,
+        notification: {
+          title: "Targafy",
+          body: body,
+        },
+        data: {}, // Additional data can be added here if needed
       },
-      data: {},
     });
 
     const options = {
-      hostname: "fcm.googleapis.com",
-      path: "/fcm/send",
+      hostname: "fcm.googleapis.com", // Corrected hostname
+      path: "/v1/projects/targafy-288b2/messages:send",
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `key=${serverKey}`, // Changed from Bearer to key=
+        Authorization: `Bearer ${accessToken}`, // Corrected Authorization header
       },
     };
 
@@ -64,7 +62,7 @@ export async function sendNotification(userId, body) {
     req.write(data);
     req.end();
   } catch (e) {
-    console.error(e.toString());
+    console.error("Exception:", e.toString());
   }
 }
 
