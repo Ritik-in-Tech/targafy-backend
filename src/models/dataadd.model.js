@@ -41,6 +41,8 @@ const dataAddSchema = new Schema(
       type: Schema.Types.ObjectId,
       required: true,
     },
+    addedBy: commonStringConstraints,
+    monthIndex: commonStringConstraints,
     businessId: { type: Schema.Types.ObjectId, required: true },
     createdDate: {
       type: Date,

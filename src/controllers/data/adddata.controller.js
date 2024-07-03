@@ -58,10 +58,14 @@ const AddData = asyncHandler(async (req, res) => {
     }
 
     const user = await User.findById(userId).session(session);
-    if (!user) {
+    if (!user || !user.name) {
       await session.abortTransaction();
       session.endSession();
-      return res.status(404).json(new ApiResponse(404, {}, "User not found"));
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(404, {}, "User not found or name of user not exist")
+        );
     }
 
     const business = await Business.findById(businessId).session(session);
@@ -124,6 +128,8 @@ const AddData = asyncHandler(async (req, res) => {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
+    console.log(currentMonth);
+    console.log(currentYear);
 
     let dataAdd = await DataAdd.findOne({
       parameterName,
@@ -159,6 +165,8 @@ const AddData = asyncHandler(async (req, res) => {
         parameterName,
         data: [{ todaysdata, comment, createdDate: currentDate }],
         userId,
+        addedBy: user.name,
+        monthIndex: currentMonth + 1,
         businessId,
         createdDate: currentDate,
       });
@@ -174,8 +182,12 @@ const AddData = asyncHandler(async (req, res) => {
     await activity.save({ session });
 
     await dataAdd.save({ session });
+    console.log(dataAdd.createdDate);
 
-    const targetValue = parseFloat(target.targetValue);
+    console.log(dataAdd.createdDate.getMonth());
+    console.log(currentMonth);
+
+    // const targetValue = parseFloat(target.targetValue);
     const todaysDataValue = parseFloat(todaysdata);
 
     // Find the data entry for the parameterName
@@ -183,7 +195,7 @@ const AddData = asyncHandler(async (req, res) => {
       (entry) =>
         entry.name === parameterName &&
         entry.dataId.equals(dataAdd._id) &&
-        entry.createdDate.getMonth() === currentMonth &&
+        entry.createdDate.getMonth() + 1 === currentMonth + 1 &&
         entry.createdDate.getFullYear() === currentYear
     );
 
@@ -201,11 +213,11 @@ const AddData = asyncHandler(async (req, res) => {
     // Sort the data array to keep the most recent entries first
     user.data.sort((a, b) => b.createdDate - a.createdDate);
 
-    // Optionally, limit the number of entries to keep (e.g., last 12 months)
-    const MAX_ENTRIES = 12;
-    if (user.data.length > MAX_ENTRIES) {
-      user.data = user.data.slice(0, MAX_ENTRIES);
-    }
+    // // Optionally, limit the number of entries to keep (e.g., last 12 months)
+    // const MAX_ENTRIES = 12;
+    // if (user.data.length > MAX_ENTRIES) {
+    //   user.data = user.data.slice(0, MAX_ENTRIES);
+    // }
     await user.save({ session });
 
     await session.commitTransaction();

@@ -39,7 +39,7 @@ router.route("/get-previous-data/:businessId/:paramName").get(getPreviousData);
 router.route("/get-target-users/:businessId").get(getTargetToAddData);
 
 router
-  .route("/add-test-data/:businessId/:parameterName")
+  .route("/add-test-data/:businessId/:parameterName/:monthName")
   .post(AddTestDataForMonth);
 
 router

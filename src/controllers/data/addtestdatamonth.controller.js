@@ -8,9 +8,8 @@ import mongoose from "mongoose";
 import { User } from "../../models/user.model.js";
 import { Activites } from "../../models/activities.model.js";
 import moment from "moment-timezone";
+import { generateRandomNumber } from "../../utils/helpers/generaterandomnumber.js";
 moment.tz.setDefault("Asia/Kolkata");
-
-const generateRandomData = () => Math.floor(Math.random() * 133);
 
 const formatDate = (date) => date.format("YYYY-MM-DD");
 
@@ -82,6 +81,9 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
       return res.status(404).json(new ApiResponse(404, {}, "Target not found"));
     }
 
+    let targetValue = target.targetValue;
+    targetValue = parseInt(targetValue);
+
     const userAssigned = target.usersAssigned.some((user) =>
       user.userId.equals(userId)
     );
@@ -118,11 +120,14 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
       currentDate.add(1, "day");
     }
 
+    const totalDays = allDays.length;
+
     console.log("First day of the month:", formatDate(allDays[0]));
     console.log(
       "Last day of the month:",
       formatDate(allDays[allDays.length - 1])
     );
+    console.log(monthStart.month() + 1);
 
     let dataAdd = await DataAdd.findOne({
       parameterName,
@@ -136,19 +141,43 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
       },
     }).session(session);
 
+    // const formattedDate = formatDate(allDays[allDays.length - 1]);
+    // const todaysdata = generateRandomData().toString();
+    // const comment = `Data for ${formattedDate}`;
+
+    // console.log(formattedDate);
+    // console.log(todaysdata);
+    // console.log(comment);
+    const adjustedDate = allDays[0]
+      .clone()
+      .hour(12)
+      .minute(0)
+      .second(0)
+      .millisecond(0)
+      .utc()
+      .toDate();
+    console.log(adjustedDate);
+    const currentMonth = allDays[0].month() + 1;
+    console.log(currentMonth);
     if (!dataAdd) {
+      console.log("Data added not found");
       dataAdd = new DataAdd({
         parameterName,
         userId,
+        addedBy: user.name,
+        monthIndex: currentMonth,
         businessId,
         data: [],
-        createdDate: monthStart.toDate(),
+        createdDate: adjustedDate,
       });
     }
+    // console.log("Hello world");
+    // console.log(adjustedDate.getMonth());
+    // console.log(adjustedDate.getFullYear());
 
     for (const day of allDays) {
       const formattedDate = formatDate(day);
-      const todaysdata = generateRandomData().toString();
+      const todaysdata = generateRandomNumber(targetValue, totalDays);
       const comment = `Data for ${formattedDate}`;
 
       // Create a new Date object at noon IST, which is 6:30 UTC
@@ -161,11 +190,18 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
         .utc()
         .toDate();
 
+      console.log(adjustedDate);
+
       dataAdd.data.push({
         todaysdata,
         comment,
         createdDate: adjustedDate,
       });
+
+      await dataAdd.save({ session });
+
+      console.log("Hello");
+      console.log(dataAdd._id);
 
       const activity = new Activites({
         userId: userId,
@@ -176,36 +212,41 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
 
       await activity.save({ session });
 
-      const targetValue = parseFloat(target.targetValue);
+      // const targetValue = parseFloat(target.targetValue);
       const todaysDataValue = parseFloat(todaysdata);
+
+      const currentMonth = day.month() + 1;
 
       let userDataEntry = user.data.find(
         (entry) =>
           entry.name === parameterName &&
           entry.dataId.equals(dataAdd._id) &&
-          entry.createdDate.getMonth() === currentMonth &&
+          entry.createdDate.getMonth() + 1 === currentMonth &&
           entry.createdDate.getFullYear() === currentYear
       );
 
       if (userDataEntry) {
+        console.log("Found");
         userDataEntry.targetDone += todaysDataValue;
       } else {
+        console.log("Not Found");
         user.data.push({
           name: parameterName,
           dataId: dataAdd._id,
           targetDone: todaysDataValue,
-          createdDate: currentDate,
+          createdDate: adjustedDate,
         });
+        await user.save({ session });
       }
 
       // Sort the data array to keep the most recent entries first
       user.data.sort((a, b) => b.createdDate - a.createdDate);
 
-      // Optionally, limit the number of entries to keep (e.g., last 12 months)
-      const MAX_ENTRIES = 12;
-      if (user.data.length > MAX_ENTRIES) {
-        user.data = user.data.slice(0, MAX_ENTRIES);
-      }
+      // // Optionally, limit the number of entries to keep (e.g., last 12 months)
+      // const MAX_ENTRIES = 12;
+      // if (user.data.length > MAX_ENTRIES) {
+      //   user.data = user.data.slice(0, MAX_ENTRIES);
+      // }
 
       await user.save({ session });
     }
