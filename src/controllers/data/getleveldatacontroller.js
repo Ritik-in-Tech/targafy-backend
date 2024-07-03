@@ -135,8 +135,9 @@ const getLevelDataController = asyncHandler(async (req, res) => {
     const numUsersAssigned = userIds.length;
     console.log(numUsersAssigned);
     let targetValue = parseInt(target.targetValue); // 2000*9
-    const dailyTargetValue =
+    let dailyTargetValue =
       (targetValue * numUsersAssigned) / startDate.daysInMonth();
+    dailyTargetValue = Math.floor(dailyTargetValue);
 
     const userDataList = await DataAdd.find(
       {
