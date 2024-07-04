@@ -3,7 +3,6 @@ import { verifyJWT } from "../middleware/auth.middleware.js";
 import {
   getDailyTargetValue,
   getPreviousData,
-  getTargetToAddData,
 } from "../controllers/data.controller.js";
 
 import { AddData } from "../controllers/data/adddata.controller.js";
@@ -13,6 +12,7 @@ import { AddTestDataForMonth } from "../controllers/data/addtestdatamonth.contro
 import { getLevelDataController } from "../controllers/data/getleveldatacontroller.js";
 import { getPieChartData } from "../controllers/data/getdatapiechart.controller.js";
 import { getThreeMonthsDataUser } from "../controllers/data/getthreemonthsdata.controller.js";
+import { getTargetToAddData } from "../controllers/data/gettargettoadddata.js";
 const router = Router();
 
 router.use(verifyJWT);
