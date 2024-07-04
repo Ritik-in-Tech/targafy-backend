@@ -50,7 +50,7 @@ const createParam = asyncHandler(async (req, res) => {
       businessId: businessId,
     }).session(session);
 
-    if (businessUsers.role !== "Admin") {
+    if (businessUsers.role === "User") {
       await session.abortTransaction();
       session.endSession();
       return res
@@ -59,7 +59,7 @@ const createParam = asyncHandler(async (req, res) => {
           new ApiResponse(
             400,
             {},
-            "Only Admin can assign the targets for the params"
+            "Only Admin and MiniAdmin can create the params"
           )
         );
     }

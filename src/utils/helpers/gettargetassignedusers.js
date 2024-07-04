@@ -6,7 +6,8 @@ export const GetTargetAssignedUsers = async (
   paramName,
   monthValue,
   businessId,
-  lastDayOfMonth
+  lastDayOfMonth,
+  userIds
 ) => {
   try {
     // Validate required fields
@@ -21,7 +22,10 @@ export const GetTargetAssignedUsers = async (
       paramName: paramName,
       businessId: businessId,
       monthIndex: monthValue,
+      userId: { $in: userIds },
     });
+
+    console.log(totalTargets);
 
     // Check if any targets were found
     if (!totalTargets || totalTargets.length === 0) {
