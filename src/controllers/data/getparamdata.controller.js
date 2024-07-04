@@ -42,12 +42,12 @@ const GetParamData = asyncHandler(async (req, res) => {
         );
     }
 
-    const target = await Target.findOne({
+    const target = await Target.find({
       paramName: paramName,
       businessId: businessId,
       monthIndex: monthValue,
     });
-    if (!target) {
+    if (!target || !target.length === 0) {
       return res
         .status(400)
         .json(
@@ -58,6 +58,11 @@ const GetParamData = asyncHandler(async (req, res) => {
           )
         );
     }
+    // console.log(target);
+
+    const userIds = target.map((t) => t.userId);
+
+    // console.log(userIds);
     const year = moment().year();
     const month = parseInt(monthValue, 10);
 
@@ -86,7 +91,8 @@ const GetParamData = asyncHandler(async (req, res) => {
       paramName,
       monthValue,
       businessId,
-      lastDayOfMonth1
+      lastDayOfMonth1,
+      userIds
     );
     console.log("hello");
 

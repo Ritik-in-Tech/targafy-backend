@@ -1,13 +1,16 @@
-import { asyncHandler } from "../../utils/asyncHandler";
-import { ApiResponse } from "../../utils/ApiResponse";
-import { Business } from "../../models/business.model";
-import { Businessusers } from "../../models/businessUsers.model";
-import { User } from "../../models/user.model";
-import { Target } from "../../models/target.model";
+import { asyncHandler } from "../../utils/asyncHandler.js";
+import { ApiResponse } from "../../utils/ApiResponse.js";
+import { Business } from "../../models/business.model.js";
+import { Businessusers } from "../../models/businessUsers.model.js";
+import { User } from "../../models/user.model.js";
+import { Target } from "../../models/target.model.js";
+import moment from "moment-timezone";
+
 const getThreeMonthsDataUser = asyncHandler(async (req, res) => {
   try {
-    const { userId, targetId, businessId } = req.params;
-    if (!userId || !targetId || !businessId) {
+    const { userId, paramName, businessId } = req.params;
+
+    if (!userId || !paramName || !businessId) {
       return res
         .status(400)
         .json(
@@ -89,12 +92,62 @@ const getThreeMonthsDataUser = asyncHandler(async (req, res) => {
         );
     }
 
-    const target = await Target.findById(targetId);
-    if (!target) {
-      return res.status(400).json(new ApiResponse(400, {}, "target not found"));
-    }
+    // Calculate the previous three months
+    const now = moment();
+    console.log(now);
+    const lastThreeMonths = [
+      now.clone().subtract(1, "months").format("M"),
+      now.clone().subtract(2, "months").format("M"),
+      now.clone().subtract(3, "months").format("M"),
+    ];
 
-    
+    console.log(lastThreeMonths);
 
-  } catch (error) {}
+    // Query the target table for the previous three months
+    const targets = await Target.find({
+      businessId: businessId,
+      userId: userId,
+      paramName: paramName,
+      monthIndex: { $in: lastThreeMonths },
+    });
+
+    // Query the user's data field for the previous three months
+    const userData = user.data.filter(
+      (dataItem) =>
+        dataItem.name === paramName &&
+        moment(dataItem.createdDate).isBetween(
+          now.clone().subtract(3, "months").startOf("month"),
+          now.endOf("month")
+        )
+    );
+
+    // Structure the response data
+    const result = lastThreeMonths.map((month) => {
+      const target = targets.find((t) => t.monthIndex === month);
+      const targetValue = target ? target.targetValue : "";
+      const targetDone =
+        userData.find(
+          (dataItem) => moment(dataItem.createdDate).format("M") === month
+        )?.targetDone || "";
+
+      return {
+        month,
+        targetValue,
+        targetDone,
+      };
+    });
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, result, "Data retrieved successfully"));
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json(
+        new ApiResponse(500, {}, "An error occurred while retrieving the data")
+      );
+  }
 });
+
+export { getThreeMonthsDataUser };

@@ -12,6 +12,7 @@ import { GetParamData } from "../controllers/data/getparamdata.controller.js";
 import { AddTestDataForMonth } from "../controllers/data/addtestdatamonth.controller.js";
 import { getLevelDataController } from "../controllers/data/getleveldatacontroller.js";
 import { getPieChartData } from "../controllers/data/getdatapiechart.controller.js";
+import { getThreeMonthsDataUser } from "../controllers/data/getthreemonthsdata.controller.js";
 const router = Router();
 
 router.use(verifyJWT);
@@ -49,6 +50,10 @@ router
 router
   .route("/get-pie-chart-data/:businessId/:userId/:paramName/:monthValue")
   .get(getPieChartData);
+
+router
+  .route("/get-three-months-data/:userId/:businessId/:paramName")
+  .get(getThreeMonthsDataUser);
 
 // router.route("/add-")
 export default router;
