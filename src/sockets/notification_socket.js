@@ -3,7 +3,7 @@ import NotificationModel from "../../src/models/notification.model.js";
 
 import {
   sendNotification,
-  sendNotification1,
+  sendNotificationNew,
 } from "../controllers/notification.controller.js";
 
 let issueNsp;
@@ -72,7 +72,7 @@ export async function emitNewNotificationEvent(userId, eventData) {
 
     issueNsp.to(userId).emit("new-notification", eventData);
 
-    await sendNotification(userId, eventData.content);
+    await sendNotificationNew(userId, eventData.content);
   } else {
     throw new Error(
       "Socket.io not initialized. Call initializeActivitySocket(server) first."
@@ -122,7 +122,7 @@ export async function emitNewNotificationAndAddBusinessEvent(
     // console.log("This is data }", data);
     issueNsp.to(userId).emit("new-notification-add-business", data);
 
-    sendNotification(userId, eventData.content);
+    sendNotificationNew(userId, eventData.content);
   } else {
     throw new Error(
       "Socket.io not initialized. Call initializeActivitySocket(server) first."

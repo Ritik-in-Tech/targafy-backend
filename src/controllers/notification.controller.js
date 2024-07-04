@@ -75,7 +75,7 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceKeyPath),
 });
 
-export async function sendNotification1(userId, body) {
+export async function sendNotificationNew(userId, body) {
   try {
     if (!userId || !body) {
       console.log("Provide complete information!!");
