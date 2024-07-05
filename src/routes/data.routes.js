@@ -13,6 +13,7 @@ import { getLevelDataController } from "../controllers/data/getleveldatacontroll
 import { getPieChartData } from "../controllers/data/getdatapiechart.controller.js";
 import { getThreeMonthsDataUser } from "../controllers/data/getthreemonthsdata.controller.js";
 import { getTargetToAddData } from "../controllers/data/gettargettoadddata.js";
+import { getProgressDataParam } from "../controllers/data/getprogressdata.controller.js";
 const router = Router();
 
 router.use(verifyJWT);
@@ -54,6 +55,10 @@ router
 router
   .route("/get-three-months-data/:userId/:businessId/:paramName")
   .get(getThreeMonthsDataUser);
+
+router
+  .route("/get-progress-data-param/:businessId/:monthValue")
+  .get(getProgressDataParam);
 
 // router.route("/add-")
 export default router;
