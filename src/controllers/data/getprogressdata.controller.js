@@ -6,6 +6,7 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import moment from "moment-timezone";
 import { GetTargetAssignedUsers } from "../../utils/helpers/gettargetassignedusers.js";
 import { DataAdd } from "../../models/dataadd.model.js";
+import { User } from "../../models/user.model.js";
 
 const getProgressDataParam = asyncHandler(async (req, res) => {
   try {
@@ -221,4 +222,82 @@ const getProgressDataParam = asyncHandler(async (req, res) => {
   }
 });
 
-export { getProgressDataParam };
+const getProgressDataUsers = asyncHandler(async (req, res) => {
+  try {
+    const { paramName, monthValue, businessId } = req.params;
+    if (!paramName || !monthValue || !businessId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Please provide all required fields"));
+    }
+
+    const paramDetails = await Params.findOne({
+      name: paramName,
+      businessId: businessId,
+    });
+    if (!paramDetails) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Param not found for the provided details")
+        );
+    }
+
+    const target = await Target.find({
+      paramName: paramName,
+      businessId: businessId,
+      monthIndex: monthValue,
+    });
+    if (!target || target.length === 0) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Target not found for the provided details")
+        );
+    }
+
+    const userIds = target.map((t) => t.userId);
+
+    const year = moment().year();
+    const month = parseInt(monthValue, 10);
+
+    if (isNaN(month) || month < 1 || month > 12) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Invalid month value provided. Must be between 1 and 12"
+          )
+        );
+    }
+
+    for (const userId of userIds) {
+      const user = await User.findById(userId);
+
+      const matchingData = user.data.find(
+        (item) =>
+          item.name === paramName &&
+          new Date(item.createdDate.$date).getMonth() === parseInt(monthValue)
+      );
+
+      console.log(matchingData);
+
+      const target = await Target.findOne({
+        businessId: businessId,
+        monthIndex: monthValue,
+        paramName: paramName,
+        userId: userId,
+      });
+      console.log(target);
+    }
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, { error }, "Internal server error"));
+  }
+});
+
+export { getProgressDataParam, getProgressDataUsers };

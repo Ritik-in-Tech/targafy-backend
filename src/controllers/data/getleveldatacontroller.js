@@ -11,10 +11,7 @@ moment.tz.setDefault("Asia/Kolkata");
 
 const getLevelDataController = asyncHandler(async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const businessId = req.params.businessId;
-    const paramName = req.params.paramName;
-    const monthValue = req.params.monthValue;
+    const { userId, businessId, paramName, monthValue } = req.params;
 
     if (!userId || !businessId || !paramName || !monthValue) {
       return res
@@ -29,7 +26,7 @@ const getLevelDataController = asyncHandler(async (req, res) => {
     }
 
     // Validate and parse month name and year
-    const year = moment().year(); // You can modify this to get the year dynamically if required
+    const year = moment().year();
     const month = parseInt(monthValue, 10);
 
     if (isNaN(month) || month < 1 || month > 12) {
@@ -114,7 +111,10 @@ const getLevelDataController = asyncHandler(async (req, res) => {
       .filter(Boolean); // Filter out undefined values
 
     console.log("allSubordinates after mapping:", allSubordinates);
-    const userIds = [userId, ...allSubordinates];
+    let userIds = [...allSubordinates];
+    if (userIds.length === 0) {
+      userIds = [userId];
+    }
     console.log("Combined userIds:", userIds);
 
     const target = await Target.findOne({
