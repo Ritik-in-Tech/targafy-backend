@@ -11,9 +11,7 @@ moment.tz.setDefault("Asia/Kolkata");
 
 const GetParamData = asyncHandler(async (req, res) => {
   try {
-    const businessId = req.params.businessId;
-    const paramName = req.params.paramName;
-    const monthValue = req.params.monthValue;
+    const { businessId, paramName, monthValue } = req.params;
     if (!businessId || !paramName || !monthValue) {
       return res
         .status(400)

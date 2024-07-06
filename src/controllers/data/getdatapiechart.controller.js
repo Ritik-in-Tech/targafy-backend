@@ -8,10 +8,7 @@ moment.tz.setDefault("Asia/Kolkata");
 
 const getPieChartData = asyncHandler(async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const businessId = req.params.businessId;
-    const paramName = req.params.paramName;
-    const monthValue = req.params.monthValue;
+    const { userId, businessId, paramName, monthValue } = req.params;
 
     if (!userId || !businessId || !paramName || !monthValue) {
       return res
@@ -97,7 +94,7 @@ const getPieChartData = asyncHandler(async (req, res) => {
       .filter(Boolean);
 
     const userDataMap = new Map();
-    let totalSum = userTargetDoneValue; // Initialize with the main user's value
+    let totalSum = userTargetDoneValue;
 
     userDataMap.set(user.name, userTargetDoneValue);
 
