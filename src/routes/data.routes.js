@@ -13,11 +13,11 @@ import { getLevelDataController } from "../controllers/data/getleveldatacontroll
 import { getPieChartData } from "../controllers/data/getdatapiechart.controller.js";
 import { getThreeMonthsDataUser } from "../controllers/data/getthreemonthsdata.controller.js";
 import { getTargetToAddData } from "../controllers/data/gettargettoadddata.js";
+
 import {
-  getProgressDataParam,
-  getProgressDataUsers,
-} from "../controllers/data/getprogressdata.controller.js";
-import { getLevelComments } from "../controllers/data/getlevelcomments.js";
+  getLevelComments,
+  getParamComments,
+} from "../controllers/data/getlevelcomments.js";
 const router = Router();
 
 router.use(verifyJWT);
@@ -60,17 +60,21 @@ router
   .route("/get-three-months-data/:userId/:businessId/:paramName")
   .get(getThreeMonthsDataUser);
 
-router
-  .route("/get-progress-data-param/:businessId/:monthValue")
-  .get(getProgressDataParam);
+// router
+//   .route("/get-progress-data-param/:businessId/:monthValue")
+//   .get(getProgressDataParam);
 
-router
-  .route("/get-progress-data-users/:paramName/:monthValue/:businessId")
-  .get(getProgressDataUsers);
+// router
+//   .route("/get-progress-data-users/:paramName/:monthValue/:businessId")
+//   .get(getProgressDataUsers);
 
 router
   .route("/get-level-comments/:businessId/:userId/:paramName/:monthValue")
   .get(getLevelComments);
+
+router
+  .route("/get-param-comments/:businessId/:paramName/:monthValue")
+  .get(getParamComments);
 
 // router.route("/add-")
 export default router;

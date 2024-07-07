@@ -6,6 +6,7 @@ import { Businessusers } from "../../models/businessUsers.model.js";
 import { Target } from "../../models/target.model.js";
 import { DataAdd } from "../../models/dataadd.model.js";
 import moment from "moment-timezone";
+import { Params } from "../../models/params.model.js";
 moment.tz.setDefault("Asia/Kolkata");
 
 const getLevelComments = asyncHandler(async (req, res) => {
@@ -193,4 +194,143 @@ const getLevelComments = asyncHandler(async (req, res) => {
   }
 });
 
-export { getLevelComments };
+const getParamComments = asyncHandler(async (req, res) => {
+  try {
+    const { businessId, paramName, monthValue } = req.params;
+    if (!businessId || !paramName || !monthValue) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Business ID , parameter name and month value  are not provided"
+          )
+        );
+    }
+
+    const paramDetails = await Params.findOne({
+      name: paramName,
+      businessId: businessId,
+    });
+    if (!paramDetails) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Invalid parameter name and business ID provided"
+          )
+        );
+    }
+
+    const target = await Target.find({
+      paramName: paramName,
+      businessId: businessId,
+      monthIndex: monthValue,
+    });
+    if (!target || !target.length === 0) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Target is not set for this business and parameter"
+          )
+        );
+    }
+    // console.log(target);
+
+    const userIds = target.map((t) => t.userId);
+
+    // console.log(userIds);
+    const year = moment().year();
+    const month = parseInt(monthValue, 10);
+
+    if (isNaN(month) || month < 1 || month > 12) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Invalid month value provided. Must be between 1 and 12"
+          )
+        );
+    }
+
+    const startDate = moment.tz(
+      `${year}-${month.toString().padStart(2, "0")}-01`,
+      "Asia/Kolkata"
+    );
+    const endDate = startDate.clone().endOf("month");
+    console.log("Start Date:", startDate.format("YYYY-MM-DD"));
+    console.log("End Date:", endDate.format("YYYY-MM-DD"));
+
+    const userList = await DataAdd.find(
+      {
+        businessId: businessId,
+        parameterName: paramName,
+        userId: { $in: userIds },
+        createdDate: {
+          $gte: startDate.toDate(),
+          $lte: endDate.toDate(),
+        },
+      },
+      "data createdDate addedBy"
+    );
+    // console.log(userList);
+
+    if (!userList || userList.length === 0) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "No comment found for the provided criteria")
+        );
+    }
+    const commentsMap = new Map();
+
+    userList.forEach((userComment) => {
+      userComment.data.forEach((item) => {
+        const date = moment(item.createdDate)
+          .tz("Asia/Kolkata")
+          .format("YYYY-MM-DD");
+        const todaysComment = item.comment;
+        const addedBy = userComment.addedBy;
+
+        if (!commentsMap.has(date)) {
+          commentsMap.set(date, []);
+        }
+
+        commentsMap.get(date).push({ todaysComment, addedBy, date });
+      });
+    });
+    const commentsArray = Array.from(commentsMap, ([date, comments]) => ({
+      date,
+      comments,
+    }));
+
+    // Sort the array by date
+    commentsArray.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Return the response
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { comments: commentsArray },
+          "Comments retrieved successfully"
+        )
+      );
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, { error }, "Internal server error"));
+  }
+});
+
+export { getLevelComments, getParamComments };
