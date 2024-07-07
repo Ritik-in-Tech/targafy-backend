@@ -1,50 +1,9 @@
 import DailyStats from "../../models/dailystats.model.js";
 import mongoose from "mongoose";
-import moment from "moment-timezone"; // Import moment-timezone
-
+import moment from "moment-timezone";
 const timeZone = "Asia/Kolkata";
 
-// Parse and validate date in the local time zone
-const parseDateInLocalTime = (dateString) => {
-  const date = moment.tz(dateString, timeZone);
-  if (!date.isValid()) {
-    throw new Error("Invalid Date");
-  }
-  return date;
-};
-
-const getDailyStatisticsForAdmin = async (req, res) => {
-  try {
-    const { businessId, date } = req.params;
-
-    // Parse and set start and end of the day in local time zone
-    const startDate = parseDateInLocalTime(date).startOf("day").toDate();
-    // console.log(startDate);
-    const endDate = parseDateInLocalTime(date).endOf("day").toDate();
-
-    const dailyStats = await DailyStats.findOne({
-      businessId: new mongoose.Types.ObjectId(businessId),
-      date: {
-        $gte: startDate,
-        $lt: endDate,
-      },
-    });
-
-    if (!dailyStats) {
-      return res.status(404).json({
-        success: false,
-        message: "No statistics found for the given date",
-      });
-    }
-
-    res.json(dailyStats);
-  } catch (error) {
-    console.error("Error fetching daily statistics:", error);
-    res.status(500).json({ success: false, error: "Internal Server Error" });
-  }
-};
-
-const getMonthlyStatisticsForAdmin = async (req, res) => {
+export const getMonthlyStatisticsForAdmin = async (req, res) => {
   try {
     const { businessId, month, year } = req.params;
 
@@ -141,5 +100,3 @@ const getMonthlyStatisticsForAdmin = async (req, res) => {
     res.status(500).json({ success: false, error: "Internal Server Error" });
   }
 };
-
-export { getDailyStatisticsForAdmin, getMonthlyStatisticsForAdmin };
