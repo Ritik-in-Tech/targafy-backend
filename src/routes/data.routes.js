@@ -17,6 +17,7 @@ import {
   getProgressDataParam,
   getProgressDataUsers,
 } from "../controllers/data/getprogressdata.controller.js";
+import { getLevelComments } from "../controllers/data/getlevelcomments.js";
 const router = Router();
 
 router.use(verifyJWT);
@@ -66,6 +67,10 @@ router
 router
   .route("/get-progress-data-users/:paramName/:monthValue/:businessId")
   .get(getProgressDataUsers);
+
+router
+  .route("/get-level-comments/:businessId/:userId/:paramName/:monthValue")
+  .get(getLevelComments);
 
 // router.route("/add-")
 export default router;
