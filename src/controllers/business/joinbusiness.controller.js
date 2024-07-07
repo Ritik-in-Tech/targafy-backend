@@ -8,7 +8,7 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { emitNewNotificationEvent } from "../../sockets/notification_socket.js";
 import mongoose from "mongoose";
-import { getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
+import { getCurrentIndianTime, getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
 import catchAsync from "../../utils/catchAsync.js";
 import ApiError from "../../utils/ApiError.js";
 
@@ -46,6 +46,9 @@ const joinBusiness = catchAsync(async (req, res, next) => {
     }
 
     const businessId = businessData._id;
+
+    const business = await Business.findById(businessId);
+    const businessName = business.name;
 
     const existingUser = await Businessusers.findOne({
       businessId,
@@ -102,9 +105,9 @@ const joinBusiness = catchAsync(async (req, res, next) => {
     await Requests.create(requestedUser);
 
     const emitData = {
-      content: `New Join Request: ${user.name} is eager to join your business. Act now!`,
+      content: `New Join Request: ${user.name} is eager to join your ${businessName} business. Act now!`,
       notificationCategory: "business",
-      createdDate: getCurrentUTCTime(),
+      createdDate: getCurrentIndianTime(),
       businessName: businessData.name,
       businessId: businessData._id,
     };

@@ -11,7 +11,7 @@ import { Acceptedrequests } from "../../models/acceptedRequests.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { emitNewNotificationAndAddBusinessEvent } from "../../sockets/notification_socket.js";
-import { getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
+import { getCurrentIndianTime, getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
 import { Office } from "../../models/office.model.js";
 
 const acceptUserJoinRequest = asyncHandler(async (req, res) => {
@@ -57,6 +57,7 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
       }
 
       // Step 2: Check if the user to add already exists in the business
+
       const userToAdd = await Businessusers.findOne({
         businessId: businessId,
         userId: userId,
@@ -186,9 +187,9 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
       await Acceptedrequests.create([acceptedRequest], { session });
 
       const emitData = {
-        content: `Congratulations, you have been added to ${business.name} successfully! 🥳🥳`,
+        content: `Congratulations, ${user.name} have been added to ${business.name} successfully! 🥳🥳`,
         notificationCategory: "business",
-        createdDate: getCurrentUTCTime(),
+        createdDate: getCurrentIndianTime(),
         businessName: business.name,
         businessId: businessId,
       };

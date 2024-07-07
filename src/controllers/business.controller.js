@@ -93,40 +93,10 @@ const createBusiness = asyncHandler(async (req, res) => {
       { session: session }
     );
 
-    // Below code is to create Head Office
-    const existingHeadOffice = await Office.findOne({
-      businessId: business[0]._id,
-      officeName: businessName,
-    });
-
-    if (existingHeadOffice) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            {},
-            "Already there is a Head Office with the same name and in the same business"
-          )
-        );
-    }
-
-    const office = new Office({
-      officeName: businessName,
-      businessId: business[0]._id,
-    });
-
-    await office.save({ session });
-
-    business[0].offices.push({
-      name: businessName,
-      officeId: office._id,
-    });
-
     await business[0].save({ session });
 
     const emitData = {
-      content: `Congratulation, ${adminName} ${businessName} business created successfully`,
+      content: `Congratulation, ${adminName} your ${businessName} business created successfully.`,
       notificationCategory: "business",
       createdDate: getCurrentUTCTime(),
       businessName: businessName,

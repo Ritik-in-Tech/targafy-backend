@@ -60,10 +60,33 @@ const aggregateDailyStats = async () => {
           createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
         });
 
-        const dataAdd = await DataAdd.countDocuments({
-          businessId: businessId,
-          createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
-        });
+        const dataAddCount = await DataAdd.aggregate([
+          {
+            $match: {
+              businessId: new mongoose.Types.ObjectId(businessId),
+            },
+          },
+          {
+            $addFields: {
+              lastCreatedDate: {
+                $max: "$data.createdDate",
+              },
+            },
+          },
+          {
+            $match: {
+              lastCreatedDate: {
+                $gte: previousDayStart,
+                $lt: previousDayEnd,
+              },
+            },
+          },
+          {
+            $count: "count",
+          },
+        ]);
+
+        const dataAdd = dataAddCount.length > 0 ? dataAddCount[0].count : 0;
 
         const messagesSent = await NotificationModel.countDocuments({
           businessId: businessId,
