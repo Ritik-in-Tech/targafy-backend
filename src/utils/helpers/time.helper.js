@@ -11,7 +11,7 @@ export function getCurrentIndianTime() {
   // Convert UTC time to IST time
   let istTime = new Date(utcTime + istOffset);
 
-  return new Date();
+  return istTime;
 }
 
 export function getCurrentUTCTime() {
