@@ -55,25 +55,25 @@ const getPieChartData = asyncHandler(async (req, res) => {
     const targetMonth = moment()
       .month(parseInt(monthValue) - 1)
       .startOf("month");
-    const userTargetDone = user.data.find(
-      (item) =>
-        item.name === paramName &&
-        moment(item.createdDate).isSame(targetMonth, "month")
-    );
+    // const userTargetDone = user.data.find(
+    //   (item) =>
+    //     item.name === paramName &&
+    //     moment(item.createdDate).isSame(targetMonth, "month")
+    // );
 
-    if (!userTargetDone) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            {},
-            `No data found for user ${user.name} for parameter ${paramName} in the specified month`
-          )
-        );
-    }
+    // if (!userTargetDone) {
+    //   return res
+    //     .status(400)
+    //     .json(
+    //       new ApiResponse(
+    //         400,
+    //         {},
+    //         `No data found for user ${user.name} for parameter ${paramName} in the specified month`
+    //       )
+    //     );
+    // }
 
-    const userTargetDoneValue = userTargetDone.targetDone;
+    // const userTargetDoneValue = userTargetDone.targetDone;
 
     if (!Array.isArray(businessuser.subordinates)) {
       return res
@@ -94,9 +94,7 @@ const getPieChartData = asyncHandler(async (req, res) => {
       .filter(Boolean);
 
     const userDataMap = new Map();
-    let totalSum = userTargetDoneValue;
-
-    userDataMap.set(user.name, userTargetDoneValue);
+    let totalSum = 0;
 
     for (const subordinateId of Subordinates) {
       const subordinate = await User.findById(subordinateId);

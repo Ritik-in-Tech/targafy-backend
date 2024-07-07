@@ -164,6 +164,8 @@ const GetParamData = asyncHandler(async (req, res) => {
     const cumulativeDailyTargets = [];
     let accumulatedData = 0;
     const formattedUserData = [];
+    let totalTargetAchieved = 0;
+    let actualTotalTarget = 0;
 
     // Iterate through each day in the month
     for (
@@ -175,12 +177,14 @@ const GetParamData = asyncHandler(async (req, res) => {
 
       // Add daily target value
       accumulatedDailyTarget += dailyTargetValue;
+      actualTotalTarget += dailyTargetValue;
       cumulativeDailyTargets.push([formattedDate, accumulatedDailyTarget]);
 
       // Check if the date is up to the last user date for data accumulation
       if (date.isSameOrBefore(lastUserDate)) {
         const dayData = dateDataMap.get(formattedDate) || 0;
         accumulatedData += dayData;
+        totalTargetAchieved += dayData;
       }
 
       if (date.isSameOrBefore(lastUserDate)) {
@@ -188,16 +192,29 @@ const GetParamData = asyncHandler(async (req, res) => {
       }
     }
 
-    const response = {
+    const data = {
       userEntries: formattedUserData,
       dailyTargetAccumulated: cumulativeDailyTargets,
     };
 
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(200, response, `${paramName} data fetched successfully`)
-      );
+    console.log("Hello");
+
+    let percentage;
+    percentage = (totalTargetAchieved / actualTotalTarget) * 100;
+    percentage = Math.floor(percentage);
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          data,
+          totalTargetAchieved,
+          actualTotalTarget,
+          percentage,
+        },
+        `${paramName} data fetched successfully`
+      )
+    );
   } catch (error) {
     console.error(error);
     return res

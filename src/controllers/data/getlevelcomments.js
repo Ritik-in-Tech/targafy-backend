@@ -6,13 +6,11 @@ import { Businessusers } from "../../models/businessUsers.model.js";
 import { Target } from "../../models/target.model.js";
 import { DataAdd } from "../../models/dataadd.model.js";
 import moment from "moment-timezone";
-import { GetTargetAssignedUsers } from "../../utils/helpers/gettargetassignedusers.js";
 moment.tz.setDefault("Asia/Kolkata");
 
-const getLevelDataController = asyncHandler(async (req, res) => {
+const getLevelComments = asyncHandler(async (req, res) => {
   try {
     const { userId, businessId, paramName, monthValue } = req.params;
-
     if (!userId || !businessId || !paramName || !monthValue) {
       return res
         .status(400)
@@ -24,8 +22,6 @@ const getLevelDataController = asyncHandler(async (req, res) => {
           )
         );
     }
-
-    // Validate and parse month name and year
     const year = moment().year();
     const month = parseInt(monthValue, 10);
 
@@ -133,27 +129,7 @@ const getLevelDataController = asyncHandler(async (req, res) => {
           )
         );
     }
-
-    const lastDayOfMonth1 = endDate.date();
-    const dailyTargetValue = await GetTargetAssignedUsers(
-      paramName,
-      monthValue,
-      businessId,
-      lastDayOfMonth1,
-      userIds
-    );
-    console.log("hello");
-
-    console.log(dailyTargetValue);
-
-    // const numUsersAssigned = userIds.length;
-    // console.log(numUsersAssigned);
-    // let targetValue = parseInt(target.targetValue); // 2000*9
-    // let dailyTargetValue =
-    //   (targetValue * numUsersAssigned) / startDate.daysInMonth();
-    // dailyTargetValue = Math.floor(dailyTargetValue);
-
-    const userDataList = await DataAdd.find(
+    const userList = await DataAdd.find(
       {
         businessId: businessId,
         parameterName: paramName,
@@ -163,108 +139,52 @@ const getLevelDataController = asyncHandler(async (req, res) => {
           $lte: endDate.toDate(),
         },
       },
-      "data createdDate"
+      "data createdDate addedBy"
     );
+    // console.log(userList);
 
-    if (!userDataList || userDataList.length === 0) {
+    if (!userList || userList.length === 0) {
       return res
         .status(400)
         .json(
-          new ApiResponse(400, {}, "No data found for the provided criteria")
+          new ApiResponse(400, {}, "No comment found for the provided criteria")
         );
     }
+    const commentsMap = new Map();
 
-    // Create a map to store the cumulative sum of `todaysdata` for each `createdDate`
-    const dateDataMap = new Map();
-
-    // Iterate over each user's data and sum the values for each date
-    userDataList.forEach((userData) => {
-      userData.data.forEach((item) => {
+    userList.forEach((userComment) => {
+      userComment.data.forEach((item) => {
         const date = moment(item.createdDate)
           .tz("Asia/Kolkata")
           .format("YYYY-MM-DD");
-        const todaysdata = parseFloat(item.todaysdata);
-        if (!dateDataMap.has(date)) {
-          dateDataMap.set(date, 0);
+        const todaysComment = item.comment;
+        const addedBy = userComment.addedBy;
+
+        if (!commentsMap.has(date)) {
+          commentsMap.set(date, []);
         }
-        dateDataMap.set(date, dateDataMap.get(date) + todaysdata);
+
+        commentsMap.get(date).push({ todaysComment, addedBy, date });
       });
     });
+    const commentsArray = Array.from(commentsMap, ([date, comments]) => ({
+      date,
+      comments,
+    }));
 
-    console.log(dateDataMap);
+    // Sort the array by date
+    commentsArray.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    const dates = Array.from(dateDataMap.keys()).sort();
-    const firstDateStr = dates[0];
-
-    // Parse the date string and create a Date object in IST
-    const firstDate = moment.tz(firstDateStr, "Asia/Kolkata");
-
-    // Calculate the first day of the month in IST
-    const firstDayOfMonth = firstDate.clone().startOf("month");
-    console.log("First day of month:", firstDayOfMonth.format("YYYY-MM-DD"));
-
-    // Calculate the last day of the month in IST
-    const lastDayOfMonth = firstDate.clone().endOf("month");
-    console.log("Last day of month:", lastDayOfMonth.format("YYYY-MM-DD"));
-
-    const lastUserDateStr = dates[dates.length - 1];
-    const lastUserDate = moment.tz(lastUserDateStr, "Asia/Kolkata");
-    console.log("Last User Date of data: ", lastUserDate);
-
-    // Initialize the cumulative target array and user data array
-    let accumulatedDailyTarget = 0;
-    const cumulativeDailyTargets = [];
-    let accumulatedData = 0;
-    const formattedUserData = [];
-    let totalTargetAchieved = 0;
-    let actualTotalTarget = 0;
-
-    // Iterate through each day in the specified month
-    for (
-      let date = startDate.clone();
-      date.isSameOrBefore(endDate);
-      date.add(1, "days")
-    ) {
-      const formattedDate = date.format("YYYY-MM-DD");
-
-      // Add daily target value
-      accumulatedDailyTarget += dailyTargetValue;
-      actualTotalTarget += dailyTargetValue;
-      cumulativeDailyTargets.push([formattedDate, accumulatedDailyTarget]);
-
-      // Check if the date has data and add to the accumulated data
-      if (date.isSameOrBefore(lastUserDate)) {
-        const dayData = dateDataMap.get(formattedDate) || 0;
-        accumulatedData += dayData;
-        totalTargetAchieved += dayData;
-      }
-
-      if (date.isSameOrBefore(lastUserDate)) {
-        formattedUserData.push([formattedDate, accumulatedData]);
-      }
-    }
-
-    const data = {
-      userEntries: formattedUserData,
-      dailyTargetAccumulated: cumulativeDailyTargets,
-    };
-
-    let percentage;
-    percentage = (totalTargetAchieved / actualTotalTarget) * 100;
-    percentage = Math.floor(percentage);
-
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        {
-          data,
-          totalTargetAchieved,
-          actualTotalTarget,
-          percentage,
-        },
-        `${user.name} and below data fetched successfully`
-      )
-    );
+    // Return the response
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { comments: commentsArray },
+          "Comments retrieved successfully"
+        )
+      );
   } catch (error) {
     console.log(error);
     return res
@@ -273,4 +193,4 @@ const getLevelDataController = asyncHandler(async (req, res) => {
   }
 });
 
-export { getLevelDataController };
+export { getLevelComments };
