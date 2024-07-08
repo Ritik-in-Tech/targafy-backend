@@ -60,31 +60,32 @@ export const testAggregateOverallStats = async (previousDayStart) => {
       ]);
       const dataAdd = dataAddCount.length > 0 ? dataAddCount[0].count : 0;
       console.log("The data add count is:", dataAdd);
-      const overallTotalSession = await DailyStats.aggregate([
-        { $match: { date: { $gte: previousDayStart, $lt: previousDayEnd } } },
+      const totalSessionResult = await User.aggregate([
         {
-          $project: {
-            totalSession: {
-              $reduce: {
-                input: "$lastSeenHistory",
-                initialValue: 0,
-                in: { $add: ["$$value", { $size: "$$this.lastSeen" }] },
-              },
+          $unwind: "$lastSeenHistory",
+        },
+        {
+          $unwind: "$lastSeenHistory.lastSeen",
+        },
+        {
+          $match: {
+            "lastSeenHistory.lastSeen": {
+              $gte: previousDayStart,
+              $lt: previousDayEnd,
             },
           },
         },
         {
           $group: {
             _id: null,
-            totalSession: { $sum: "$totalSession" },
+            totalSessions: { $sum: 1 },
           },
         },
       ]);
 
-      let totalSession = 0;
-      if (overallTotalSession.length > 0) {
-        totalSession = overallTotalSession[0].totalSession;
-      }
+      const totalSession =
+        totalSessionResult.length > 0 ? totalSessionResult[0].totalSessions : 0;
+
       console.log("The count of the total session is:", totalSession);
 
       await OverallStats.create({
