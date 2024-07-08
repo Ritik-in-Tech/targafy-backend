@@ -1,19 +1,5 @@
 import mongoose from "mongoose";
 
-const lastSeenHistorySchema = new mongoose.Schema(
-  {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "Users",
-    },
-    lastSeen: {
-      type: [Date],
-      default: [],
-    },
-  },
-  { _id: false }
-);
 const dailyStatsSchema = new mongoose.Schema(
   {
     businessId: {
@@ -69,9 +55,9 @@ const dailyStatsSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    lastSeenHistory: {
-      type: [lastSeenHistorySchema],
-      default: [],
+    avg_SessionCount: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }

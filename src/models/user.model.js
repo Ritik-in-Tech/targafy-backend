@@ -48,6 +48,21 @@ const dataSchema = new Schema(
   }
 );
 
+const lastSeenHistorySchema = new Schema(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "Users",
+    },
+    lastSeen: {
+      type: [Date],
+      default: [],
+    },
+  },
+  { _id: false }
+);
+
 const notificationSchema = new Schema({
   content: {
     type: String,
@@ -93,7 +108,7 @@ const userSchema = new Schema({
     default: 0,
     type: Number,
   },
-
+  lastSeenHistory: [lastSeenHistorySchema],
   email: {
     type: String,
     trim: true,

@@ -1,11 +1,10 @@
 import { Businessusers } from "../models/businessUsers.model.js";
-import DailyStats from "../models/dailystats.model.js";
 import OverallStats from "../models/overall.stats.model.js";
 import { Usersratings } from "../models/rating.model.js";
 import NotificationModel from "../models/notification.model.js";
 import { DataAdd } from "../models/dataadd.model.js";
-import mongoose from "mongoose";
 import { getStartOfPreviousDay } from "./aggregate_daily.stats.js";
+import { User } from "../models/user.model.js";
 
 export const aggregateOverallDailyStats = async () => {
   try {
@@ -57,31 +56,31 @@ export const aggregateOverallDailyStats = async () => {
         },
       ]);
       const dataAdd = dataAddCount.length > 0 ? dataAddCount[0].count : 0;
-      const overallTotalSession = await DailyStats.aggregate([
-        { $match: { date: { $gte: previousDayStart, $lt: previousDayEnd } } },
+      const totalSessionResult = await User.aggregate([
         {
-          $project: {
-            totalSession: {
-              $reduce: {
-                input: "$lastSeenHistory",
-                initialValue: 0,
-                in: { $add: ["$$value", { $size: "$$this.lastSeen" }] },
-              },
+          $unwind: "$lastSeenHistory",
+        },
+        {
+          $unwind: "$lastSeenHistory.lastSeen",
+        },
+        {
+          $match: {
+            "lastSeenHistory.lastSeen": {
+              $gte: previousDayStart,
+              $lt: previousDayEnd,
             },
           },
         },
         {
           $group: {
             _id: null,
-            totalSession: { $sum: "$totalSession" },
+            totalSessions: { $sum: 1 },
           },
         },
       ]);
 
-      let totalSession = 0;
-      if (overallTotalSession.length > 0) {
-        totalSession = overallTotalSession[0].totalSession;
-      }
+      const totalSession =
+        totalSessionResult.length > 0 ? totalSessionResult[0].totalSessions : 0;
 
       await OverallStats.create({
         date: previousDayStart,

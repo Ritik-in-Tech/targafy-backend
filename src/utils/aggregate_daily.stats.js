@@ -5,6 +5,7 @@ import { Usersratings } from "../models/rating.model.js";
 import { DataAdd } from "../models/dataadd.model.js";
 import NotificationModel from "../models/notification.model.js";
 import mongoose from "mongoose";
+import { User } from "../models/user.model.js";
 
 export const getStartOfPreviousDay = () => {
   const yesterday = new Date();
@@ -101,6 +102,39 @@ const aggregateDailyStats = async () => {
           createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
         });
 
+        const totalSessionResult = await User.aggregate([
+          {
+            $match: {
+              "businesses.businessId": new mongoose.Types.ObjectId(businessId),
+            },
+          },
+          {
+            $unwind: "$lastSeenHistory",
+          },
+          {
+            $unwind: "$lastSeenHistory.lastSeen",
+          },
+          {
+            $match: {
+              "lastSeenHistory.lastSeen": {
+                $gte: new Date(previousDayStart),
+                $lt: new Date(previousDayEnd),
+              },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              totalSessions: { $sum: 1 },
+            },
+          },
+        ]);
+
+        const session =
+          totalSessionResult.length > 0
+            ? totalSessionResult[0].totalSessions
+            : 0;
+
         const sevenDaysAgo = getStartOfNDaysAgo(7);
 
         const statsOfLast7Days = await DailyStats.aggregate([
@@ -118,6 +152,7 @@ const aggregateDailyStats = async () => {
               total_FeedbackGiven: { $sum: "$feedbackGiven" },
               total_MessagesSent: { $sum: "$messagesSent" },
               total_DataAdd: { $sum: "$dataAdd" },
+              total_SessionCount: { $sum: "$session" },
               count: { $sum: 1 },
             },
           },
@@ -129,6 +164,7 @@ const aggregateDailyStats = async () => {
           total_FeedbackGiven: 0,
           total_MessagesSent: 0,
           total_DataAdd: 0,
+          total_SessionCount: 0,
           count: 1,
         };
 
@@ -138,6 +174,7 @@ const aggregateDailyStats = async () => {
         const avg_MessagesSent = avgStats.total_MessagesSent / avgStats.count;
         const avg_ActiveUsers = avgStats.total_ActiveUsers / avgStats.count;
         const avg_DataAdd = avgStats.total_DataAdd / avgStats.count;
+        const avg_SessionCount = avgStats.total_SessionCount / avgStats.count;
 
         await DailyStats.create({
           businessId,
@@ -147,11 +184,13 @@ const aggregateDailyStats = async () => {
           feedbackGiven: feedbackGiven,
           messagesSent: messagesSent,
           dataAdd: dataAdd,
+          sessionCount: session,
           avg_RegisteredUsers: avg_RegisteredUsers,
           avg_ActiveUsers: avg_ActiveUsers,
           avg_FeedbackGiven: avg_FeedbackGiven,
           avg_MessagesSent: avg_MessagesSent,
           avg_DataAdd: avg_DataAdd,
+          avg_SessionCount: avg_SessionCount,
         });
       }
       allUpdated = true;

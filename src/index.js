@@ -111,7 +111,7 @@ initializeServer();
 
 const businessId = "668638149103073a3380eeef";
 const previousDayStart = new Date("2024-07-06T00:00:00Z");
-const previousDayEnd = new Date("2024-07-06T23:59:59Z");
+const previousDayEnd = new Date("2024-07-07T23:59:59Z");
 
 // import { aggregateOverallDailyStats } from "./utils/aggregate_overall.stats.js";
 // const ans = aggregateOverallDailyStats();
@@ -127,10 +127,18 @@ const previousDayEnd = new Date("2024-07-06T23:59:59Z");
 // const ans = await testAggregateOverallStats(previousDayStart);
 // console.log(ans);
 
-// import { aggregateDailyStats } from "./utils/aggregate_daily.stats.js";
-// const ans = await aggregateDailyStats();
-// console.log(ans);
+import { aggregateDailyStats } from "./utils/aggregate_daily.stats.js";
+const ans = await aggregateDailyStats();
+console.log(ans);
 
 // import { testAggregateDailyStats } from "./utils/testaggregatedailystats.js";
 // const ans = await testAggregateDailyStats(previousDayStart);
+// console.log(ans);
+
+// import { totalSessionCount } from "./utils/totalsessioncount.js";
+// const ans = await totalSessionCount(
+//   businessId,
+//   previousDayStart,
+//   previousDayEnd
+// );
 // console.log(ans);
