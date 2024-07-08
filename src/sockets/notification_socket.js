@@ -109,6 +109,11 @@ export async function emitNewNotificationAndAddBusinessEvent(
       }
     );
 
+    let notificationData = await NotificationModel.create({
+      ...eventData,
+      userId,
+    });
+
     // console.log("This is userid", userId);
 
     // console.log("This is eventData : ", eventData);

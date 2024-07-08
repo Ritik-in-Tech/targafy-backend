@@ -108,3 +108,29 @@ async function initializeServer() {
 
 // Call the initializeServer function to start the app
 initializeServer();
+
+const businessId = "668638149103073a3380eeef";
+const previousDayStart = new Date("2024-07-06T00:00:00Z");
+const previousDayEnd = new Date("2024-07-06T23:59:59Z");
+
+// import { aggregateOverallDailyStats } from "./utils/aggregate_overall.stats.js";
+// const ans = aggregateOverallDailyStats();
+// console.log(ans);
+// import { getTestDataAddCount } from "./utils/testdataaddcount.js";
+// const ans = await getTestDataAddCount(
+//   businessId,
+//   previousDayStart,
+//   previousDayEnd
+// );
+// console.log("Data Add count", ans);
+// import { testAggregateOverallStats } from "./utils/testaggregateoverallstats.js";
+// const ans = await testAggregateOverallStats(previousDayStart);
+// console.log(ans);
+
+// import { aggregateDailyStats } from "./utils/aggregate_daily.stats.js";
+// const ans = await aggregateDailyStats();
+// console.log(ans);
+
+// import { testAggregateDailyStats } from "./utils/testaggregatedailystats.js";
+// const ans = await testAggregateDailyStats(previousDayStart);
+// console.log(ans);

@@ -1,35 +1,37 @@
 import { Businessusers } from "../models/businessUsers.model.js";
 import DailyStats from "../models/dailystats.model.js";
+import { DataAdd } from "../models/dataadd.model.js";
+import NotificationModel from "../models/notification.model.js";
 import OverallStats from "../models/overall.stats.model.js";
 import { Usersratings } from "../models/rating.model.js";
-import NotificationModel from "../models/notification.model.js";
-import { DataAdd } from "../models/dataadd.model.js";
-import mongoose from "mongoose";
-import { getStartOfPreviousDay } from "./aggregate_daily.stats.js";
 
-export const aggregateOverallDailyStats = async () => {
+export const testAggregateOverallStats = async (previousDayStart) => {
   try {
-    const previousDayStart = getStartOfPreviousDay();
+    // const previousDayStart = getStartOfPreviousDay();
     const previousDayEnd = new Date(previousDayStart);
     previousDayEnd.setUTCHours(23, 59, 59, 999);
-
     const existingStats = await OverallStats.findOne({
       date: previousDayStart,
     });
 
     if (!existingStats) {
+      console.log("Existing stats not found");
       const registeredUsers = await Businessusers.countDocuments({
         registrationDate: { $gte: previousDayStart, $lt: previousDayEnd },
       });
+      console.log("The registered users count is:", registeredUsers);
       const feedbackGiven = await Usersratings.countDocuments({
         createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
       });
+      console.log("The feedback count is:", feedbackGiven);
       const activeUsers = await Businessusers.countDocuments({
         lastSeen: { $gte: previousDayStart, $lt: previousDayEnd },
       });
+      console.log("The active users count is:", activeUsers);
       const messagesSent = await NotificationModel.countDocuments({
         createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
       });
+      console.log("The messages sent count is:", messagesSent);
       const dataAddCount = await DataAdd.aggregate([
         {
           $addFields: {
@@ -57,6 +59,7 @@ export const aggregateOverallDailyStats = async () => {
         },
       ]);
       const dataAdd = dataAddCount.length > 0 ? dataAddCount[0].count : 0;
+      console.log("The data add count is:", dataAdd);
       const overallTotalSession = await DailyStats.aggregate([
         { $match: { date: { $gte: previousDayStart, $lt: previousDayEnd } } },
         {
@@ -82,6 +85,7 @@ export const aggregateOverallDailyStats = async () => {
       if (overallTotalSession.length > 0) {
         totalSession = overallTotalSession[0].totalSession;
       }
+      console.log("The count of the total session is:", totalSession);
 
       await OverallStats.create({
         date: previousDayStart,
