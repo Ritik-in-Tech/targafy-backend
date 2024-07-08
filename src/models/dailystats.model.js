@@ -63,13 +63,6 @@ const dailyStatsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-dailyStatsSchema.virtual("totalSession").get(function () {
-  return this.lastSeenHistory.reduce(
-    (total, user) => total + user.lastSeen.length,
-    0
-  );
-});
-
 // Ensure virtual fields are included in JSON output
 dailyStatsSchema.set("toJSON", {
   virtuals: true,

@@ -48,6 +48,7 @@ jobs:
               -e NODE_ENV='${{ secrets.NODE_ENV }}' \
               -e FCM_ACCESS_TOKEN='${{ secrets.FCM_ACCESS_TOKEN }}' \
               -e ACCESS_TOKEN_SECRET='${{ secrets.ACCESS_TOKEN_SECRET }}' \
+              -e ACCESS_TOKEN_SECRET_ADMIN='${{secrets.ACCESS_TOKEN_SECRET_ADMIN}}' \
               -e ACCESS_TOKEN_EXPIRY='${{ secrets.ACCESS_TOKEN_EXPIRY }}' \
               -e AUTHKEY='${{ secrets.AUTHKEY }}' \
               -e FCM_API_KEY='${{ secrets.FCM_API_KEY }}' \
