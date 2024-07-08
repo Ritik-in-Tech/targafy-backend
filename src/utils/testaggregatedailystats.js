@@ -1,17 +1,10 @@
-import { Businessusers } from "../models/businessUsers.model.js";
 import { Business } from "../models/business.model.js";
+import { Businessusers } from "../models/businessUsers.model.js";
 import DailyStats from "../models/dailystats.model.js";
-import { Usersratings } from "../models/rating.model.js";
 import { DataAdd } from "../models/dataadd.model.js";
-import NotificationModel from "../models/notification.model.js";
+import { Usersratings } from "../models/rating.model.js";
 import mongoose from "mongoose";
-
-export const getStartOfPreviousDay = () => {
-  const yesterday = new Date();
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-  yesterday.setUTCHours(0, 0, 0, 0);
-  return yesterday;
-};
+import notificationModel from "../models/notification.model.js";
 
 export const getStartOfNDaysAgo = (days) => {
   const date = new Date();
@@ -20,13 +13,12 @@ export const getStartOfNDaysAgo = (days) => {
   return date;
 };
 
-const aggregateDailyStats = async () => {
+export const testAggregateDailyStats = async (previousDayStart) => {
   try {
-    // Get the start and end of the previous day in local time
-    const previousDayStart = getStartOfPreviousDay();
     const previousDayEnd = new Date(previousDayStart);
     previousDayEnd.setUTCHours(23, 59, 59, 999);
-
+    console.log(previousDayStart);
+    console.log(previousDayEnd);
     const businesses = await Business.find().select("_id");
 
     if (businesses.length === 0) {
@@ -45,22 +37,26 @@ const aggregateDailyStats = async () => {
       });
 
       if (!existingStats) {
+        console.log("Not any existing stats found");
         allUpdated = false;
 
         const registeredUsers = await Businessusers.countDocuments({
           businessId: businessId,
           registrationDate: { $gte: previousDayStart, $lt: previousDayEnd },
         });
+        console.log("The registered users count is:", registeredUsers);
 
         const activeUsers = await Businessusers.countDocuments({
           businessId: businessId,
           lastSeen: { $gte: previousDayStart, $lt: previousDayEnd },
         });
+        console.log("The active users count is:", activeUsers);
 
         const feedbackGiven = await Usersratings.countDocuments({
           businessId: businessId,
           createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
         });
+        console.log("The feedback count is:", feedbackGiven);
 
         const dataAddCount = await DataAdd.aggregate([
           {
@@ -95,12 +91,12 @@ const aggregateDailyStats = async () => {
         ]);
 
         const dataAdd = dataAddCount.length > 0 ? dataAddCount[0].count : 0;
-
-        const messagesSent = await NotificationModel.countDocuments({
+        console.log("The data add count is:", dataAdd);
+        const messagesSent = await notificationModel.countDocuments({
           businessId: businessId,
           createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
         });
-
+        console.log("The messages sent count is:", messagesSent);
         const sevenDaysAgo = getStartOfNDaysAgo(7);
 
         const statsOfLast7Days = await DailyStats.aggregate([
@@ -167,5 +163,3 @@ const aggregateDailyStats = async () => {
     return false;
   }
 };
-
-export { aggregateDailyStats };
