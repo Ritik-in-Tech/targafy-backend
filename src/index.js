@@ -127,9 +127,9 @@ const previousDayEnd = new Date("2024-07-07T23:59:59Z");
 // const ans = await testAggregateOverallStats(previousDayStart);
 // console.log(ans);
 
-import { aggregateDailyStats } from "./utils/aggregate_daily.stats.js";
-const ans = await aggregateDailyStats();
-console.log(ans);
+// import { aggregateDailyStats } from "./utils/aggregate_daily.stats.js";
+// const ans = await aggregateDailyStats();
+// console.log(ans);
 
 // import { testAggregateDailyStats } from "./utils/testaggregatedailystats.js";
 // const ans = await testAggregateDailyStats(previousDayStart);
