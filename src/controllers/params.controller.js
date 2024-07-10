@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Businessusers } from "../models/businessUsers.model.js";
 import mongoose from "mongoose";
+import { TypeBParams } from "../models/typeBparams.model.js";
 
 // Create a new param
 const createParam = asyncHandler(async (req, res) => {
@@ -216,9 +217,7 @@ const createParam = asyncHandler(async (req, res) => {
 
 const createTypeBParams = asyncHandler(async (req, res) => {
   try {
-    console.log("Heloo!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     const businessId = req.params.businessId;
-    console.log(businessId);
     if (!businessId || !mongoose.Types.ObjectId.isValid(businessId)) {
       return res
         .status(400)
@@ -226,6 +225,7 @@ const createTypeBParams = asyncHandler(async (req, res) => {
     }
 
     const business = await Business.findById(businessId);
+
     if (!business) {
       return res
         .status(400)
@@ -242,7 +242,7 @@ const createTypeBParams = asyncHandler(async (req, res) => {
     }
 
     const { paramName1, paramName2 } = req.body;
-    if (!paramName1 || !paramName2 || !benchMarks) {
+    if (!paramName1 || !paramName2) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Please provide all fields"));
@@ -293,7 +293,48 @@ const createTypeBParams = asyncHandler(async (req, res) => {
     console.log(error);
     return res
       .status(500)
-      .json(new ApiResponse(500, {}, "Internal server error"));
+      .json(new ApiResponse(500, { error }, "Internal server error"));
+  }
+});
+
+const getTypeBParams = asyncHandler(async (req, res) => {
+  try {
+    const businessId = req.params.businessId;
+    if (!businessId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Please provide businessId"));
+    }
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Business not found"));
+    }
+
+    const typeBParams = await TypeBParams.find({ businessId: businessId });
+
+    // Transform the data into an array of arrays
+    const formattedParams = typeBParams.map((param) => [
+      param.paramName1,
+      param.paramName2,
+    ]);
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { paramPairs: formattedParams },
+          "Data fetched successfully!"
+        )
+      );
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, { error }, "Internal server error"));
   }
 });
 
@@ -647,4 +688,5 @@ export {
   getAssignUsers,
   getParamId,
   createTypeBParams,
+  getTypeBParams,
 };

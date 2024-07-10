@@ -3,8 +3,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import axios from "axios";
 import jwt from "jsonwebtoken";
-import { ENV_VAR } from "../utils/variable.env.js";
+// import { ENV_VAR } from "../utils/variable.env.js";
 
+import dotenv from "dotenv";
+dotenv.config();
 const payload = {
   Param1: "value1",
   Param2: "value2",
@@ -14,9 +16,11 @@ const payload = {
 const headers = {
   accept: "application/json",
   "content-type": "application/json",
-  authkey: ENV_VAR.AUTHKEY,
+  authkey: process.env.AUTHKEY,
   "User-Agent": "ReadMe-API-Explorer",
 };
+
+// console.log(headers);
 
 // Register a new OTP
 const verifyloginOTP = asyncHandler(async (req, res) => {
