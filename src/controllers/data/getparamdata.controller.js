@@ -200,9 +200,14 @@ const GetParamData = asyncHandler(async (req, res) => {
     let percentage;
     percentage = (totalTargetAchieved / actualTotalTarget) * 100;
     percentage = Math.floor(percentage);
-    const benchmarkValues = target.benchMark
-      ? target.benchMark.map((benchmark) => benchmark.value)
-      : [];
+    const targetObject = target[0];
+
+    const benchmarkValues =
+      targetObject && targetObject.benchMark
+        ? targetObject.benchMark.map((benchmark) => benchmark.value)
+        : [];
+
+    console.log(benchmarkValues);
 
     return res.status(200).json(
       new ApiResponse(
