@@ -10,6 +10,7 @@ import {
   getAssignUsers,
   getParamId,
   createTypeBParams,
+  getTypeBParams,
 } from "../controllers/params.controller.js";
 import { addUserToParam } from "../controllers/params/addusertoparam.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -34,6 +35,8 @@ router.route("/add-user-to-param/:paramId").post(addUserToParam);
 router.route("/get-param-id/:businessId").get(getParamId);
 
 router.route("/create-typeBParam/:businessId").post(createTypeBParams);
+
+router.route("/get-typeBParams/:businessId").get(getTypeBParams);
 
 router
   .route("/:bid/:pid")

@@ -197,11 +197,12 @@ const GetParamData = asyncHandler(async (req, res) => {
       dailyTargetAccumulated: cumulativeDailyTargets,
     };
 
-    console.log("Hello");
-
     let percentage;
     percentage = (totalTargetAchieved / actualTotalTarget) * 100;
     percentage = Math.floor(percentage);
+    const benchmarkValues = target.benchMark
+      ? target.benchMark.map((benchmark) => benchmark.value)
+      : [];
 
     return res.status(200).json(
       new ApiResponse(
@@ -211,6 +212,7 @@ const GetParamData = asyncHandler(async (req, res) => {
           totalTargetAchieved,
           actualTotalTarget,
           percentage,
+          benchmarkValues,
         },
         `${paramName} data fetched successfully`
       )

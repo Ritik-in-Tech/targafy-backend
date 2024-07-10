@@ -253,6 +253,10 @@ const getLevelDataController = asyncHandler(async (req, res) => {
     percentage = (totalTargetAchieved / actualTotalTarget) * 100;
     percentage = Math.floor(percentage);
 
+    const benchmarkValues = target.benchMark
+      ? target.benchMark.map((benchmark) => benchmark.value)
+      : [];
+
     return res.status(200).json(
       new ApiResponse(
         200,
@@ -261,6 +265,7 @@ const getLevelDataController = asyncHandler(async (req, res) => {
           totalTargetAchieved,
           actualTotalTarget,
           percentage,
+          benchmarkValues,
         },
         `${user.name} and below data fetched successfully`
       )

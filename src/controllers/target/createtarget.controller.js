@@ -35,8 +35,6 @@ const createTarget = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Please provide all required fields"));
     }
 
-    console.log("hello");
-
     if (benchMarks && !Array.isArray(benchMarks)) {
       await session.abortTransaction();
       session.endSession();
@@ -203,7 +201,6 @@ const createTarget = asyncHandler(async (req, res) => {
       }
       const benchMarkArray = [];
 
-      console.log("heelo");
       for (const benchmark of benchMarks) {
         benchMarkArray.push({ value: benchmark });
       }
