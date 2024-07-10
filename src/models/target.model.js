@@ -22,15 +22,12 @@ const commonDateConstraints = {
   default: getCurrentIndianTime(),
 };
 
-// const userSchema = new Schema(
-//   {
-//     name: commonStringConstraints,
-//     userId: {
-//       type: Schema.Types.ObjectId,
-//     },
-//   },
-//   { _id: false }
-// );
+const benchMarkSchema = new Schema(
+  {
+    value: commonStringConstraints,
+  },
+  { _id: false }
+);
 
 const targetSchema = new Schema({
   targetValue: commonStringConstraints,
@@ -44,6 +41,7 @@ const targetSchema = new Schema({
     type: Schema.Types.ObjectId,
     required: true,
   },
+  benchMark: [benchMarkSchema],
   assignedto: commonStringConstraints,
   assignedBy: commonStringConstraints,
   monthIndex: commonStringConstraints,

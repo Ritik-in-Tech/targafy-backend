@@ -214,6 +214,89 @@ const createParam = asyncHandler(async (req, res) => {
   }
 });
 
+const createTypeBParams = asyncHandler(async (req, res) => {
+  try {
+    console.log("Heloo!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    const businessId = req.params.businessId;
+    console.log(businessId);
+    if (!businessId || !mongoose.Types.ObjectId.isValid(businessId)) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Invalid Business Id provided"));
+    }
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Business not found"));
+    }
+
+    const userId = req.user._id;
+    if (!userId) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Invalid token found please log in again")
+        );
+    }
+
+    const { paramName1, paramName2 } = req.body;
+    if (!paramName1 || !paramName2 || !benchMarks) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Please provide all fields"));
+    }
+
+    const businessuser = await Businessusers.findOne({
+      businessId: businessId,
+      userId: userId,
+    });
+
+    if (!businessuser || businessuser.role === "User") {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Only Admin and MiniAdmin can allow to do this task"
+          )
+        );
+    }
+
+    const existingTypeBParam = await TypeBParams.findOne({
+      businessId: businessId,
+      paramName1: paramName1,
+      paramName2: paramName2,
+    });
+
+    if (existingTypeBParam) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Type B param already exist"));
+    }
+
+    const typeBParam = new TypeBParams({
+      paramName1: paramName1,
+      paramName2: paramName2,
+      businessId: businessId,
+    });
+
+    await typeBParam.save();
+    return res
+      .status(201)
+      .json(
+        new ApiResponse(201, { typeBParam }, "Type B param created sucessfully")
+      );
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, {}, "Internal server error"));
+  }
+});
+
 // Get all params
 const getAllParams = asyncHandler(async (req, res) => {
   try {
@@ -563,4 +646,5 @@ export {
   getAssignedParams,
   getAssignUsers,
   getParamId,
+  createTypeBParams,
 };
