@@ -11,6 +11,10 @@ import moment from "moment-timezone";
 import { generateRandomNumber } from "../../utils/helpers/generaterandomnumber.js";
 moment.tz.setDefault("Asia/Kolkata");
 
+function getRandomNumber() {
+  return Math.floor(Math.random() * (1 - 0 + 1)) + 0;
+}
+
 const formatDate = (date) => date.format("YYYY-MM-DD");
 
 const AddTestDataForMonth = asyncHandler(async (req, res) => {
@@ -169,7 +173,8 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
 
     for (const day of allDays) {
       const formattedDate = formatDate(day);
-      const todaysdata = generateRandomNumber(targetValue, totalDays);
+      // const todaysdata = generateRandomNumber(targetValue, totalDays);
+      const todaysdata = getRandomNumber();
       const comment = `Data for ${formattedDate}`;
 
       // Create a new Date object at noon IST, which is 6:30 UTC

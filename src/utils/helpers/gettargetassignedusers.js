@@ -38,8 +38,8 @@ export const GetTargetAssignedUsers = async (
       return sum + Number(target.targetValue);
     }, 0);
 
-    let dailyTarget = sumTarget / lastDayOfMonth;
-    dailyTarget = Math.floor(dailyTarget);
+    const dailyTarget = sumTarget / lastDayOfMonth;
+    // dailyTarget = Math.floor(dailyTarget);
 
     return dailyTarget;
   } catch (error) {
