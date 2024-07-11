@@ -7,7 +7,7 @@ import { verifyJWTAdmin } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
-router.use(verifyJWTAdmin);
+// router.use(verifyJWTAdmin);
 
 router.route("/daily-stats/:businessId/:date").get(getDailyStatisticsForAdmin);
 router
