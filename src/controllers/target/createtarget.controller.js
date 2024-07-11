@@ -16,8 +16,7 @@ const createTarget = asyncHandler(async (req, res) => {
   session.startTransaction();
 
   try {
-    const { targetValue, paramName, comment, userIds, monthIndex, benchMarks } =
-      req.body;
+    const { targetValue, paramName, comment, userIds, monthIndex } = req.body;
     const businessId = req.params.businessId;
     const loggedInuserId = req.user._id;
 
@@ -33,14 +32,6 @@ const createTarget = asyncHandler(async (req, res) => {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Please provide all required fields"));
-    }
-
-    if (benchMarks && !Array.isArray(benchMarks)) {
-      await session.abortTransaction();
-      session.endSession();
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "BenchMarks should be in array"));
     }
 
     const year = moment().year();
@@ -199,13 +190,6 @@ const createTarget = asyncHandler(async (req, res) => {
             )
           );
       }
-      const benchMarkArray = [];
-
-      for (const benchmark of benchMarks) {
-        benchMarkArray.push({ value: benchmark });
-      }
-
-      console.log(benchMarkArray);
 
       const target = new Target({
         targetValue: targetValue,
@@ -216,7 +200,6 @@ const createTarget = asyncHandler(async (req, res) => {
         monthIndex: monthIndex,
         assignedBy: loggedInUser.name,
         assignedto: user.name,
-        benchMark: benchMarkArray,
       });
 
       await target.save({ session });

@@ -22,13 +22,6 @@ const commonDateConstraints = {
   default: getCurrentIndianTime(),
 };
 
-const benchMarkSchema = new Schema(
-  {
-    value: commonStringConstraints,
-  },
-  { _id: false }
-);
-
 const targetSchema = new Schema({
   targetValue: commonStringConstraints,
   paramName: commonStringConstraints,
@@ -41,7 +34,6 @@ const targetSchema = new Schema({
     type: Schema.Types.ObjectId,
     required: true,
   },
-  benchMark: [benchMarkSchema],
   assignedto: commonStringConstraints,
   assignedBy: commonStringConstraints,
   monthIndex: commonStringConstraints,
