@@ -194,20 +194,23 @@ const GetParamData = asyncHandler(async (req, res) => {
 
     const data = {
       userEntries: formattedUserData,
-      dailyTargetAccumulated: cumulativeDailyTargets,
+      dailyTargetAccumulated: [
+        lastDayOfMonth.format("YYYY-MM-DD"),
+        dailyTargetValue,
+      ],
     };
 
     let percentage;
     percentage = (totalTargetAchieved / actualTotalTarget) * 100;
     percentage = Math.floor(percentage);
-    const targetObject = target[0];
+    // const targetObject = target[0];
 
-    const benchmarkValues =
-      targetObject && targetObject.benchMark
-        ? targetObject.benchMark.map((benchmark) => benchmark.value)
-        : [];
+    // const benchmarkValues =
+    //   targetObject && targetObject.benchMark
+    //     ? targetObject.benchMark.map((benchmark) => benchmark.value)
+    //     : [];
 
-    console.log(benchmarkValues);
+    // console.log(benchmarkValues);
 
     return res.status(200).json(
       new ApiResponse(
@@ -217,7 +220,7 @@ const GetParamData = asyncHandler(async (req, res) => {
           totalTargetAchieved,
           actualTotalTarget,
           percentage,
-          benchmarkValues,
+          // benchmarkValues,
         },
         `${paramName} data fetched successfully`
       )

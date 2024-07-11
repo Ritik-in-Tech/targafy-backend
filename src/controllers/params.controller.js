@@ -240,9 +240,8 @@ const createTypeBParams = asyncHandler(async (req, res) => {
           new ApiResponse(400, {}, "Invalid token found please log in again")
         );
     }
-
-    const { paramName1, paramName2 } = req.body;
-    if (!paramName1 || !paramName2) {
+    const { paramName1, paramName2, benchMarks } = req.body;
+    if (!paramName1 || !paramName2 || !benchMarks) {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Please provide all fields"));
@@ -265,6 +264,21 @@ const createTypeBParams = asyncHandler(async (req, res) => {
         );
     }
 
+    if (benchMarks && !Array.isArray(benchMarks)) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "BenchMarks should be in array"));
+    }
+
+    const benchMarkArray = [];
+    for (const benchmark of benchMarks) {
+      benchMarkArray.push({ value: benchmark });
+    }
+
+    console.log(benchMarkArray);
+
     const existingTypeBParam = await TypeBParams.findOne({
       businessId: businessId,
       paramName1: paramName1,
@@ -281,6 +295,7 @@ const createTypeBParams = asyncHandler(async (req, res) => {
       paramName1: paramName1,
       paramName2: paramName2,
       businessId: businessId,
+      benchMark: benchMarkArray,
     });
 
     await typeBParam.save();
@@ -315,10 +330,10 @@ const getTypeBParams = asyncHandler(async (req, res) => {
 
     const typeBParams = await TypeBParams.find({ businessId: businessId });
 
-    // Transform the data into an array of arrays
     const formattedParams = typeBParams.map((param) => [
       param.paramName1,
       param.paramName2,
+      param.benchMark,
     ]);
 
     return res
