@@ -248,8 +248,8 @@ const getLevelDataController = asyncHandler(async (req, res) => {
     const data = {
       userEntries: formattedUserData,
       dailyTargetAccumulated: [
-        lastDayOfMonth.format("YYYY-MM-DD"),
-        dailyTargetValue,
+        [firstDayOfMonth.format("YYYY-MM-DD"), 0],
+        [lastDayOfMonth.format("YYYY-MM-DD"), dailyTargetValue],
       ],
     };
 
