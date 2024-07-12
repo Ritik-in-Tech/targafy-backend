@@ -8,6 +8,8 @@ import { Businessusers } from "../../models/businessUsers.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { Activites } from "../../models/activities.model.js";
 import moment from "moment-timezone";
+import { emitNewNotificationEvent } from "../../sockets/notification_socket.js";
+import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
 moment.tz.setDefault("Asia/Kolkata");
 
 // controllers to add target
@@ -124,6 +126,8 @@ const createTarget = asyncHandler(async (req, res) => {
         );
     }
 
+    const validUserIds = [];
+
     for (const userId of userIds) {
       const user = await User.findOne({ _id: userId }).session(session);
       if (!user) {
@@ -191,6 +195,8 @@ const createTarget = asyncHandler(async (req, res) => {
           );
       }
 
+      validUserIds.push(user._id);
+
       const target = new Target({
         targetValue: targetValue,
         paramName: paramName,
@@ -212,6 +218,18 @@ const createTarget = asyncHandler(async (req, res) => {
       });
 
       await activity.save({ session });
+    }
+
+    const emitData = {
+      content: `You have assigned target in ${paramName} for the business ${business.name}`,
+      notificationCategory: "business",
+      createdDate: getCurrentIndianTime(),
+      businessName: business.name,
+      businessId: business._id,
+    };
+
+    for (const userId of validUserIds) {
+      await emitNewNotificationEvent(userId, emitData);
     }
 
     await session.commitTransaction();
