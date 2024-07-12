@@ -222,7 +222,7 @@ const createTarget = asyncHandler(async (req, res) => {
 
     const emitData = {
       content: `You have assigned target in ${paramName} for the business ${business.name}`,
-      notificationCategory: "business",
+      notificationCategory: "target",
       createdDate: getCurrentIndianTime(),
       businessName: business.name,
       businessId: business._id,
