@@ -160,7 +160,7 @@ const createParam = asyncHandler(async (req, res) => {
 
     const emitData = {
       content: `You have added to the Parameter ${name} in the business ${business.name}`,
-      notificationCategory: "business",
+      notificationCategory: "params",
       createdDate: getCurrentIndianTime(),
       businessName: business.name,
       businessId: business._id,

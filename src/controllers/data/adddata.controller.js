@@ -195,7 +195,7 @@ const AddData = asyncHandler(async (req, res) => {
 
     const emitData = {
       content: `${user.name} added the data for the target ${target.paramName} in the Business ${business.name}`,
-      notificationCategory: "business",
+      notificationCategory: "DataAdd",
       createdDate: getCurrentIndianTime(),
       businessName: business.name,
       businessId: business._id,
