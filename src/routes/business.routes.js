@@ -35,6 +35,7 @@ import { getBusinessUserDetails } from "../controllers/business/getBusinessDetai
 import { getUserHierarchyData } from "../controllers/business/getuserhierarchy.controller.js";
 import { changeManager } from "../controllers/business/changemanager.controller.js";
 import { getBusinessUserRatings } from "../controllers/business/getbusinessuserratings.controller.js";
+import { checkBusinessApproved } from "../controllers/business/checkbusinessapproved.controller.js";
 
 router.use(verifyJWT);
 
@@ -128,5 +129,7 @@ router.route("/requests/user-business-logo/:businessId").get(getBusinessLogo); /
 router
   .route("/get-business-user-rating/:businessId")
   .get(getBusinessUserRatings);
+
+router.route("/check-approvalBusiness").get(checkBusinessApproved);
 
 export default router;
