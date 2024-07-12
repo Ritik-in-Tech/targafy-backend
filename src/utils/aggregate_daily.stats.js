@@ -152,7 +152,7 @@ const aggregateDailyStats = async () => {
               total_FeedbackGiven: { $sum: "$feedbackGiven" },
               total_MessagesSent: { $sum: "$messagesSent" },
               total_DataAdd: { $sum: "$dataAdd" },
-              total_SessionCount: { $sum: "$session" },
+              total_SessionCount: { $sum: "$sessionCount" },
               count: { $sum: 1 },
             },
           },

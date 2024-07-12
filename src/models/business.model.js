@@ -57,6 +57,10 @@ const businessSchema = new Schema({
     type: [officeSchema],
     default: [],
   },
+  createdDate: {
+    type: Date,
+    default: new Date("2024-05-01T00:00:00Z"),
+  },
 });
 
 const Business = model("Business", businessSchema);
