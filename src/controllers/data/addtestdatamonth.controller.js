@@ -12,7 +12,7 @@ import { generateRandomNumber } from "../../utils/helpers/generaterandomnumber.j
 moment.tz.setDefault("Asia/Kolkata");
 
 function getRandomNumber() {
-  return Math.floor(Math.random() * (3 - 0 + 1)) + 0;
+  return Math.floor(Math.random() * (1 - 0 + 1)) + 0;
 }
 
 const formatDate = (date) => date.format("YYYY-MM-DD");

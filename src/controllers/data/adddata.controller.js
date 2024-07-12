@@ -9,6 +9,9 @@ import { User } from "../../models/user.model.js";
 import { Activites } from "../../models/activities.model.js";
 import moment from "moment-timezone";
 import { Businessusers } from "../../models/businessUsers.model.js";
+import { getParentIdsList } from "../../utils/helpers/getparentIds.js";
+import { emitNewNotificationEvent } from "../../sockets/notification_socket.js";
+import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
 moment.tz.setDefault("Asia/Kolkata");
 
 const AddData = asyncHandler(async (req, res) => {
@@ -172,7 +175,39 @@ const AddData = asyncHandler(async (req, res) => {
       await activity.save({ session });
     }
 
+    const notificationIds = [];
+    const businessAdminAndMiniAdmin = await Businessusers.find(
+      { businessId, role: { $in: ["Admin", "MiniAdmin"] } },
+      { name: 1, userId: 1 }
+    );
+
+    notificationIds.push(
+      ...businessAdminAndMiniAdmin.map((user) => user.userId)
+    );
+
+    const parentIds = await getParentIdsList(userId, businessId);
+
+    if (parentIds.length !== 0) {
+      notificationIds.push(...parentIds);
+    }
+
+    // console.log(notificationIds);
+
+    const emitData = {
+      content: `${user.name} added the data for the target ${target.paramName} in the Business ${business.name}`,
+      notificationCategory: "business",
+      createdDate: getCurrentIndianTime(),
+      businessName: business.name,
+      businessId: business._id,
+    };
+
+    for (const userId of notificationIds) {
+      // console.log(userId);
+      await emitNewNotificationEvent(userId, emitData);
+    }
+
     await dataAdd.save({ session });
+    console.log("Hello");
     console.log(dataAdd.createdDate);
 
     console.log(dataAdd.createdDate.getMonth());
@@ -209,6 +244,7 @@ const AddData = asyncHandler(async (req, res) => {
     // if (user.data.length > MAX_ENTRIES) {
     //   user.data = user.data.slice(0, MAX_ENTRIES);
     // }
+
     await user.save({ session });
 
     await session.commitTransaction();
