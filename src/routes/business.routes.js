@@ -75,7 +75,7 @@ router.route("/promotion/:businessId").patch(promoteUser); // done
 // router to demote user from mini admin to user
 router.route("/demote/:businessId").patch(demoteUser);
 
-// only admin can promote use or mini admin to admin
+// only admin can promote user or mini admin to admin
 router
   .route("/promote/admin/:businessId/:userIdToPromote")
   .patch(promoteToAdmin); // done

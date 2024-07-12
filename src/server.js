@@ -82,6 +82,7 @@ import addDataRouter from "./routes/data.routes.js";
 import activityRouter from "./routes/activities.routes.js";
 import adminRouter from "./routes/admin.routes.js";
 import { getAccessToken } from "./generateaccesstoken.js";
+import notificationRoutes from "./routes/notification.routes.js";
 
 app.use("/api/v1/business", businessRoutes);
 app.use("/api/v1/auth", authRoutes);
@@ -93,6 +94,7 @@ app.use("/api/v1", uploadfileRouter);
 app.use("/api/v1/data", addDataRouter);
 app.use("/api/v1/activity", activityRouter);
 app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/notification", notificationRoutes);
 
 app.use(
   "/api-docs",
