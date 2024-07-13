@@ -4,50 +4,25 @@ import ApiError from "../../utils/ApiError.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 
-const changeManager = asyncHandler(async (req, res) => {
-  const { businessId, userId } = req.params;
+export const changeManager = asyncHandler(async (req, res, next) => {
+  const { userId, businessId } = req.params;
   const { newParentId } = req.query;
 
-  const loggedInUser = req.user._id;
-  if (!loggedInUser) {
-    return res
-      .status(404)
-      .json(new ApiResponse(404, {}, "Invalid token please log in again"));
-  }
-  if (!businessId) {
-    return res
-      .status(404)
-      .json(
-        new ApiResponse(404, {}, "Business Id is not provided in the params")
-      );
-  }
+  /*
+    console.log(newParentId, businessId, userId);
 
-  if (!newParentId) {
-    return res
-      .status(404)
-      .json(
-        new ApiResponse(404, {}, "Please provide the newParentId in req query")
-      );
-  }
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-  const checkEligibility = await Businessusers.findOne({
-    userId: loggedInUser,
-    businessId: businessId,
-  });
+    
+    const data = await BusinessUserModel.find(
+        {businessId, "userType": "Insider" },
+        {"subordinates" : 1 , "allSubordinates" : 1 , "name" : 1 , "userId" : 1, "parentId" : 1}
+    );
 
-  if (!checkEligibility || !checkEligibility.role) {
-    return res
-      .status(404)
-      .json(
-        new ApiResponse(404, {}, "Role is not found for the logged in user")
-      );
-  }
-
-  if (checkEligibility.role !== "Admin") {
-    return res
-      .status(404)
-      .json(new ApiResponse(404, {}, "Only admin can change user manager"));
-  }
+    console.log("This is data : " , data);
+    return;
+    */
 
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -63,8 +38,8 @@ const changeManager = asyncHandler(async (req, res) => {
       userId: newParentId,
       userType: "Insider",
     });
-    // console.log("This is user ", user);
-    // console.log("This is parent ", newParentUser);
+    console.log("This is user ", user);
+    console.log("This is parent ", newParentUser);
     if (!user || !user.userId) {
       return res.status(404).send({ message: "User not found in business!!" });
     }
@@ -75,14 +50,17 @@ const changeManager = asyncHandler(async (req, res) => {
         .send({ message: "Manager not found in business!!" });
     }
 
-    // console.log("This is user ", user);
-    // console.log("This is parent ", newParentUser);
+    console.log("This is user ", user);
+    console.log("This is parent ", newParentUser);
 
     const subordinates = user.subordinates || [];
     let allSubordinates = user.allSubordinates || [];
     allSubordinates = [...allSubordinates, new mongoose.Types.ObjectId(userId)];
+    // const issueIdsToUpdate = user.assignedToMeIssues || [];
 
-    // console.log("This is allsubordinates :", allSubordinates);
+    console.log("This is allsubordinates :", allSubordinates);
+
+    // return res.send(allSubordinates);
 
     if (
       allSubordinates.some(
@@ -90,9 +68,9 @@ const changeManager = asyncHandler(async (req, res) => {
           subordinate.toString() === newParentUser.userId.toString()
       )
     ) {
-      //   console.log("It contains.....");
+      console.log("It contains.....");
     } else {
-      //   console.log("It does not contains.....");
+      console.log("It does not contains.....");
 
       const parentUsers =
         (await Businessusers.find(
@@ -106,7 +84,7 @@ const changeManager = asyncHandler(async (req, res) => {
           { userId: 1 }
         )) || [];
 
-      //   console.log("This is parents data : ", parentUsers);
+      console.log("This is parents data : ", parentUsers);
 
       let _userIds = parentUsers.map((user) => user.userId);
 
@@ -135,7 +113,7 @@ const changeManager = asyncHandler(async (req, res) => {
           { userId: 1 }
         )) || [];
 
-      //   console.log("This is parents data : ", parentUsersOfNewManager);
+      console.log("This is parents data : ", parentUsersOfNewManager);
 
       let userIds = parentUsersOfNewManager.map((user) => user.userId);
 
@@ -165,10 +143,7 @@ const changeManager = asyncHandler(async (req, res) => {
       );
 
       await Businessusers.updateOne(
-        {
-          businessId: businessId,
-          userId: new mongoose.Types.ObjectId(userId),
-        },
+        { businessId: businessId, userId: new mongoose.Types.ObjectId(userId) },
         {
           $set: {
             parentId: newParentId,
@@ -191,5 +166,3 @@ const changeManager = asyncHandler(async (req, res) => {
     next(new ApiError("Failed to change user parent.", 500));
   }
 });
-
-export { changeManager };
