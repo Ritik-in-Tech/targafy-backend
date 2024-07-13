@@ -35,7 +35,9 @@ const io = new Server(server, {
     origin: "*",
     methods: ["GET", "POST"],
     credentials: true,
+    allowedHeaders: ["my-custom-header"],
   },
+  allowEIO3: true,
 });
 
 // generate access token
