@@ -15,17 +15,12 @@ import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
 moment.tz.setDefault("Asia/Kolkata");
 
 const AddData = asyncHandler(async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const { todaysdata, comment } = req.body;
     const parameterName = req.params.parameterName;
     const businessId = req.params.businessId;
 
     if (!todaysdata || !comment) {
-      await session.abortTransaction();
-      session.endSession();
       return res
         .status(400)
         .json(
@@ -38,8 +33,6 @@ const AddData = asyncHandler(async (req, res) => {
     }
 
     if (!parameterName || !businessId) {
-      await session.abortTransaction();
-      session.endSession();
       return res
         .status(400)
         .json(
@@ -53,17 +46,13 @@ const AddData = asyncHandler(async (req, res) => {
 
     const userId = req.user._id;
     if (!userId) {
-      await session.abortTransaction();
-      session.endSession();
       return res
         .status(401)
         .json(new ApiResponse(401, {}, "Token expired please log in again"));
     }
 
-    const user = await User.findById(userId).session(session);
+    const user = await User.findById(userId);
     if (!user || !user.name) {
-      await session.abortTransaction();
-      session.endSession();
       return res
         .status(404)
         .json(
@@ -71,10 +60,10 @@ const AddData = asyncHandler(async (req, res) => {
         );
     }
 
-    const business = await Business.findById(businessId).session(session);
+    // console.log(user);
+
+    const business = await Business.findById(businessId);
     if (!business) {
-      await session.abortTransaction();
-      session.endSession();
       return res
         .status(404)
         .json(
@@ -86,26 +75,19 @@ const AddData = asyncHandler(async (req, res) => {
         );
     }
 
-    const businessusers = await Businessusers.findOne({
-      userId: userId,
-      businessId: businessId,
-    });
-
     const paramDetails = await Params.findOne({
       name: parameterName,
       businessId,
-    }).session(session);
+    });
     if (!paramDetails) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(404).json(new ApiResponse(404, {}, "Param not found"));
     }
 
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
-    console.log(typeof currentMonth);
-    console.log(currentYear);
+    // console.log(typeof currentMonth);
+    // console.log(currentYear);
 
     let ongoingMonth = currentMonth + 1;
     ongoingMonth = ongoingMonth.toString();
@@ -115,10 +97,8 @@ const AddData = asyncHandler(async (req, res) => {
       businessId,
       userId: userId,
       monthIndex: ongoingMonth,
-    }).session(session);
+    });
     if (!target) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(404).json(new ApiResponse(404, {}, "Target not found"));
     }
 
@@ -136,25 +116,50 @@ const AddData = asyncHandler(async (req, res) => {
           { $eq: [{ $year: "$createdDate" }, currentYear] },
         ],
       },
-    }).session(session);
+    });
 
     // console.log(dataAdd);
-
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     if (dataAdd) {
-      dataAdd.data.push({
-        todaysdata,
-        comment,
-        createdDate: currentDate,
+      const todayEntry = dataAdd.data.find((entry) => {
+        const entryDate = new Date(entry.createdDate);
+        return (
+          entryDate.getFullYear() === today.getFullYear() &&
+          entryDate.getMonth() === today.getMonth() &&
+          entryDate.getDate() === today.getDate()
+        );
       });
+
+      if (todayEntry) {
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(
+              400,
+              {},
+              "You have already added the data for today"
+            )
+          );
+      } else {
+        dataAdd.data.push({
+          todaysdata,
+          comment,
+          createdDate: currentDate,
+        });
+      }
 
       const activity = new Activites({
         userId: userId,
         businessId,
-        content: `${user.name} added the data for ${parameterName} in ${business.name}`,
+        content: `${user.name} ${
+          todayEntry ? "updated" : "added"
+        } the data for ${parameterName} in ${business.name}`,
         activityCategory: "Data Add",
       });
 
-      await activity.save({ session });
+      await activity.save();
+      await dataAdd.save();
     } else {
       dataAdd = new DataAdd({
         parameterName,
@@ -172,7 +177,8 @@ const AddData = asyncHandler(async (req, res) => {
         activityCategory: "Data Add",
       });
 
-      await activity.save({ session });
+      await activity.save();
+      await dataAdd.save();
     }
 
     const notificationIds = [];
@@ -206,7 +212,9 @@ const AddData = asyncHandler(async (req, res) => {
       await emitNewNotificationEvent(userId, emitData);
     }
 
-    await dataAdd.save({ session });
+    await dataAdd.save();
+
+    console.log(dataAdd._id);
     console.log("Hello");
     console.log(dataAdd.createdDate);
 
@@ -228,6 +236,7 @@ const AddData = asyncHandler(async (req, res) => {
     if (userDataEntry) {
       userDataEntry.targetDone += todaysDataValue;
     } else {
+      console.log("Hello");
       user.data.push({
         name: parameterName,
         dataId: dataAdd._id,
@@ -236,26 +245,14 @@ const AddData = asyncHandler(async (req, res) => {
       });
     }
 
-    // Sort the data array to keep the most recent entries first
     user.data.sort((a, b) => b.createdDate - a.createdDate);
 
-    // // Optionally, limit the number of entries to keep (e.g., last 12 months)
-    // const MAX_ENTRIES = 12;
-    // if (user.data.length > MAX_ENTRIES) {
-    //   user.data = user.data.slice(0, MAX_ENTRIES);
-    // }
-
-    await user.save({ session });
-
-    await session.commitTransaction();
-    session.endSession();
+    await user.save();
 
     return res
       .status(201)
       .json(new ApiResponse(201, { dataAdd }, "Data added successfully"));
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     console.error("Error:", error);
     return res
       .status(500)
