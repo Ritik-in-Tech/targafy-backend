@@ -12,7 +12,10 @@ import { AddTestDataForMonth } from "../controllers/data/addtestdatamonth.contro
 import { getLevelDataController } from "../controllers/data/getleveldatacontroller.js";
 import { getPieChartData } from "../controllers/data/getdatapiechart.controller.js";
 import { getThreeMonthsDataUser } from "../controllers/data/getthreemonthsdata.controller.js";
-import { getTargetToAddData } from "../controllers/data/gettargettoadddata.js";
+import {
+  getTargetToAddData,
+  getTargetToAddDataNew,
+} from "../controllers/data/gettargettoadddata.js";
 
 import {
   getLevelComments,
@@ -43,6 +46,8 @@ router.route("/get-previous-data/:businessId/:paramName").get(getPreviousData);
 
 // router to get the target names for the specifc user
 router.route("/get-target-users/:businessId").get(getTargetToAddData);
+
+router.route("/get-target-users-value/:businessId").get(getTargetToAddDataNew);
 
 router
   .route("/add-test-data/:businessId/:paramName/:monthName")
