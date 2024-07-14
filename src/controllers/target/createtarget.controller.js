@@ -8,7 +8,10 @@ import { Businessusers } from "../../models/businessUsers.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { Activites } from "../../models/activities.model.js";
 import moment from "moment-timezone";
-import { emitNewNotificationEvent } from "../../sockets/notification_socket.js";
+import {
+  activityNotificationEvent,
+  emitNewNotificationEvent,
+} from "../../sockets/notification_socket.js";
 import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
 moment.tz.setDefault("Asia/Kolkata");
 
@@ -229,7 +232,7 @@ const createTarget = asyncHandler(async (req, res) => {
     };
 
     for (const userId of validUserIds) {
-      await emitNewNotificationEvent(userId, emitData);
+      await activityNotificationEvent(userId, emitData);
     }
 
     await session.commitTransaction();

@@ -12,10 +12,23 @@ import swaggerUi from "swagger-ui-express";
 import { fileURLToPath } from "url";
 import YAML from "yaml";
 import sdk from "api";
-const sdkInstance = sdk("@msg91api/v5.0#6n91xmlhu4pcnz");
+import http from "http";
+import https from "https";
 
+const sdkInstance = sdk("@msg91api/v5.0#6n91xmlhu4pcnz");
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const sslKeyPath = path.join(__dirname, "../localhost.key");
+const sslCertPath = path.join(__dirname, "../localhost.crt");
+
+const privateKey = fs.readFileSync(sslKeyPath, "utf8");
+const certificate = fs.readFileSync(sslCertPath, "utf8");
+
+const options = {
+  key: privateKey,
+  cert: certificate,
+};
 
 const file = fs.readFileSync(
   path.resolve(__dirname, "../swagger.yaml"),
@@ -27,24 +40,6 @@ import { initializeNotificationSocket } from "./sockets/notification_socket.js";
 import "./utils/helpers/aggregrate.cron.js";
 
 const app = express();
-const server = createServer(app);
-
-// socket io setup
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-    credentials: true,
-    allowedHeaders: ["my-custom-header"],
-  },
-  allowEIO3: true,
-});
-
-// generate access token
-// await getAccessToken();
-
-// initialize notification
-initializeNotificationSocket(io);
 
 // Middleware setup
 if (process.env.NODE_ENV === "development") {
@@ -73,14 +68,13 @@ import authRoutes from "./routes/authentication.routes.js";
 import paramsRoutes from "./routes/params.routes.js";
 import targetRoutes from "./routes/target.routes.js";
 import userRoutes from "./routes/user.routes.js";
-import ApiError from "./utils/ApiError.js";
 import uploadRouter from "./routes/upload.document.js";
 import uploadfileRouter from "./routes/uploadfile.routes.js";
 import addDataRouter from "./routes/data.routes.js";
 import activityRouter from "./routes/activities.routes.js";
 import adminRouter from "./routes/admin.routes.js";
-import { getAccessToken } from "./generateaccesstoken.js";
 import notificationRoutes from "./routes/notification.routes.js";
+import { connectDB } from "./db/index.js";
 
 app.use("/api/v1/business", businessRoutes);
 app.use("/api/v1/auth", authRoutes);
@@ -106,4 +100,44 @@ app.get("*", (req, res) => {
   });
 });
 
-export default app;
+const HTTP_PORT = process.env.HTTP_PORT || 80;
+const HTTPS_PORT = process.env.HTTPS_PORT || 8443;
+const startServer = async () => {
+  try {
+    await connectDB();
+
+    const httpServer = http.createServer(app);
+
+    const httpsServer = https.createServer(options, app);
+
+    const ioHttp = new Server(httpServer, {
+      cors: {
+        origin: "*",
+        methods: ["GET", "POST"],
+      },
+    });
+
+    const ioHttps = new Server(httpsServer, {
+      cors: {
+        origin: "*",
+        methods: ["GET", "POST"],
+      },
+    });
+
+    initializeNotificationSocket(ioHttp);
+    initializeNotificationSocket(ioHttps);
+
+    httpServer.listen(HTTP_PORT, () => {
+      console.log(`HTTP Server running on http://localhost:${HTTP_PORT}`);
+    });
+
+    httpsServer.listen(HTTPS_PORT, () => {
+      console.log(`HTTPS Server running on https://localhost:${HTTPS_PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start the server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();

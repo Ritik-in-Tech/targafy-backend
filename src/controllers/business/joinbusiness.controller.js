@@ -6,9 +6,12 @@ import { Acceptedrequests } from "../../models/acceptedRequests.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
-import { emitNewNotificationEvent } from "../../sockets/notification_socket.js";
+import { emitNewNotificationEvent, joinBusinessNotificationEvent } from "../../sockets/notification_socket.js";
 import mongoose from "mongoose";
-import { getCurrentIndianTime, getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
+import {
+  getCurrentIndianTime,
+  getCurrentUTCTime,
+} from "../../utils/helpers/time.helper.js";
 import catchAsync from "../../utils/catchAsync.js";
 import ApiError from "../../utils/ApiError.js";
 
@@ -119,7 +122,7 @@ const joinBusiness = catchAsync(async (req, res, next) => {
 
     await Promise.all(
       businessAdmins.map(async (admin) => {
-        await emitNewNotificationEvent(admin.userId, emitData);
+        await joinBusinessNotificationEvent(admin.userId, emitData);
       })
     );
 

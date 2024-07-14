@@ -108,6 +108,14 @@ const userSchema = new Schema({
     default: 0,
     type: Number,
   },
+  acceptViewCounter: {
+    default: 0,
+    type: Number,
+  },
+  activityViewCounter: {
+    default: 0,
+    type: Number,
+  },
   lastSeenHistory: [lastSeenHistorySchema],
   email: {
     type: String,

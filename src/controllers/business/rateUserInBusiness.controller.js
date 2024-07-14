@@ -7,9 +7,14 @@ import { Usersratings } from "../../models/rating.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
-import { getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
+import {
+  getCurrentIndianTime,
+  getCurrentUTCTime,
+} from "../../utils/helpers/time.helper.js";
 import { sendNotification } from "../notification.controller.js";
 import { User } from "../../models/user.model.js";
+import { Business } from "../../models/business.model.js";
+import { emitNewNotificationEvent } from "../../sockets/notification_socket.js";
 
 const rateUserInBusiness = asyncHandler(async (req, res, next) => {
   try {
@@ -77,6 +82,13 @@ const rateUserInBusiness = asyncHandler(async (req, res, next) => {
     };
     // console.log("New Rating: ", newRating);
 
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Business not found"));
+    }
+
     const user = await Businessusers.findOne({
       businessId: businessId,
       userId: userId,
@@ -132,10 +144,17 @@ const rateUserInBusiness = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(401, {}, "Unable to rate user!!"));
     }
 
-    sendNotification(
-      userId,
-      `You received a new ${isFeedback ? "feedback" : "rating"}! Check it out.`
-    );
+    const emitData = {
+      content: `You received a new ${
+        isFeedback ? "feedback" : "rating"
+      }! Check it out.`,
+      notificationCategory: "rating",
+      createdDate: getCurrentIndianTime(),
+      businessName: business.name,
+      businessId: businessId,
+    };
+
+    emitNewNotificationEvent(userId, emitData);
 
     return res
       .status(200)
