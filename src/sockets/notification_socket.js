@@ -1,20 +1,17 @@
 import { User } from "../../src/models/user.model.js";
 import NotificationModel from "../../src/models/notification.model.js";
 
-import {
-  sendNotification,
-  sendNotificationNew,
-} from "../controllers/notification.controller.js";
+import { sendNotificationNew } from "../controllers/notification.controller.js";
 
-let io;
-let connectedSocket;
+let issueNsp;
 
 export function initializeNotificationSocket(io) {
   try {
-    console.log("***** Io Notifcation started *****");
+    console.log("***** Io Notification started *****");
 
-    io.on("connection", (socket) => {
-      connectedSocket = socket;
+    issueNsp = io.of("/home/notifications");
+
+    issueNsp.on("connection", (socket) => {
       console.log("User Connected: ", socket.id);
 
       socket.on("user-joined", (username) => {
@@ -25,7 +22,6 @@ export function initializeNotificationSocket(io) {
 
       socket.on("message", (message) => {
         console.log(`Received message: ${message}`);
-        // You can also broadcast this message to all connected clients if needed
         io.emit("notification", message);
       });
 
@@ -38,26 +34,16 @@ export function initializeNotificationSocket(io) {
         });
       });
     });
-    return io;
+
+    return issueNsp;
   } catch (error) {
     console.error("Error initializing activity socket:", error);
     throw error;
   }
 }
 
-// it's used when particular socket to send notification or data
-export function getSocket() {
-  return connectedSocket;
-}
-
-// it's used when to broadcast to all the connected clients
-export function getIo() {
-  return io;
-}
-
 export async function emitNewNotificationEvent(userId, eventData) {
-  const currentSocket = getSocket();
-  if (currentSocket) {
+  if (issueNsp) {
     // console.log("This is event data : "  , eventData);
     if (
       !userId ||
@@ -86,7 +72,7 @@ export async function emitNewNotificationEvent(userId, eventData) {
 
     // console.log("This is userid where notification is sent : ", userId);
 
-    currentSocket.to(userId).emit("new-notification", eventData);
+    issueNsp.to(userId).emit("new-notification", eventData);
 
     await sendNotificationNew(userId, eventData.content);
   } else {
@@ -102,8 +88,7 @@ export async function emitNewNotificationAndAddBusinessEvent(
   eventData,
   newBusiness
 ) {
-  const currentSocket = getSocket();
-  if (currentSocket) {
+  if (issueNsp) {
     console.log("This is event data : ", eventData, userId);
     if (
       !userId ||
@@ -142,7 +127,7 @@ export async function emitNewNotificationAndAddBusinessEvent(
     };
 
     // console.log("This is data }", data);
-    currentSocket.to(userId).emit("new-notification-add-business", data);
+    issueNsp.to(userId).emit("new-notification-add-business", data);
 
     sendNotificationNew(userId, eventData.content);
   } else {
@@ -153,8 +138,7 @@ export async function emitNewNotificationAndAddBusinessEvent(
 }
 
 export async function joinBusinessNotificationEvent(userId, eventData) {
-  const currentSocket = getSocket();
-  if (currentSocket) {
+  if (issueNsp) {
     // console.log("This is event data : "  , eventData);
     if (
       !userId ||
@@ -183,7 +167,7 @@ export async function joinBusinessNotificationEvent(userId, eventData) {
 
     // console.log("This is userid where notification is sent : ", userId);
 
-    currentSocket.to(userId).emit("join-business-notification", eventData);
+    issueNsp.to(userId).emit("join-business-notification", eventData);
 
     await sendNotificationNew(userId, eventData.content);
   } else {
@@ -194,8 +178,7 @@ export async function joinBusinessNotificationEvent(userId, eventData) {
 }
 
 export async function activityNotificationEvent(userId, eventData) {
-  const currentSocket = getSocket();
-  if (currentSocket) {
+  if (issueNsp) {
     // console.log("This is event data : "  , eventData);
     if (
       !userId ||
@@ -224,7 +207,7 @@ export async function activityNotificationEvent(userId, eventData) {
 
     // console.log("This is userid where notification is sent : ", userId);
 
-    currentSocket.to(userId).emit("activity-notification", eventData);
+    issueNsp.to(userId).emit("activity-notification", eventData);
 
     await sendNotificationNew(userId, eventData.content);
   } else {
