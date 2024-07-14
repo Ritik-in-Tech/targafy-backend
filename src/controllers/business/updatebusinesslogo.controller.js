@@ -1,11 +1,9 @@
 import { Business } from "../../models/business.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { User } from "../../models/user.model.js";
-import { emitNewNotificationEvent } from "../../sockets/notification_socket.js";
 
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
-import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
 
 const updateBusinessLogo = asyncHandler(async (req, res, next) => {
   try {
@@ -75,16 +73,6 @@ const updateBusinessLogo = asyncHandler(async (req, res, next) => {
     //       new ApiResponse(400, {}, "Some error occurred while updating logo")
     //     );
     // }
-
-    const emitData = {
-      content: `${user.name} your ${business.name} business Logo updated successfully.`,
-      notificationCategory: "business",
-      createdDate: getCurrentIndianTime(),
-      businessName: business.name,
-      businessId: business._id,
-    };
-
-    emitNewNotificationEvent(userId, emitData);
 
     return res
       .status(200)

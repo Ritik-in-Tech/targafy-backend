@@ -7,6 +7,7 @@ import { Params } from "../../models/params.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { Activites } from "../../models/activities.model.js";
+import { activityNotificationEvent } from "../../sockets/notification_socket.js";
 
 const addUserToTarget = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -104,7 +105,7 @@ const addUserToTarget = asyncHandler(async (req, res) => {
           new ApiResponse(404, {}, "Parameter not found for this business")
         );
     }
-
+    const validUserIds = [];
     for (const userId of userIds) {
       const user = await User.findById(userId).session(session);
       if (!user) {
@@ -200,6 +201,8 @@ const addUserToTarget = asyncHandler(async (req, res) => {
         assignedto: user.name,
       });
 
+      validUserIds.push(userId);
+
       await newtarget.save({ session });
 
       const activity = new Activites({
@@ -210,6 +213,18 @@ const addUserToTarget = asyncHandler(async (req, res) => {
       });
 
       await activity.save({ session });
+    }
+
+    const emitData = {
+      content: `You have assigned target in ${paramName} for the business ${business.name}`,
+      notificationCategory: "target",
+      createdDate: getCurrentIndianTime(),
+      businessName: business.name,
+      businessId: business._id,
+    };
+
+    for (const userId of validUserIds) {
+      await activityNotificationEvent(userId, emitData);
     }
 
     await session.commitTransaction();

@@ -4,6 +4,8 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { User } from "../../models/user.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
+import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
+import { activityNotificationEvent } from "../../sockets/notification_socket.js";
 
 const addUserToParam = asyncHandler(async (req, res) => {
   try {
@@ -61,6 +63,7 @@ const addUserToParam = asyncHandler(async (req, res) => {
     }
 
     const validUsers = [];
+    const validUserId = [];
     for (const userId of userIds) {
       const user = await User.findById(userId);
       if (!user) {
@@ -99,7 +102,7 @@ const addUserToParam = asyncHandler(async (req, res) => {
             )
           );
       }
-
+      validUserId.push(userId);
       validUsers.push({ userId: user._id, name: user.name });
     }
 
@@ -107,6 +110,19 @@ const addUserToParam = asyncHandler(async (req, res) => {
     param.usersAssigned.push(...validUsers);
 
     await param.save();
+
+    const emitData = {
+      content: `You have added to the Parameter ${param.name} in the business ${business.name}`,
+      notificationCategory: "params",
+      createdDate: getCurrentIndianTime(),
+      businessName: business.name,
+      businessId: business._id,
+    };
+
+    for (const userId of validUserId) {
+      // console.log(userId);
+      await activityNotificationEvent(userId, emitData);
+    }
 
     return res
       .status(200)

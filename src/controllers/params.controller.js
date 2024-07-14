@@ -6,7 +6,10 @@ import { User } from "../models/user.model.js";
 import { Businessusers } from "../models/businessUsers.model.js";
 import mongoose from "mongoose";
 import { TypeBParams } from "../models/typeBparams.model.js";
-import { emitNewNotificationEvent } from "../sockets/notification_socket.js";
+import {
+  activityNotificationEvent,
+  emitNewNotificationEvent,
+} from "../sockets/notification_socket.js";
 import { getCurrentIndianTime } from "../utils/helpers/time.helper.js";
 
 // Create a new param
@@ -168,7 +171,7 @@ const createParam = asyncHandler(async (req, res) => {
 
     for (const userId of validUserIds) {
       // console.log(userId);
-      await emitNewNotificationEvent(userId, emitData);
+      await activityNotificationEvent(userId, emitData);
     }
 
     // Add the parameter name and id to the business.params array

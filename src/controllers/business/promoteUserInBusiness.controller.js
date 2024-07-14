@@ -5,7 +5,10 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { Business } from "../../models/business.model.js";
 import { emitNewNotificationEvent } from "../../sockets/notification_socket.js";
-import { getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
+import {
+  getCurrentIndianTime,
+  getCurrentUTCTime,
+} from "../../utils/helpers/time.helper.js";
 
 const promoteUser = asyncHandler(async (req, res, next) => {
   const { role, userIdToPromote } = req.body;
@@ -93,7 +96,7 @@ const promoteUser = asyncHandler(async (req, res, next) => {
     const emitData = {
       content: `Your role in business ${business.name}is changed now your role is ${role}`,
       notificationCategory: "business",
-      createdDate: getCurrentUTCTime(),
+      createdDate: getCurrentIndianTime(),
       businessName: business.name,
       businessId: businessId,
     };
@@ -219,7 +222,7 @@ const demoteUser = asyncHandler(async (req, res, next) => {
     const emitData = {
       content: `Your role in business ${business.name} has been demoted to User`,
       notificationCategory: "business",
-      createdDate: getCurrentUTCTime(),
+      createdDate: getCurrentIndianTime(),
       businessName: business.name,
       businessId: businessId,
     };

@@ -10,7 +10,7 @@ import { Activites } from "../../models/activities.model.js";
 import moment from "moment-timezone";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { getParentIdsList } from "../../utils/helpers/getparentIds.js";
-import { emitNewNotificationEvent } from "../../sockets/notification_socket.js";
+import { activityNotificationEvent, emitNewNotificationEvent } from "../../sockets/notification_socket.js";
 import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
 moment.tz.setDefault("Asia/Kolkata");
 
@@ -209,7 +209,7 @@ const AddData = asyncHandler(async (req, res) => {
 
     for (const userId of notificationIds) {
       // console.log(userId);
-      await emitNewNotificationEvent(userId, emitData);
+      await activityNotificationEvent(userId, emitData);
     }
 
     await dataAdd.save();
