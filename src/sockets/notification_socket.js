@@ -75,9 +75,41 @@ export async function emitNewNotificationEvent(userId, eventData) {
 
     //  console.log(result);
 
+    console.log("This is userid where notification is sent : ", userId);
+
+    issueNsp.to(userId.toString()).emit("new-notification", eventData);
+
+    await sendNotificationNew(userId, eventData.content);
+  } else {
+    throw new Error(
+      "Socket.io not initialized. Call initializeActivitySocket(server) first."
+    );
+  }
+}
+
+export async function emitCreateBusinessNotification(userId, eventData) {
+  if (issueNsp) {
+    // console.log("This is event data : "  , eventData);
+    if (
+      !userId ||
+      !eventData ||
+      !eventData.content ||
+      !eventData.createdDate ||
+      !eventData.notificationCategory ||
+      !eventData.businessId
+    ) {
+      return;
+    }
+
+    let data = await NotificationModel.create({ ...eventData, userId });
+
+    // console.log("this is data ", data);
+
+    //  console.log(result);
+
     // console.log("This is userid where notification is sent : ", userId);
 
-    issueNsp.to(userId).emit("new-notification", eventData);
+    issueNsp.to(userId.toString()).emit("new-notification", eventData);
 
     await sendNotificationNew(userId, eventData.content);
   } else {
@@ -110,21 +142,21 @@ export async function emitNewNotificationAndAddBusinessEvent(
     // const businessId = eventData.businessId;
     // console.log(businessId);
 
-    await Businessusers.updateOne(
-      { userId: userId, businessId: businessId },
-      {
-        $inc: {
-          notificationViewCounter: 1,
-        },
-      }
-    );
+    // await Businessusers.updateOne(
+    //   { userId: userId, businessId: businessId },
+    //   {
+    //     $inc: {
+    //       notificationViewCounter: 1,
+    //     },
+    //   }
+    // );
 
     let notificationData = await NotificationModel.create({
       ...eventData,
       userId,
     });
 
-    // console.log("This is userid", userId);
+    console.log("This is userid", userId);
 
     // console.log("This is eventData : ", eventData);
     // console.log("This is newBusiness : ", newBusiness);
@@ -176,9 +208,13 @@ export async function joinBusinessNotificationEvent(userId, eventData) {
 
     //  console.log(result);
 
-    // console.log("This is userid where notification is sent : ", userId);
+    console.log("This is userid where notification is sent : ", userId);
 
-    issueNsp.to(userId).emit("join-business-notification", eventData);
+    // console.log("This is theuserId);
+
+    issueNsp
+      .to(userId.toString())
+      .emit("join-business-notification", eventData);
 
     await sendNotificationNew(userId, eventData.content);
   } else {
@@ -220,7 +256,7 @@ export async function activityNotificationEvent(userId, eventData) {
 
     // console.log("This is userid where notification is sent : ", userId);
 
-    issueNsp.to(userId).emit("activity-notification", eventData);
+    issueNsp.to(userId.toString()).emit("activity-notification", eventData);
 
     await sendNotificationNew(userId, eventData.content);
   } else {

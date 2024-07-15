@@ -11,7 +11,10 @@ import { Acceptedrequests } from "../../models/acceptedRequests.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { emitNewNotificationAndAddBusinessEvent } from "../../sockets/notification_socket.js";
-import { getCurrentIndianTime, getCurrentUTCTime } from "../../utils/helpers/time.helper.js";
+import {
+  getCurrentIndianTime,
+  getCurrentUTCTime,
+} from "../../utils/helpers/time.helper.js";
 import { Office } from "../../models/office.model.js";
 
 const acceptUserJoinRequest = asyncHandler(async (req, res) => {
@@ -128,8 +131,6 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         userType: "Insider",
         subordinates: [],
         allSubordinates: [],
-        // officeJoined: [],
-        activityViewCounter: 0,
       };
 
       const newBusiness = {
@@ -186,6 +187,9 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
 
       await Acceptedrequests.create([acceptedRequest], { session });
 
+      // parentUser.notificationViewCounter += 1;
+      // await parentUser.save();
+
       const emitData = {
         content: `Congratulations, ${user.name} have been added to ${business.name} successfully! 🥳🥳`,
         notificationCategory: "business",
@@ -205,22 +209,15 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
       await session.commitTransaction();
       session.endSession();
 
-      // Update the newly added user's officeJoined after committing the transaction
-      // const newBusinessUser = await Businessusers.findOne({
-      //   businessId: businessId,
-      //   userId: userId,
-      // });
+      const newBusinessUser = await Businessusers.findOne({
+        businessId: businessId,
+        userId: userId,
+      });
 
-      // if (newBusinessUser) {
-      //   const officeData = {
-      //     officeName: office.officeName,
-      //     officeId: officeId,
-      //   };
-
-      //   newBusinessUser.officeJoined.push(officeData);
-
-      //   await newBusinessUser.save();
-      // }
+      if (newBusinessUser) {
+        newBusinessUser.notificationViewCounter += 1;
+        await newBusinessUser.save();
+      }
 
       return res
         .status(200)
