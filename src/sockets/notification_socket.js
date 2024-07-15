@@ -2,6 +2,7 @@ import { User } from "../../src/models/user.model.js";
 import NotificationModel from "../../src/models/notification.model.js";
 
 import { sendNotificationNew } from "../controllers/notification.controller.js";
+import { Businessusers } from "../models/businessUsers.model.js";
 
 let issueNsp;
 
@@ -50,13 +51,17 @@ export async function emitNewNotificationEvent(userId, eventData) {
       !eventData ||
       !eventData.content ||
       !eventData.createdDate ||
-      !eventData.notificationCategory
+      !eventData.notificationCategory ||
+      !eventData.businessId
     ) {
       return;
     }
 
-    await User.updateOne(
-      { _id: userId },
+    const businessId = eventData.businessId;
+    console.log(businessId);
+
+    await Businessusers.updateOne(
+      { userId: userId, businessId: businessId },
       {
         $inc: {
           notificationViewCounter: 1,
@@ -102,8 +107,11 @@ export async function emitNewNotificationAndAddBusinessEvent(
 
     // console.log("This mishra.......");
 
-    await User.updateOne(
-      { _id: userId },
+    // const businessId = eventData.businessId;
+    // console.log(businessId);
+
+    await Businessusers.updateOne(
+      { userId: userId, businessId: businessId },
       {
         $inc: {
           notificationViewCounter: 1,
@@ -150,8 +158,11 @@ export async function joinBusinessNotificationEvent(userId, eventData) {
       return;
     }
 
-    await User.updateOne(
-      { _id: userId },
+    const businessId = eventData.businessId;
+    console.log(businessId);
+
+    await Businessusers.updateOne(
+      { userId: userId, businessId: businessId },
       {
         $inc: {
           acceptViewCounter: 1,
@@ -190,15 +201,17 @@ export async function activityNotificationEvent(userId, eventData) {
       return;
     }
 
-    await User.updateOne(
-      { _id: userId },
+    const businessId = eventData.businessId;
+    console.log(businessId);
+
+    await Businessusers.updateOne(
+      { userId: userId, businessId: businessId },
       {
         $inc: {
           activityViewCounter: 1,
         },
       }
     );
-
     let data = await NotificationModel.create({ ...eventData, userId });
 
     // console.log("this is data ", data);

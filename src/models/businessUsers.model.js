@@ -72,13 +72,17 @@ const businessUsersSchema = new Schema({
       return this.userType !== "Outsider"; // Only required if userType is not "outsider"
     },
   },
-
+  notificationViewCounter: {
+    default: 0,
+    type: Number,
+  },
+  acceptViewCounter: {
+    default: 0,
+    type: Number,
+  },
   activityViewCounter: {
     type: Number,
     default: 0,
-    required: function () {
-      return this.userType !== "Outsider"; // Only required if userType is not "outsider"
-    },
   },
   lastSeen: {
     type: Date,
