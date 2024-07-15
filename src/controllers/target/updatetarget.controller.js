@@ -6,21 +6,28 @@ import { User } from "../../models/user.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { Activites } from "../../models/activities.model.js";
 import mongoose from "mongoose";
+import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
+import { activityNotificationEvent } from "../../sockets/notification_socket.js";
+import { Params } from "../../models/params.model.js";
 
 const updateUserTarget = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const { userId, newTargetValue, comment, monthIndex } = req.body;
-    if (!userId || !monthIndex) {
+    const { userTargets, comment, monthIndex } = req.body;
+    if (!userTargets || !Array.isArray(userTargets) || !monthIndex) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "Please provide required fields"));
+        .json(new ApiResponse(400, {}, "Please provide all required fields"));
     }
 
     const { paramName, businessId } = req.params;
     if (!paramName || !businessId) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(400)
         .json(
@@ -32,8 +39,26 @@ const updateUserTarget = asyncHandler(async (req, res) => {
         );
     }
 
+    const month = parseInt(monthIndex, 10);
+
+    if (isNaN(month) || month < 1 || month > 12) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Invalid month value provided. Must be between 1 and 12"
+          )
+        );
+    }
+
     const loggedInuserId = req.user._id;
     if (!loggedInuserId) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(400)
         .json(
@@ -59,14 +84,10 @@ const updateUserTarget = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Business not found"));
     }
 
-    console.log(business);
-
     const businessusers = await Businessusers.findOne({
       businessId: businessId,
       userId: loggedInuserId,
     }).session(session);
-
-    console.log(businessusers.role);
 
     if (!businessusers || businessusers.role === "User") {
       await session.abortTransaction();
@@ -82,50 +103,113 @@ const updateUserTarget = asyncHandler(async (req, res) => {
         );
     }
 
-    const target = await Target.findOne({
-      businessId: businessId,
-      paramName: paramName,
-      monthIndex: monthIndex,
-      userId: userId,
+    const param = await Params.findOne({
+      name: paramName,
+      businessId,
     }).session(session);
-
-    if (!target) {
+    if (!param) {
       await session.abortTransaction();
       session.endSession();
       return res
         .status(400)
         .json(
-          new ApiResponse(400, {}, "No target found for the provided details")
+          new ApiResponse(
+            400,
+            {},
+            "Parameter name does not exist for this business where you want to update the target"
+          )
         );
     }
+    const validUserIds = [];
+    for (const { userId, newTargetValue } of userTargets) {
+      const user = await User.findOne({ _id: userId }).session(session);
+      if (!user) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(400, {}, `User with ID ${userId} does not exist`)
+          );
+      }
 
-    if (newTargetValue) {
-      target.targetValue = newTargetValue;
+      const businessUser = await Businessusers.findOne({
+        userId: user._id,
+        businessId,
+      }).session(session);
+      if (!businessUser) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(
+              400,
+              {},
+              `User with ID ${userId} is not associated with this business`
+            )
+          );
+      }
+
+      const userAssigned = param.usersAssigned.some((u) =>
+        u.userId.equals(user._id)
+      );
+      if (!userAssigned) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(
+              400,
+              {},
+              `User with ID ${userId} is not assigned to this parameter`
+            )
+          );
+      }
+
+      const existingTarget = await Target.findOne({
+        paramName,
+        businessId,
+        monthIndex,
+        userId: user._id,
+      }).session(session);
+
+      existingTarget.targetValue = newTargetValue;
+      existingTarget.updatedBy = loggedInUser.name;
+
+      await existingTarget.save({ session });
+
+      const activity = new Activites({
+        userId: userId,
+        businessId,
+        content: `Target update for parameter ${paramName} to ${newTargetValue}`,
+        activityCategory: "Target Update",
+      });
+
+      await activity.save({ session });
+
+      validUserIds.push(userId);
     }
 
-    if (comment) {
-      target.comment = comment;
+    const emitData = {
+      content: `Your target in ${paramName} for the business ${business.name} has been updated`,
+      notificationCategory: "target",
+      createdDate: getCurrentIndianTime(),
+      businessName: business.name,
+      businessId: business._id,
+    };
+
+    for (const userId of validUserIds) {
+      await activityNotificationEvent(userId, emitData);
     }
-
-    target.updatedBy = loggedInUser.name;
-
-    await target.save({ session });
-
-    const activity = new Activites({
-      userId: userId,
-      businessId,
-      content: `Target update for parameter ${paramName} to ${target.assignedto}`,
-      activityCategory: "Target Update",
-    });
-
-    await activity.save({ session });
 
     await session.commitTransaction();
     session.endSession();
 
     return res
       .status(200)
-      .json(new ApiResponse(200, { target }, "Target updated successfully"));
+      .json(new ApiResponse(200, {}, "Targets updated successfully"));
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
