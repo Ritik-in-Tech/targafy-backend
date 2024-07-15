@@ -6,7 +6,7 @@ import { User } from "../../models/user.model.js";
 import { Target } from "../../models/target.model.js";
 import moment from "moment-timezone";
 
-const getThreeMonthsDataUser = asyncHandler(async (req, res) => {
+const getOneMonthsDataUser = asyncHandler(async (req, res) => {
   try {
     const { userId, paramName, businessId } = req.params;
 
@@ -58,17 +58,17 @@ const getThreeMonthsDataUser = asyncHandler(async (req, res) => {
         );
     }
 
-    if (businessusers.role === "User") {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            {},
-            "Only admin and miniAdmin is allowed to do this"
-          )
-        );
-    }
+    // if (businessusers.role === "User") {
+    //   return res
+    //     .status(400)
+    //     .json(
+    //       new ApiResponse(
+    //         400,
+    //         {},
+    //         "Only admin and miniAdmin is allowed to do this"
+    //       )
+    //     );
+    // }
 
     const user = await User.findById(userId);
     if (!user) {
@@ -95,20 +95,21 @@ const getThreeMonthsDataUser = asyncHandler(async (req, res) => {
     // Calculate the previous three months
     const now = moment();
     console.log(now);
-    const lastThreeMonths = [
+    const lastOneMonths = [
+      now.clone().subtract(0, "months").format("M"),
       now.clone().subtract(1, "months").format("M"),
-      now.clone().subtract(2, "months").format("M"),
-      now.clone().subtract(3, "months").format("M"),
+      // now.clone().subtract(2, "months").format("M"),
+      // now.clone().subtract(3, "months").format("M"),
     ];
 
-    console.log(lastThreeMonths);
+    console.log(lastOneMonths);
 
     // Query the target table for the previous three months
     const targets = await Target.find({
       businessId: businessId,
       userId: userId,
       paramName: paramName,
-      monthIndex: { $in: lastThreeMonths },
+      monthIndex: { $in: lastOneMonths },
     });
 
     // Query the user's data field for the previous three months
@@ -116,13 +117,13 @@ const getThreeMonthsDataUser = asyncHandler(async (req, res) => {
       (dataItem) =>
         dataItem.name === paramName &&
         moment(dataItem.createdDate).isBetween(
-          now.clone().subtract(3, "months").startOf("month"),
+          now.clone().subtract(1, "months").startOf("month"),
           now.endOf("month")
         )
     );
 
     // Structure the response data
-    const result = lastThreeMonths.map((month) => {
+    const result = lastOneMonths.map((month) => {
       const target = targets.find((t) => t.monthIndex === month);
       const targetValue = target ? target.targetValue : "";
       const targetDone =
@@ -150,4 +151,4 @@ const getThreeMonthsDataUser = asyncHandler(async (req, res) => {
   }
 });
 
-export { getThreeMonthsDataUser };
+export { getOneMonthsDataUser };
