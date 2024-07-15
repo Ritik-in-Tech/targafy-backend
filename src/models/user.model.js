@@ -114,6 +114,10 @@ const userSchema = new Schema({
   fcmToken: {
     type: String,
   },
+  notificationViewCounter: {
+    default: 0,
+    type: Number,
+  },
   data: [dataSchema],
 });
 

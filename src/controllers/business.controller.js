@@ -6,7 +6,10 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { generateUniqueCode } from "../utils/helpers/array.helper.js";
 import { Businessusers } from "../models/businessUsers.model.js";
 import { startSession } from "mongoose";
-import { emitNewNotificationEvent } from "../sockets/notification_socket.js";
+import {
+  emitCreateBusinessNotification,
+  emitNewNotificationEvent,
+} from "../sockets/notification_socket.js";
 import { getCurrentUTCTime } from "../utils/helpers/time.helper.js";
 import { Office } from "../models/office.model.js";
 
@@ -77,7 +80,15 @@ const createBusiness = asyncHandler(async (req, res) => {
       groupsJoined: [],
     };
 
-    await Businessusers.create([adminInfo], { session: session });
+    const createdBusinessUser = await Businessusers.create([adminInfo], {
+      session: session,
+    });
+
+    await Businessusers.findByIdAndUpdate(
+      createdBusinessUser[0]._id,
+      { $inc: { notificationViewCounter: 1 } },
+      { session: session }
+    );
 
     const result = await User.updateOne(
       { _id: adminId },
@@ -103,7 +114,7 @@ const createBusiness = asyncHandler(async (req, res) => {
       businessId: business[0]._id,
     };
 
-    emitNewNotificationEvent(adminId, emitData);
+    emitCreateBusinessNotification(adminId, emitData);
 
     if (result.modifiedCount == 0) {
       await session.abortTransaction();
