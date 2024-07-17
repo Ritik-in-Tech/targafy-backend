@@ -65,15 +65,15 @@ export const getSubordinateUserNotification = asyncHandler(async (req, res) => {
           (userRole === "MiniAdmin" || userRole === "User")) ||
         (loggedInUserRole === "User" && userRole === "User")
       ) {
-        const createdDateIST = moment(notification.createdDate)
-          .tz("Asia/Kolkata")
-          .format("YYYY-MM-DD HH:mm:ss");
+        // const createdDateIST = moment(notification.createdDate)
+        //   .tz("Asia/Kolkata")
+        //   .format("YYYY-MM-DD HH:mm:ss");
         return {
           _id: notification._id,
           userId: notification.userId,
           content: notification.content,
           notificationCategory: notification.notificationCategory,
-          createdDate: createdDateIST,
+          createdDate: notification.createdDate,
           businessName: notification.businessName,
           businessId: notification.businessId,
         };
