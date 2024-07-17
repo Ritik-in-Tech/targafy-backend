@@ -4,6 +4,7 @@ import notificationModel from "../../models/notification.model.js";
 import { User } from "../../models/user.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import moment from "moment-timezone";
 
 export const getSubordinateUserNotification = asyncHandler(async (req, res) => {
   const businessId = req.params.businessId;
@@ -64,12 +65,15 @@ export const getSubordinateUserNotification = asyncHandler(async (req, res) => {
           (userRole === "MiniAdmin" || userRole === "User")) ||
         (loggedInUserRole === "User" && userRole === "User")
       ) {
+        const createdDateIST = moment(notification.createdDate)
+          .tz("Asia/Kolkata")
+          .format("YYYY-MM-DD HH:mm:ss");
         return {
           _id: notification._id,
           userId: notification.userId,
           content: notification.content,
           notificationCategory: notification.notificationCategory,
-          createdDate: notification.createdDate,
+          createdDate: createdDateIST,
           businessName: notification.businessName,
           businessId: notification.businessId,
         };
