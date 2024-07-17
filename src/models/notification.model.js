@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 import {} from "../utils/helpers.js";
 
-import { getCurrentUTCTime } from "../utils/helpers/time.helper.js";
+import { getCurrentIndianTime } from "../utils/helpers/time.helper.js";
 
 const notificationSchema = new Schema({
   // This is userId is used to identify that the notification belong to which user
@@ -20,7 +20,7 @@ const notificationSchema = new Schema({
   },
   createdDate: {
     type: Date,
-    default: getCurrentUTCTime(),
+    default: getCurrentIndianTime(),
   },
   businessName: {
     type: String,
