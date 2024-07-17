@@ -3,7 +3,7 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import cors from "cors";
 import bodyParser from "body-parser";
-import { createServer } from "http";
+// import { createServer } from "http";
 import { Server } from "socket.io";
 import morgan from "morgan";
 import path from "path";
@@ -15,7 +15,7 @@ import sdk from "api";
 import http from "http";
 import https from "https";
 
-const sdkInstance = sdk("@msg91api/v5.0#6n91xmlhu4pcnz");
+// const sdkInstance = sdk("@msg91api/v5.0#6n91xmlhu4pcnz");
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
