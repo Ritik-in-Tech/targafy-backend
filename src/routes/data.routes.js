@@ -11,7 +11,10 @@ import { GetParamData } from "../controllers/data/getparamdata.controller.js";
 import { AddTestDataForMonth } from "../controllers/data/addtestdatamonth.controller.js";
 import { getLevelDataController } from "../controllers/data/getleveldatacontroller.js";
 import { getPieChartData } from "../controllers/data/getdatapiechart.controller.js";
-import { getOneMonthsDataUser } from "../controllers/data/getOnemonthsdata.controller.js";
+import {
+  getOneMonthsDataUser,
+  getThreeMonthsDataUser,
+} from "../controllers/data/getOnemonthsdata.controller.js";
 import {
   getTargetToAddData,
   getTargetToAddDataNew,
@@ -64,6 +67,10 @@ router
 router
   .route("/get-one-months-data/:userId/:businessId/:paramName")
   .get(getOneMonthsDataUser);
+
+router
+  .route("/get-three-months-data/:userId/:businessId/:paramName")
+  .get(getThreeMonthsDataUser);
 
 // router
 //   .route("/get-progress-data-param/:businessId/:monthValue")
