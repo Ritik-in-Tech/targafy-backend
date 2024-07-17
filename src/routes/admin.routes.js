@@ -4,6 +4,8 @@ import { getMonthlyStatisticsForAdmin } from "../controllers/admin/monthly_stats
 import { getDailyOverAllStatisticsAdmin } from "../controllers/admin/getdaily_overallstats.js";
 import { verifyJWTAdmin } from "../middleware/auth.middleware.js";
 import { getBusinessList } from "../controllers/business/getbusinesslist.controller.js";
+import { getCombinedStats } from "../controllers/admin/getcombinedstats.js";
+import { getCombinedMonthlyStats } from "../controllers/admin/getcombinedmonthly.stats.js";
 // import { getDailyStatisticsForAdmin } from "../controllers/admin/admin_app.statistics.controller.js";
 
 const router = Router();
@@ -19,5 +21,11 @@ router
 router
   .route("/get-daily-overallStats/:date")
   .get(getDailyOverAllStatisticsAdmin);
+
+router.route("/get-combined-stats/:businessId/:date").get(getCombinedStats);
+
+router
+  .route("/get-combined-monthly-stats/:businessId/:date")
+  .get(getCombinedMonthlyStats);
 
 export default router;
