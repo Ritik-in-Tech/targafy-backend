@@ -92,21 +92,17 @@ const getAllActivityBusiness = asyncHandler(async (req, res) => {
       }).select("content activityCategory createdDate");
     }
 
-    const activitiesWithISTDates = activities.map((activity) => ({
-      ...activity.toObject(),
-      createdDate: moment(activity.createdDate)
-        .tz("Asia/Kolkata")
-        .format("YYYY-MM-DD HH:mm:ss"),
-    }));
+    // const activitiesWithISTDates = activities.map((activity) => ({
+    //   ...activity.toObject(),
+    //   createdDate: moment(activity.createdDate)
+    //     .tz("Asia/Kolkata")
+    //     .format("YYYY-MM-DD HH:mm:ss"),
+    // }));
 
     return res
       .status(200)
       .json(
-        new ApiResponse(
-          200,
-          { activities: activitiesWithISTDates },
-          "Activities fetched successfully"
-        )
+        new ApiResponse(200, { activities }, "Activities fetched successfully")
       );
   } catch (error) {
     console.error("Error:", error);
@@ -175,14 +171,14 @@ const getSubordinateUserActivity = asyncHandler(async (req, res) => {
           (userRole === "MiniAdmin" || userRole === "User")) ||
         (loggedInUserRole === "User" && userRole === "User")
       ) {
-        const createdDateIST = moment(activity.createdDate)
-          .tz("Asia/Kolkata")
-          .format("YYYY-MM-DD HH:mm:ss");
+        // const createdDateIST = moment(activity.createdDate)
+        //   .tz("Asia/Kolkata")
+        //   .format("YYYY-MM-DD HH:mm:ss");
         return {
           _id: activity._id,
           content: activity.content,
           activityCategory: activity.activityCategory,
-          createdDate: createdDateIST,
+          createdDate: activity.createdDate,
         };
       }
 
