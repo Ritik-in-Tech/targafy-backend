@@ -245,6 +245,7 @@ export async function activityNotificationEvent(userId, eventData) {
       {
         $inc: {
           activityViewCounter: 1,
+          notificationViewCounter: 1,
         },
       }
     );
