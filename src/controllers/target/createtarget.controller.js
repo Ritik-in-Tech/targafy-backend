@@ -218,6 +218,7 @@ const createTarget = asyncHandler(async (req, res) => {
         businessId,
         content: `Assigned target for parameter ${paramName} to ${user.name}`,
         activityCategory: "Target Assignment",
+        createdDate: new Date(),
       });
 
       await activity.save({ session });
