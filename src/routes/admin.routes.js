@@ -6,6 +6,7 @@ import { verifyJWTAdmin } from "../middleware/auth.middleware.js";
 import { getBusinessList } from "../controllers/business/getbusinesslist.controller.js";
 import { getCombinedStats } from "../controllers/admin/getcombinedstats.js";
 import { getCombinedMonthlyStats } from "../controllers/admin/getcombinedmonthly.stats.js";
+import { getCombinedOverAllStatisticsAdmin } from "../controllers/admin/getcombinedoverallstats.js";
 // import { getDailyStatisticsForAdmin } from "../controllers/admin/admin_app.statistics.controller.js";
 
 const router = Router();
@@ -27,5 +28,9 @@ router.route("/get-combined-stats/:businessId/:date").get(getCombinedStats);
 router
   .route("/get-combined-monthly-stats/:businessId/:date")
   .get(getCombinedMonthlyStats);
+
+router
+  .route("/get-combined-overallstats/:date")
+  .get(getCombinedOverAllStatisticsAdmin);
 
 export default router;
