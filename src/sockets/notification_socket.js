@@ -1,4 +1,3 @@
-import { User } from "../../src/models/user.model.js";
 import NotificationModel from "../../src/models/notification.model.js";
 
 import { sendNotificationNew } from "../controllers/notification.controller.js";
