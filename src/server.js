@@ -128,7 +128,7 @@ const startServer = async () => {
     });
 
     initializeNotificationSocket(ioHttp);
-    initializeActivitySocket(ioHttp);
+    // initializeActivitySocket(ioHttp);
     // initializeNotificationSocket(ioHttps);
 
     // const result = await aggregateOverallDailyStats();
