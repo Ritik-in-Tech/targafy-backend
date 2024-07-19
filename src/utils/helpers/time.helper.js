@@ -17,3 +17,13 @@ export function getCurrentIndianTime() {
 export function getCurrentUTCTime() {
   return new Date();
 }
+
+export function convertToIST(currentDate) {
+  let utcTime = currentDate.getTime();
+
+  let istOffset = 5.5 * 60 * 60 * 1000;
+
+  let istTime = new Date(utcTime + istOffset);
+
+  return istTime;
+}
