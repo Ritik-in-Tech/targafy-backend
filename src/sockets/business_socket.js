@@ -13,21 +13,32 @@ export function initializeActivitySocket(io) {
       console.log("User Connected: ", socket.id);
 
       socket.on("business-user-joined", async (username) => {
+        if (!isValidUsernameFormat(username)) {
+          console.log(
+            "Invalid username format. Expected format: businessId_userId"
+          );
+          socket.emit(
+            "error",
+            "Invalid username format. Expected format: businessId_userId"
+          );
+          return;
+        }
+
         socket.username = username;
         console.log(`User connected In Activity Socket: ${username}`);
 
         socket.join(username);
       });
 
-      //   socket.on("message", (message) => {
-      //     console.log(`Received message: ${message}`);
-      //     io.emit("notification", message);
-      //   });
-
       socket.on("disconnect", async () => {
         console.log("User Disconnected", socket.id);
 
         const username = socket.username;
+
+        if (!username || !isValidUsernameFormat(username)) {
+          console.log("Invalid username format on disconnect");
+          return;
+        }
 
         const ids = splitMongoId(username);
         console.log("These are business and user ids : ", ids);
@@ -49,10 +60,12 @@ export function initializeActivitySocket(io) {
                 }
               );
             } else {
-              console.log(
-                "At least one of the IDs is not a valid MongoDB ObjectID."
-              );
+              console.log("User not found in the database.");
             }
+          } else {
+            console.log(
+              "At least one of the IDs is not a valid MongoDB ObjectID."
+            );
           }
         }
 
@@ -74,4 +87,12 @@ export function initializeActivitySocket(io) {
     console.error("Error initializing activity socket:", error);
     throw error;
   }
+}
+
+function isValidUsernameFormat(username) {
+  if (typeof username !== "string" || username.split("_").length !== 2) {
+    return false;
+  }
+  const [businessId, userId] = username.split("_");
+  return businessId && userId && isMongoId(businessId) && isMongoId(userId);
 }
