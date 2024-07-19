@@ -14,17 +14,6 @@ export function initializeActivitySocket(io) {
       console.log("User Connected: ", socket.id);
 
       socket.on("business-user-joined", async (username) => {
-        if (!isValidUsernameFormat(username)) {
-          console.log(
-            "Invalid username format. Expected format: businessId_userId"
-          );
-          socket.emit(
-            "error",
-            "Invalid username format. Expected format: businessId_userId"
-          );
-          return;
-        }
-
         socket.username = username;
         console.log(`User connected In Activity Socket: ${username}`);
 
