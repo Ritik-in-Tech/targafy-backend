@@ -10,7 +10,10 @@ import {
   emitCreateBusinessNotification,
   emitNewNotificationEvent,
 } from "../sockets/notification_socket.js";
-import { getCurrentUTCTime } from "../utils/helpers/time.helper.js";
+import {
+  getCurrentIndianTime,
+  getCurrentUTCTime,
+} from "../utils/helpers/time.helper.js";
 import { Office } from "../models/office.model.js";
 
 const createBusiness = asyncHandler(async (req, res) => {
@@ -109,7 +112,7 @@ const createBusiness = asyncHandler(async (req, res) => {
     const emitData = {
       content: `Congratulation, ${adminName} your ${businessName} business created successfully.`,
       notificationCategory: "business",
-      createdDate: getCurrentUTCTime(),
+      createdDate: getCurrentIndianTime(),
       businessName: businessName,
       businessId: business[0]._id,
     };
