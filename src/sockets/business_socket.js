@@ -1,5 +1,5 @@
 import { Businessusers } from "../models/businessUsers.model.js";
-import { isMongoId } from "../utils/helpers.js";
+import { isMongoId, splitMongoId } from "../utils/helpers.js";
 import { getCurrentIndianTime } from "../utils/helpers/time.helper.js";
 
 let issueNsp;
@@ -35,11 +35,6 @@ export function initializeActivitySocket(io) {
         console.log("User Disconnected", socket.id);
 
         const username = socket.username;
-
-        if (!username || !isValidUsernameFormat(username)) {
-          console.log("Invalid username format on disconnect");
-          return;
-        }
 
         const ids = splitMongoId(username);
         console.log("These are business and user ids : ", ids);
@@ -88,12 +83,4 @@ export function initializeActivitySocket(io) {
     console.error("Error initializing activity socket:", error);
     throw error;
   }
-}
-
-function isValidUsernameFormat(username) {
-  if (typeof username !== "string" || username.split("_").length !== 2) {
-    return false;
-  }
-  const [businessId, userId] = username.split("_");
-  return businessId && userId && isMongoId(businessId) && isMongoId(userId);
 }
