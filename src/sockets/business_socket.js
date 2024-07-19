@@ -8,12 +8,33 @@ export function initializeActivitySocket(io) {
   try {
     console.log("***** Io Business Activity started *****");
 
-    issueNsp = io.of("/business/activity");
+    const issueNsp = io.of("/business/activity");
 
     issueNsp.on("connection", (socket) => {
       console.log("User Connected: ", socket.id);
 
       socket.on("business-user-joined", async (username) => {
+        if (typeof username !== "string") {
+          console.log("Invalid username format: Username must be a string");
+          return;
+        }
+
+        const parts = username.split("_");
+        if (parts.length !== 2) {
+          console.log(
+            "Invalid username format: Username must contain exactly one underscore"
+          );
+          return;
+        }
+
+        const [businessId, userId] = parts;
+        if (!isMongoId(businessId) || !isMongoId(userId)) {
+          console.log(
+            "Invalid username format: Both parts must be valid MongoDB ObjectIDs"
+          );
+          return;
+        }
+
         socket.username = username;
         console.log(`User connected In Activity Socket: ${username}`);
 
@@ -24,8 +45,13 @@ export function initializeActivitySocket(io) {
         console.log("User Disconnected", socket.id);
 
         const username = socket.username;
+        if (!username) {
+          console.log("No username associated with this socket");
+          return;
+        }
 
         const ids = splitMongoId(username);
+        console.log(ids);
         console.log("These are business and user ids : ", ids);
 
         if (ids.businessId && ids.userId) {
@@ -34,6 +60,7 @@ export function initializeActivitySocket(io) {
               businessId: ids.businessId,
               userId: ids.userId,
             });
+            console.log(user);
 
             if (user) {
               await Businessusers.updateOne(
@@ -55,15 +82,13 @@ export function initializeActivitySocket(io) {
         }
 
         console.log("User Disconnected username : ", username);
-        if (username) {
-          const rooms = Object.keys(socket.rooms);
-          rooms.forEach((room) => {
-            socket.leave(room);
-            console.log(`User left room ${room}`);
-          });
-          console.log(`User left all rooms`);
-          delete socket.username;
-        }
+        const rooms = Object.keys(socket.rooms);
+        rooms.forEach((room) => {
+          socket.leave(room);
+          console.log(`User left room ${room}`);
+        });
+        console.log(`User left all rooms`);
+        delete socket.username;
       });
     });
 
