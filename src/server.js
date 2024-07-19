@@ -37,6 +37,7 @@ const file = fs.readFileSync(
 const swaggerDocument = YAML.parse(file);
 
 import { initializeNotificationSocket } from "./sockets/notification_socket.js";
+import { initializeActivitySocket } from "./sockets/business_socket.js";
 import "./utils/helpers/aggregrate.cron.js";
 
 const app = express();
@@ -127,6 +128,7 @@ const startServer = async () => {
     });
 
     initializeNotificationSocket(ioHttp);
+    initializeActivitySocket(ioHttp);
     // initializeNotificationSocket(ioHttps);
 
     // const result = await aggregateOverallDailyStats();

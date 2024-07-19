@@ -88,7 +88,7 @@ const businessUsersSchema = new Schema({
     type: Date,
     default: getCurrentUTCTime(),
     required: function () {
-      return this.userType !== "Outsider"; // Only required if userType is not "outsider"
+      return this.userType !== "Outsider";
     },
   },
   totalRating: {
