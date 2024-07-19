@@ -226,7 +226,6 @@ export async function joinBusinessNotificationEvent(userId, eventData) {
 
 export async function activityNotificationEvent(userId, eventData) {
   if (issueNsp) {
-    // console.log("This is event data : "  , eventData);
     if (
       !userId ||
       !eventData ||
