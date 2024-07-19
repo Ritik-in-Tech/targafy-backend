@@ -5,7 +5,10 @@ import {
   getPreviousData,
 } from "../controllers/data.controller.js";
 
-import { AddData } from "../controllers/data/adddata.controller.js";
+import {
+  AddData,
+  AddDataTest,
+} from "../controllers/data/adddata.controller.js";
 import { GetParamDataSpecificUser } from "../controllers/data/getdataspecificuser.controller.js";
 import { GetParamData } from "../controllers/data/getparamdata.controller.js";
 import { AddTestDataForMonth } from "../controllers/data/addtestdatamonth.controller.js";
@@ -29,6 +32,8 @@ const router = Router();
 router.use(verifyJWT);
 
 router.route("/add-data/:businessId/:parameterName").post(AddData);
+
+router.route("/add-test-data/:businessId").post(AddDataTest);
 
 // router to get user specific data
 router

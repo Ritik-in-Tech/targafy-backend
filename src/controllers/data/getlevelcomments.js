@@ -158,6 +158,9 @@ const getLevelComments = asyncHandler(async (req, res) => {
         const date = moment(item.createdDate)
           .tz("Asia/Kolkata")
           .format("YYYY-MM-DD");
+        const time = moment(item.createdDate)
+          .tz("Asia/Kolkata")
+          .format("HH:mm:ss");
         const todaysComment = item.comment;
         const addedBy = userComment.addedBy;
 
@@ -165,7 +168,7 @@ const getLevelComments = asyncHandler(async (req, res) => {
           commentsMap.set(date, []);
         }
 
-        commentsMap.get(date).push({ todaysComment, addedBy, date });
+        commentsMap.get(date).push({ todaysComment, addedBy, date, time });
       });
     });
     const commentsArray = Array.from(commentsMap, ([date, comments]) => ({
@@ -297,6 +300,9 @@ const getParamComments = asyncHandler(async (req, res) => {
         const date = moment(item.createdDate)
           .tz("Asia/Kolkata")
           .format("YYYY-MM-DD");
+        const time = moment(item.createdDate)
+          .tz("Asia/Kolkata")
+          .format("HH:mm:ss");
         const todaysComment = item.comment;
         const addedBy = userComment.addedBy;
 
@@ -304,7 +310,7 @@ const getParamComments = asyncHandler(async (req, res) => {
           commentsMap.set(date, []);
         }
 
-        commentsMap.get(date).push({ todaysComment, addedBy, date });
+        commentsMap.get(date).push({ todaysComment, addedBy, date, time });
       });
     });
     const commentsArray = Array.from(commentsMap, ([date, comments]) => ({
