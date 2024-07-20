@@ -7,6 +7,7 @@ import { getBusinessList } from "../controllers/business/getbusinesslist.control
 import { getCombinedStats } from "../controllers/admin/getcombinedstats.js";
 import { getCombinedMonthlyStats } from "../controllers/admin/getcombinedmonthly.stats.js";
 import { getCombinedOverAllStatisticsAdmin } from "../controllers/admin/getcombinedoverallstats.js";
+import { getSessionStats } from "../controllers/admin/getsession_stats.controller.js";
 // import { getDailyStatisticsForAdmin } from "../controllers/admin/admin_app.statistics.controller.js";
 
 const router = Router();
@@ -32,5 +33,7 @@ router
 router
   .route("/get-combined-overallstats/:date")
   .get(getCombinedOverAllStatisticsAdmin);
+
+router.route("/get-session-stats/:businessId/:date").get(getSessionStats);
 
 export default router;
