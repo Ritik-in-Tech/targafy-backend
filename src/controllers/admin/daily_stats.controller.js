@@ -6,9 +6,8 @@ export const getDailyStatisticsForAdmin = async (req, res) => {
   try {
     const { businessId, date } = req.params;
 
-    // Parse and set start and end of the day in local time zone
     const startDate = parseDateInLocalTime(date).startOf("day").toDate();
-    // console.log(startDate);
+
     const endDate = parseDateInLocalTime(date).endOf("day").toDate();
 
     const dailyStats = await DailyStats.findOne({

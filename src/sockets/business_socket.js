@@ -1,6 +1,8 @@
 import { Businessusers } from "../models/businessUsers.model.js";
 import { isMongoId, splitMongoId } from "../utils/helpers.js";
 import { getCurrentIndianTime } from "../utils/helpers/time.helper.js";
+import DailyStats from "../models/dailystats.model.js";
+import { getStartOfPreviousDay } from "../utils/aggregate_daily.stats.js";
 
 let issueNsp;
 
@@ -63,6 +65,74 @@ export function initializeActivitySocket(io) {
             console.log(user);
 
             if (user) {
+              const previousLastSeen = user.lastSeen;
+              const dailyStats = await DailyStats.findOne({
+                businessId: ids.businessId,
+                date: getStartOfPreviousDay(),
+                "lastSeenHistory.userId": ids.userId,
+              });
+
+              if (dailyStats) {
+                // If userId exists, push the new lastSeen to the existing array
+                await DailyStats.findOneAndUpdate(
+                  {
+                    businessId: ids.businessId,
+                    date: getStartOfPreviousDay(),
+                    "lastSeenHistory.userId": ids.userId,
+                  },
+                  {
+                    $push: {
+                      "lastSeenHistory.$.lastSeen": previousLastSeen,
+                    },
+                  }
+                );
+              } else {
+                // Check if there are any previous entries
+                const lastSeenExists = await DailyStats.findOne({
+                  businessId: ids.businessId,
+                  date: getStartOfPreviousDay(),
+                  lastSeenHistory: { $exists: true, $ne: [] },
+                });
+
+                if (lastSeenExists) {
+                  // If userId does not exist, create a new entry
+                  await DailyStats.findOneAndUpdate(
+                    {
+                      businessId: ids.businessId,
+                      date: getStartOfPreviousDay(),
+                    },
+                    {
+                      $addToSet: {
+                        lastSeenHistory: {
+                          userId: ids.userId,
+                          lastSeen: [previousLastSeen],
+                        },
+                      },
+                    },
+                    { upsert: true }
+                  );
+                } else {
+                  // If lastSeenHistory does not exist or is empty, initialize the array
+                  await DailyStats.updateOne(
+                    {
+                      businessId: ids.businessId,
+                      date: getStartOfPreviousDay(),
+                    },
+                    {
+                      $set: {
+                        lastSeenHistory: [
+                          {
+                            userId: ids.userId,
+                            lastSeen: [previousLastSeen],
+                          },
+                        ],
+                      },
+                    },
+                    { upsert: true }
+                  );
+                }
+              }
+
               await Businessusers.updateOne(
                 { businessId: ids.businessId, userId: ids.userId },
                 {

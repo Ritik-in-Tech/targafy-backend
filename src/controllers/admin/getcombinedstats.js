@@ -40,7 +40,7 @@ export const getCombinedStats = async (req, res) => {
         activeUsers: 1,
         feedbackGiven: 1,
         messagesSent: 1,
-        sessionCount: 1,
+        lastSeenHistory: 1,
         dataAdd: 1,
         date: 1,
       }
@@ -72,7 +72,14 @@ export const getCombinedStats = async (req, res) => {
       response.registeredUsers.push(stat.registeredUsers || 0);
       response.feedbackGiven.push(stat.feedbackGiven || 0);
       response.messagesSent.push(stat.messagesSent || 0);
-      response.totalSession.push(stat.sessionCount || 0);
+      // Calculate totalSession for each day
+      const totalSessionCount = stat.lastSeenHistory
+        ? stat.lastSeenHistory.reduce(
+            (total, user) => total + (user.lastSeen ? user.lastSeen.length : 0),
+            0
+          )
+        : 0;
+      response.totalSession.push(totalSessionCount);
       response.totalDataAdd.push(stat.dataAdd || 0);
     });
 

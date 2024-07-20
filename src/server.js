@@ -76,8 +76,14 @@ import activityRouter from "./routes/activities.routes.js";
 import adminRouter from "./routes/admin.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import { connectDB } from "./db/index.js";
-import { aggregateDailyStats } from "./utils/aggregate_daily.stats.js";
-import { aggregateOverallDailyStats } from "./utils/aggregate_overall.stats.js";
+import {
+  aggregateDailyStats,
+  aggregateTestDailyStats,
+} from "./utils/aggregate_daily.stats.js";
+import {
+  aggregateOverallDailyStats,
+  aggregateTestOverallDailyStats,
+} from "./utils/aggregate_overall.stats.js";
 
 app.use("/api/v1/business", businessRoutes);
 app.use("/api/v1/auth", authRoutes);
@@ -130,8 +136,9 @@ const startServer = async () => {
     initializeNotificationSocket(ioHttp);
     initializeActivitySocket(ioHttp);
     // initializeNotificationSocket(ioHttps);
-
-    // const result = await aggregateOverallDailyStats();
+    // const targetDate = new Date("2024-06-30");
+    // // const result = await aggregateTestDailyStats(targetDate);
+    // const result = await aggregateTestOverallDailyStats(targetDate);
     // console.log(result);
 
     httpServer.listen(HTTP_PORT, () => {
