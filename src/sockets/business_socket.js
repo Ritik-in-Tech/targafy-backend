@@ -66,6 +66,7 @@ export function initializeActivitySocket(io) {
 
             if (user) {
               const previousLastSeen = user.lastSeen;
+              console.log(`User previuos last seen is: ${previousLastSeen}`);
               const dailyStats = await DailyStats.findOne({
                 businessId: ids.businessId,
                 date: getStartOfPreviousDay(),
@@ -74,6 +75,7 @@ export function initializeActivitySocket(io) {
 
               if (dailyStats) {
                 // If userId exists, push the new lastSeen to the existing array
+                console.log("Daily stats found");
                 await DailyStats.findOneAndUpdate(
                   {
                     businessId: ids.businessId,
@@ -88,6 +90,7 @@ export function initializeActivitySocket(io) {
                 );
               } else {
                 // Check if there are any previous entries
+                console.log("Daily Stats not found");
                 const lastSeenExists = await DailyStats.findOne({
                   businessId: ids.businessId,
                   date: getStartOfPreviousDay(),
@@ -96,6 +99,7 @@ export function initializeActivitySocket(io) {
 
                 if (lastSeenExists) {
                   // If userId does not exist, create a new entry
+                  console.log("Last seen exists");
                   await DailyStats.findOneAndUpdate(
                     {
                       businessId: ids.businessId,
@@ -113,6 +117,7 @@ export function initializeActivitySocket(io) {
                   );
                 } else {
                   // If lastSeenHistory does not exist or is empty, initialize the array
+                  console.log("Last seen history does not exists");
                   await DailyStats.updateOne(
                     {
                       businessId: ids.businessId,
