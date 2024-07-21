@@ -30,7 +30,9 @@ const fullSslCertPath = path.join(projectRoot, sslCertPath);
 let privateKey, certificate;
 try {
   privateKey = fs.readFileSync(fullSslKeyPath, "utf8");
+  console.log(privateKey);
   certificate = fs.readFileSync(fullSslCertPath, "utf8");
+  console.log(certificate);
 } catch (error) {
   console.error("Error reading SSL files:", error);
   throw error;
