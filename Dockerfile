@@ -3,9 +3,11 @@ FROM node:alpine3.18
 # Set working directory
 WORKDIR /src
 
-# Copy package files and install dependencies
-COPY package*.json ./
-RUN npm install
+# Copy package files from the root directory to the working directory
+COPY  package.json ./
+
+# Install dependencies
+RUN ls -la && npm install
 
 # Copy the rest of your source code
 COPY . .
