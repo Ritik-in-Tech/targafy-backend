@@ -7,7 +7,8 @@ export const GetTargetAssignedUsers = async (
   monthValue,
   businessId,
   lastDayOfMonth,
-  userIds
+  userIds,
+  res
 ) => {
   try {
     // Validate required fields
@@ -37,9 +38,6 @@ export const GetTargetAssignedUsers = async (
     const sumTarget = totalTargets.reduce((sum, target) => {
       return sum + Number(target.targetValue);
     }, 0);
-
-    // const dailyTarget = sumTarget / lastDayOfMonth;
-    // dailyTarget = Math.floor(dailyTarget);
 
     return sumTarget;
   } catch (error) {

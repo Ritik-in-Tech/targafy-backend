@@ -141,7 +141,8 @@ const getLevelDataController = asyncHandler(async (req, res) => {
       monthValue,
       businessId,
       lastDayOfMonth1,
-      userIds
+      userIds,
+      res
     );
     console.log("hello");
 
