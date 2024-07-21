@@ -24,7 +24,7 @@ jobs:
             --build-arg SERVICE_KEY_CONTENT='${{ secrets.SERVICE_KEY_CONTENT }}' \
             --build-arg OPENSSL_CNF_CONTENT='${{ secrets.OPENSSL_CNF_CONTENT }}' \
             --build-arg SSL_KEY_CONTENT='${{ secrets.SSL_KEY_CONTENT }}' \
-            --build-arg SSL_CERT_CONTENT="${{ secrets.SSL_CERT_CONTENT }}" \
+            --build-arg SSL_CERT_CONTENT='${{ secrets.SSL_CERT_CONTENT }}'' \
             -t ritik819/targafybackend:latest .
 
       - name: Publish Image to Docker Hub
