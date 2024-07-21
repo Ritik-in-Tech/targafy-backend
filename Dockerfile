@@ -5,6 +5,7 @@ WORKDIR /src
 
 # Copy package files from the root directory to the working directory
 COPY package.json ./
+COPY package-lock.json ./
 
 # Install dependencies
 RUN npm install
@@ -14,9 +15,9 @@ COPY . .
 
 # Create secure_files directory and copy necessary files
 RUN mkdir -p /src/secure_files
-COPY secure_files/service_key.json /src/secure_files/
-COPY secure_files/openssl.cnf /src/secure_files/
 COPY secure_files/localhost.key /src/secure_files/
+COPY secure_files/openssl.cnf /src/secure_files/
+COPY secure_files/service_key.json /src/secure_files/
 COPY secure_files/localhost.crt /src/secure_files/
 
 # Set environment variables
