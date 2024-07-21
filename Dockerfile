@@ -4,7 +4,7 @@ FROM node:alpine3.18
 WORKDIR /src
 
 # Copy package.json and package-lock.json (if available)
-COPY package.json ./
+COPY package*.json ./
 
 # Install dependencies
 RUN npm install
