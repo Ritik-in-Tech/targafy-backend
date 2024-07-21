@@ -1,13 +1,13 @@
 FROM node:alpine3.18
 
 # Set working directory
-WORKDIR /app
+WORKDIR /src
 
 # List contents of the current build context
 RUN ls -la
 
-# Copy package.json and package-lock.json (if available)
-COPY package*.json ./
+# Explicitly copy package.json
+COPY package.json ./package.json
 
 # List contents after copying
 RUN ls -la
