@@ -21,7 +21,7 @@ ARG SSL_CERT_CONTENT
 RUN echo "$SERVICE_KEY_CONTENT" > ./secure_files/service_key.json && \
     echo "$OPENSSL_CNF_CONTENT" > ./secure_files/openssl.cnf && \
     echo "$SSL_KEY_CONTENT" > ./secure_files/localhost.key && \
-    echo "$SSL_CERT_PATH_CONTENT" > ./secure_files/localhost.crt
+    echo "$SSL_CERT_CONTENT" > ./secure_files/localhost.crt
 
 # Set environment variables with relative paths
 ENV SERVICE_KEY="./secure_files/service_key.json"
