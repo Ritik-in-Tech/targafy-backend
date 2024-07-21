@@ -190,21 +190,25 @@ const AddData = asyncHandler(async (req, res) => {
       await dataAdd.save();
     }
 
-    const notificationIds = [];
+    const uniqueNotificationIds = new Set();
+
     const businessAdminAndMiniAdmin = await Businessusers.find(
       { businessId, role: { $in: ["Admin", "MiniAdmin"] } },
       { name: 1, userId: 1 }
     );
 
-    notificationIds.push(
-      ...businessAdminAndMiniAdmin.map((user) => user.userId)
+    // Add admin and mini-admin IDs to the Set
+    businessAdminAndMiniAdmin.forEach((user) =>
+      uniqueNotificationIds.add(user.userId)
     );
 
     const parentIds = await getParentIdsList(userId, businessId);
 
-    if (parentIds.length !== 0) {
-      notificationIds.push(...parentIds);
-    }
+    // Add parent IDs to the Set
+    parentIds.forEach((id) => uniqueNotificationIds.add(id));
+
+    // Convert the Set back to an array if needed
+    const notificationIds = Array.from(uniqueNotificationIds);
 
     // console.log(notificationIds);
 
