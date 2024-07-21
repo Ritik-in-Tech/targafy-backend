@@ -3,14 +3,23 @@ FROM node:alpine3.18
 # Set working directory
 WORKDIR /app
 
+# List contents of the current build context
+RUN ls -la
+
 # Copy package.json and package-lock.json (if available)
 COPY package*.json ./
+
+# List contents after copying
+RUN ls -la
 
 # Install dependencies
 RUN npm install
 
 # Copy the rest of your source code
 COPY . .
+
+# List contents after copying everything
+RUN ls -la
 
 # Create secure_files directory
 RUN mkdir -p /app/secure_files
