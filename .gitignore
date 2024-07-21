@@ -1,7 +1,4 @@
 .env
 package-lock.json
 node_modules
-openssl.cnf
-localhost.crt
-localhost.key
-service_key.json
+secure_files/*

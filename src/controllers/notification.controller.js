@@ -3,6 +3,75 @@ import { User } from "../../src/models/user.model.js";
 import admin from "firebase-admin";
 import { fileURLToPath } from "url";
 import path from "path";
+import dotenv from "dotenv";
+import fs from "fs";
+
+// Load environment variables
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Get the service key path from the environment variable
+const serviceKeyPath = process.env.SERVICE_KEY;
+
+if (!serviceKeyPath) {
+  throw new Error("SERVICE_KEY is not set in the environment");
+}
+
+const projectRoot = path.resolve(__dirname, "../..");
+const fullServiceKeyPath = path.join(projectRoot, serviceKeyPath);
+
+// console.log(fullServiceKeyPath);
+
+// Read and parse the service account file
+let serviceAccount;
+try {
+  const serviceAccountFile = fs.readFileSync(fullServiceKeyPath, "utf8");
+  serviceAccount = JSON.parse(serviceAccountFile);
+} catch (error) {
+  console.error("Error reading service account file:", error);
+  throw error;
+}
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+export async function sendNotificationNew(userId, body) {
+  try {
+    if (!userId || !body) {
+      console.log("Provide complete information!!");
+      return;
+    }
+
+    const userInfo = await User.findOne({ _id: userId });
+
+    if (!userInfo.fcmToken) {
+      console.log("User has no fcm token!!");
+      return;
+    }
+
+    let token = userInfo.fcmToken;
+    console.log(token);
+    console.log(body);
+
+    const message = {
+      token: token,
+      notification: {
+        title: "Targafy",
+        body: body,
+      },
+      data: {},
+    };
+
+    console.log("Sending notification:", message.notification);
+    const response = await admin.messaging().send(message);
+    console.log("Successfully sent message:", response);
+  } catch (error) {
+    console.log("Error sending message:", error);
+  }
+}
 
 export async function sendNotification(userId, body) {
   try {
@@ -63,49 +132,5 @@ export async function sendNotification(userId, body) {
     req.end();
   } catch (e) {
     console.error("Exception:", e.toString());
-  }
-}
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const serviceKeyPath = path.join(__dirname, "../../service_key.json");
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceKeyPath),
-});
-
-export async function sendNotificationNew(userId, body) {
-  try {
-    if (!userId || !body) {
-      console.log("Provide complete information!!");
-      return;
-    }
-
-    const userInfo = await User.findOne({ _id: userId });
-
-    if (!userInfo.fcmToken) {
-      console.log("User has no fcm token!!");
-      return;
-    }
-
-    let token = userInfo.fcmToken;
-    console.log(token);
-    console.log(body);
-
-    const message = {
-      token: token,
-      notification: {
-        title: "Targafy",
-        body: body,
-      },
-      data: {},
-    };
-
-    console.log("Sending notification:", message.notification);
-    const response = await admin.messaging().send(message);
-    console.log("Successfully sent message:", response);
-  } catch (error) {
-    console.log("Error sending message:", error);
   }
 }

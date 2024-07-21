@@ -3,7 +3,6 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import cors from "cors";
 import bodyParser from "body-parser";
-// import { createServer } from "http";
 import { Server } from "socket.io";
 import morgan from "morgan";
 import path from "path";
@@ -11,19 +10,31 @@ import fs from "fs";
 import swaggerUi from "swagger-ui-express";
 import { fileURLToPath } from "url";
 import YAML from "yaml";
-import sdk from "api";
 import http from "http";
 import https from "https";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // const sdkInstance = sdk("@msg91api/v5.0#6n91xmlhu4pcnz");
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const sslKeyPath = path.join(__dirname, "../localhost.key");
-const sslCertPath = path.join(__dirname, "../localhost.crt");
+const sslKeyPath = process.env.SSL_KEY_PATH;
+const sslCertPath = process.env.SSL_CERT_PATH;
 
-const privateKey = fs.readFileSync(sslKeyPath, "utf8");
-const certificate = fs.readFileSync(sslCertPath, "utf8");
+const projectRoot = path.resolve(__dirname, "..");
+const fullSslKeyPath = path.join(projectRoot, sslKeyPath);
+const fullSslCertPath = path.join(projectRoot, sslCertPath);
+
+let privateKey, certificate;
+try {
+  privateKey = fs.readFileSync(fullSslKeyPath, "utf8");
+  certificate = fs.readFileSync(fullSslCertPath, "utf8");
+} catch (error) {
+  console.error("Error reading SSL files:", error);
+  throw error;
+}
 
 const options = {
   key: privateKey,

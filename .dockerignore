@@ -1,0 +1,6 @@
+.env
+secure_files
+*.key
+*.crt
+*.json
+openssl.cnf
