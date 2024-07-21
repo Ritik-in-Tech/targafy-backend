@@ -3,7 +3,6 @@ FROM node:alpine3.18
 WORKDIR /src
 
 COPY package.json ./
-COPY package-lock.json ./
 
 RUN npm install
 
