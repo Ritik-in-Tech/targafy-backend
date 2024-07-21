@@ -63,10 +63,10 @@ jobs:
             -e AWS_SECRET_KEY='${{ secrets.AWS_SECRET_KEY }}' \
             -e HTTPS_PORT='${{ secrets.HTTPS_PORT }}' \
             -e HTTP_PORT='${{ secrets.HTTP_PORT }}' \
-            -e SERVICE_KEY="/src/secure_files/service_key.json" \
-            -e OPENSSL_CNF_PATH="/src/secure_files/openssl.cnf" \
-            -e SSL_KEY_PATH="/src/secure_files/localhost.key" \
-            -e SSL_CERT_PATH="/src/secure_files/localhost.crt" \
+            -e SERVICE_KEY="/secure_files/service_key.json" \
+            -e OPENSSL_CNF_PATH="/secure_files/openssl.cnf" \
+            -e SSL_KEY_PATH="/secure_files/localhost.key" \
+            -e SSL_CERT_PATH="/secure_files/localhost.crt" \
               ritik819/targafybackend:latest
 
       - name: Clean up old images

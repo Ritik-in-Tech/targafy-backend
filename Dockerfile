@@ -1,34 +1,36 @@
 FROM node:alpine3.18
 
-# Set working directory
 WORKDIR /src
 
-# Copy package files from the root directory to the working directory
 COPY package.json ./
 COPY package-lock.json ./
 
-# Install dependencies
 RUN npm install
 
-# Copy the rest of your source code
 COPY . .
 
-# Create secure_files directory and copy necessary files
-RUN mkdir -p /src/secure_files
-COPY secure_files/localhost.key /src/secure_files/
-COPY secure_files/openssl.cnf /src/secure_files/
-COPY secure_files/service_key.json /src/secure_files/
-COPY secure_files/localhost.crt /src/secure_files/
+# Create secure_files directory
+RUN mkdir -p secure_files
 
-# Set environment variables
-ENV SERVICE_KEY="/src/secure_files/service_key.json"
-ENV OPENSSL_CNF_PATH="/src/secure_files/openssl.cnf"
-ENV SSL_KEY_PATH="/src/secure_files/localhost.key"
-ENV SSL_CERT_PATH="/src/secure_files/localhost.crt"
+# Use build args to receive file contents
+ARG SERVICE_KEY_CONTENT
+ARG OPENSSL_CNF_CONTENT
+ARG SSL_KEY_CONTENT
+ARG SSL_CERT_CONTENT
 
-# Expose the ports your app runs on
+# Create files with content from build args
+RUN echo "$SERVICE_KEY_CONTENT" > ./secure_files/service_key.json && \
+    echo "$OPENSSL_CNF_CONTENT" > ./secure_files/openssl.cnf && \
+    echo "$SSL_KEY_CONTENT" > ./secure_files/localhost.key && \
+    echo "$SSL_CERT_PATH_CONTENT" > ./secure_files/localhost.crt
+
+# Set environment variables with relative paths
+ENV SERVICE_KEY="./secure_files/service_key.json"
+ENV OPENSSL_CNF_PATH="./secure_files/openssl.cnf"
+ENV SSL_KEY_PATH="./secure_files/localhost.key"
+ENV SSL_CERT_PATH="./secure_files/localhost.crt"
+
 EXPOSE 443
 EXPOSE 80
 
-# Command to run your application
 CMD ["npm", "run", "dev"]
