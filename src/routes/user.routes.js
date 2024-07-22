@@ -6,9 +6,14 @@ import { getUser } from "../controllers/user/getUser.controller.js";
 import { getUserNotification } from "../controllers/user/getUserNotification.controller.js";
 import { updateUserName } from "../controllers/user/updateUserName.controller.js";
 import { updateUserAvtar } from "../controllers/user/updateUserAvtar.controller.js";
-import { getUserAvatar } from "../controllers/user/getUserAvatar.controller.js";
+import {
+  getUserAvatar,
+  getUserAvatarByUserId,
+} from "../controllers/user/getUserAvatar.controller.js";
 import { setFCMToken } from "../controllers/user.controller.js";
 import { addLastSeenHistory } from "../controllers/user/addlastseenhistory.js";
+
+router.route("/get-user-avatar/:userId").get(getUserAvatarByUserId);
 
 router.use(verifyJWT);
 
