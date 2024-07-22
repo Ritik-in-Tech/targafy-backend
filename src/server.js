@@ -149,9 +149,9 @@ const startServer = async () => {
     initializeNotificationSocket(ioHttp);
     initializeActivitySocket(ioHttp);
     // initializeNotificationSocket(ioHttps);
-    // const targetDate = new Date("2024-06-30");
-    // // const result = await aggregateTestDailyStats(targetDate);
-    // const result = await aggregateTestOverallDailyStats(targetDate);
+    // const targetDate = new Date("2024-07-21");
+    // const result = await aggregateTestDailyStats(targetDate);
+    // // const result = await aggregateTestOverallDailyStats(targetDate);
     // console.log(result);
 
     httpServer.listen(HTTP_PORT, () => {

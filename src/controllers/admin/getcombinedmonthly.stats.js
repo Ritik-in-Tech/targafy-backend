@@ -90,27 +90,8 @@ export const getCombinedMonthlyStats = async (req, res) => {
       response.activeUsers.push(stat ? stat.activeUsers : 0);
       response.feedbackGiven.push(stat ? stat.feedbackGiven : 0);
       response.messagesSent.push(stat ? stat.messagesSent : 0);
-
+      response.totalSession.push(stat ? stat.totalSession : 0);
       response.totalDataAdd.push(stat ? stat.dataAdd : 0);
-
-      if (stat) {
-        const totalSessionCount = stat.lastSeenHistory.reduce(
-          (total, dayHistory) => {
-            return (
-              total +
-              dayHistory.reduce(
-                (dayTotal, user) =>
-                  dayTotal + (user.lastSeen ? user.lastSeen.length : 0),
-                0
-              )
-            );
-          },
-          0
-        );
-        response.totalSession.push(totalSessionCount);
-      } else {
-        response.totalSession.push(0);
-      }
     });
 
     res.json({ success: true, data: response });

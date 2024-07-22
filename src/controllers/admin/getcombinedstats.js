@@ -72,14 +72,7 @@ export const getCombinedStats = async (req, res) => {
       response.registeredUsers.push(stat.registeredUsers || 0);
       response.feedbackGiven.push(stat.feedbackGiven || 0);
       response.messagesSent.push(stat.messagesSent || 0);
-      // Calculate totalSession for each day
-      const totalSessionCount = stat.lastSeenHistory
-        ? stat.lastSeenHistory.reduce(
-            (total, user) => total + (user.lastSeen ? user.lastSeen.length : 0),
-            0
-          )
-        : 0;
-      response.totalSession.push(totalSessionCount);
+      response.totalSession.push(stat.totalSession || 0);
       response.totalDataAdd.push(stat.dataAdd || 0);
     });
 
