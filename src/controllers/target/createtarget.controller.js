@@ -13,7 +13,7 @@ import {
   emitNewNotificationEvent,
 } from "../../sockets/notification_socket.js";
 import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
-import { getMonthName } from "../../utils/helpers.js";
+import { formatName, getMonthName } from "../../utils/helpers.js";
 moment.tz.setDefault("Asia/Kolkata");
 
 // controllers to add target
@@ -216,17 +216,20 @@ const createTarget = asyncHandler(async (req, res) => {
 
       await target.save({ session });
 
+      const userName = formatName(user.name);
+      const assignedName = formatName(loggedInUser.name);
+
       const activity = new Activites({
         userId: user._id,
         businessId,
-        content: `Target assigned -> ${user.name} (${MonthName} ${paramName}): ${targetValue}`,
+        content: `${assignedName}: ${userName}(${MonthName} Target ${paramName}) set to ${target[0].targetValue}`,
         activityCategory: "Target Assignment",
       });
 
       await activity.save({ session });
 
       const emitData = {
-        content: `Target assigned -> ${user.name} (${MonthName} ${paramName}): ${targetValue}`,
+        content: `${assignedName}: ${userName}(${MonthName} Target ${paramName}) set to ${target[0].targetValue}`,
         notificationCategory: "target",
         createdDate: getCurrentIndianTime(),
         businessName: business.name,

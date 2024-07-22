@@ -32,7 +32,10 @@ import { getBusinessLogo } from "../controllers/business/getBusinessLogo.control
 import { rateUserInBusiness } from "../controllers/business/rateUserInBusiness.controller.js";
 import { updateBusinessParameters } from "../controllers/business/updatebusinessparameters.js";
 import { getBusinessUserDetails } from "../controllers/business/getBusinessDetails.js";
-import { getUserHierarchyData } from "../controllers/business/getuserhierarchy.controller.js";
+import {
+  getSubUserHierarchyData,
+  getUserHierarchyData,
+} from "../controllers/business/getuserhierarchy.controller.js";
 import { changeManager } from "../controllers/business/changemanager.controller.js";
 import { getBusinessUserRatings } from "../controllers/business/getbusinessuserratings.controller.js";
 import { checkBusinessApproved } from "../controllers/business/checkbusinessapproved.controller.js";
@@ -131,5 +134,7 @@ router
   .get(getBusinessUserRatings);
 
 router.route("/check-approvalBusiness").get(checkBusinessApproved);
+
+router.route("/get-sub-hierarchy/:businessId").get(getSubUserHierarchyData);
 
 export default router;

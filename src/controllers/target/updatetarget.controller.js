@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
 import { activityNotificationEvent } from "../../sockets/notification_socket.js";
 import { Params } from "../../models/params.model.js";
-import { getMonthName } from "../../utils/helpers.js";
+import { formatName, getMonthName } from "../../utils/helpers.js";
 
 const updateUserTarget = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -183,17 +183,20 @@ const updateUserTarget = asyncHandler(async (req, res) => {
 
       await existingTarget.save({ session });
 
+      const userName = formatName(user.name);
+      const assignedName = formatName(loggedInUser.name);
+
       const activity = new Activites({
         userId: user._id,
         businessId,
-        content: `Target update -> ${user.name} (${MonthName} ${paramName}): ${newTargetValue}`,
+        content: `${assignedName}: ${userName}(${MonthName} Target ${paramName}) updated to ${newTargetValue}`,
         activityCategory: "Target Update",
       });
 
       await activity.save({ session });
 
       const emitData = {
-        content: `Target Update -> ${user.name} (${MonthName} ${paramName}): ${newTargetValue}`,
+        content: `${assignedName}: ${userName}(${MonthName} Target ${paramName}) updated to ${newTargetValue}`,
         notificationCategory: "target",
         createdDate: getCurrentIndianTime(),
         businessName: business.name,

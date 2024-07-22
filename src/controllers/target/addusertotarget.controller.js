@@ -8,7 +8,7 @@ import { Businessusers } from "../../models/businessUsers.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { Activites } from "../../models/activities.model.js";
 import { activityNotificationEvent } from "../../sockets/notification_socket.js";
-import { getMonthName } from "../../utils/helpers.js";
+import { formatName, getMonthName } from "../../utils/helpers.js";
 
 const addUserToTarget = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -208,17 +208,20 @@ const addUserToTarget = asyncHandler(async (req, res) => {
 
       await newtarget.save({ session });
 
+      const userName = formatName(user.name);
+      const assignedName = formatName(loggedInUser.name);
+
       const activity = new Activites({
         userId: user._id,
         businessId,
-        content: `Target assigned -> ${user.name} (${MonthName} ${paramName}): ${target[0].targetValue}`,
+        content: `${assignedName}: ${userName}(${MonthName} Target ${paramName}) set to ${target[0].targetValue}`,
         activityCategory: "Target Assignment",
       });
 
       await activity.save({ session });
 
       const emitData = {
-        content: `Target assigned -> ${user.name} (${MonthName} ${paramName}): ${target[0].targetValue}`,
+        content: `${assignedName}: ${userName}(${MonthName} Target ${paramName}) set to ${target[0].targetValue}`,
         notificationCategory: "target",
         createdDate: getCurrentIndianTime(),
         businessName: business.name,

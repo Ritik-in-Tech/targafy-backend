@@ -97,7 +97,7 @@ import {
   aggregateOverallDailyStats,
   aggregateTestOverallDailyStats,
 } from "./utils/aggregate_overall.stats.js";
-import { formatDateNew, getMonthName } from "./utils/helpers.js";
+import { formatDateNew, formatName, getMonthName } from "./utils/helpers.js";
 
 app.use("/api/v1/business", businessRoutes);
 app.use("/api/v1/auth", authRoutes);
@@ -161,6 +161,9 @@ const startServer = async () => {
     // const currentDate = new Date();
     // const date = formatDateNew(currentDate);
     // console.log(date);
+
+    // const newName = formatName("Ritik Tiwari");
+    // console.log(newName);
 
     httpServer.listen(HTTP_PORT, () => {
       console.log(`HTTP Server running on http://localhost:${HTTP_PORT}`);

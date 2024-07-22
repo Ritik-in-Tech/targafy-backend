@@ -270,6 +270,14 @@ function isMongoId(id) {
   return mongoose.Types.ObjectId.isValid(id);
 }
 
+export function formatName(fullName) {
+  const names = fullName.split(" ");
+  if (names.length > 1) {
+    return `${names[0]} ${names[names.length - 1][0]}`;
+  }
+  return fullName;
+}
+
 function getCurrentIndianTime() {
   // Get current date and time in UTC
   //  let currentDate = new Date();
