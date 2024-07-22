@@ -8,6 +8,7 @@ import { Businessusers } from "../../models/businessUsers.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { Activites } from "../../models/activities.model.js";
 import { activityNotificationEvent } from "../../sockets/notification_socket.js";
+import { getMonthName } from "../../utils/helpers.js";
 
 const addUserToTarget = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -39,6 +40,8 @@ const addUserToTarget = asyncHandler(async (req, res) => {
           )
         );
     }
+
+    const MonthName = getMonthName(month);
 
     const { paramName, businessId } = req.params;
     if (!paramName || !businessId) {
@@ -208,24 +211,33 @@ const addUserToTarget = asyncHandler(async (req, res) => {
       const activity = new Activites({
         userId: user._id,
         businessId,
-        content: `Assigned target for parameter ${paramName} to ${user.name}`,
+        content: `Target assigned -> ${user.name} (${MonthName} ${paramName}): ${target[0].targetValue}`,
         activityCategory: "Target Assignment",
       });
 
       await activity.save({ session });
-    }
 
-    const emitData = {
-      content: `You have assigned target in ${paramName} for the business ${business.name}`,
-      notificationCategory: "target",
-      createdDate: getCurrentIndianTime(),
-      businessName: business.name,
-      businessId: business._id,
-    };
-
-    for (const userId of validUserIds) {
+      const emitData = {
+        content: `Target assigned -> ${user.name} (${MonthName} ${paramName}): ${target[0].targetValue}`,
+        notificationCategory: "target",
+        createdDate: getCurrentIndianTime(),
+        businessName: business.name,
+        businessId: business._id,
+      };
       await activityNotificationEvent(userId, emitData);
     }
+
+    // for (const userId of validUserIds) {
+    //   const user = await User.findById(userId);
+    //   const emitData = {
+    //     content: `Target assigned -> ${user.name} (${getMonthName} ${paramName}): ${target[0].targetValue}`,
+    //     notificationCategory: "target",
+    //     createdDate: getCurrentIndianTime(),
+    //     businessName: business.name,
+    //     businessId: business._id,
+    //   };
+    //   await activityNotificationEvent(userId, emitData);
+    // }
 
     await session.commitTransaction();
     session.endSession();

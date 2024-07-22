@@ -13,6 +13,7 @@ import {
   emitNewNotificationEvent,
 } from "../../sockets/notification_socket.js";
 import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
+import { getMonthName } from "../../utils/helpers.js";
 moment.tz.setDefault("Asia/Kolkata");
 
 // controllers to add target
@@ -129,6 +130,8 @@ const createTarget = asyncHandler(async (req, res) => {
         );
     }
 
+    const MonthName = getMonthName(month);
+
     const validUserIds = [];
 
     for (const userId of userIds) {
@@ -216,23 +219,19 @@ const createTarget = asyncHandler(async (req, res) => {
       const activity = new Activites({
         userId: user._id,
         businessId,
-        content: `Assigned target for parameter ${paramName} to ${user.name}`,
+        content: `Target assigned -> ${user.name} (${MonthName} ${paramName}): ${targetValue}`,
         activityCategory: "Target Assignment",
-        createdDate: new Date(),
       });
 
       await activity.save({ session });
-    }
 
-    const emitData = {
-      content: `You have assigned target in ${paramName} for the business ${business.name}`,
-      notificationCategory: "target",
-      createdDate: getCurrentIndianTime(),
-      businessName: business.name,
-      businessId: business._id,
-    };
-
-    for (const userId of validUserIds) {
+      const emitData = {
+        content: `Target assigned -> ${user.name} (${MonthName} ${paramName}): ${targetValue}`,
+        notificationCategory: "target",
+        createdDate: getCurrentIndianTime(),
+        businessName: business.name,
+        businessId: business._id,
+      };
       await activityNotificationEvent(userId, emitData);
     }
 

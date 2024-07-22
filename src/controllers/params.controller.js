@@ -11,6 +11,7 @@ import {
   emitNewNotificationEvent,
 } from "../sockets/notification_socket.js";
 import { getCurrentIndianTime } from "../utils/helpers/time.helper.js";
+import { Activites } from "../models/activities.model.js";
 
 // Create a new param
 const createParam = asyncHandler(async (req, res) => {
@@ -161,15 +162,24 @@ const createParam = asyncHandler(async (req, res) => {
     // Save the Params document to the database
     await param.save({ session });
 
-    const emitData = {
-      content: `You have added to the Parameter ${name} in the business ${business.name}`,
-      notificationCategory: "params",
-      createdDate: getCurrentIndianTime(),
-      businessName: business.name,
-      businessId: business._id,
-    };
-
     for (const userId of validUserIds) {
+      const user = await User.findById(userId);
+      const activity = new Activites({
+        userId: userId,
+        businessId,
+        content: `Parameter assigned -> ${user.name} : ${name}`,
+        activityCategory: "Param Assignment",
+      });
+
+      await activity.save({ session });
+
+      const emitData = {
+        content: `Parameter assigned -> ${user.name} : ${name}`,
+        notificationCategory: "params",
+        createdDate: getCurrentIndianTime(),
+        businessName: business.name,
+        businessId: business._id,
+      };
       // console.log(userId);
       await activityNotificationEvent(userId, emitData);
     }

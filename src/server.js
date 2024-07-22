@@ -97,6 +97,7 @@ import {
   aggregateOverallDailyStats,
   aggregateTestOverallDailyStats,
 } from "./utils/aggregate_overall.stats.js";
+import { formatDateNew, getMonthName } from "./utils/helpers.js";
 
 app.use("/api/v1/business", businessRoutes);
 app.use("/api/v1/auth", authRoutes);
@@ -153,6 +154,13 @@ const startServer = async () => {
     // const result = await aggregateTestDailyStats(targetDate);
     // // const result = await aggregateTestOverallDailyStats(targetDate);
     // console.log(result);
+
+    // const ans = getMonthName(11);
+    // console.log(ans);
+
+    // const currentDate = new Date();
+    // const date = formatDateNew(currentDate);
+    // console.log(date);
 
     httpServer.listen(HTTP_PORT, () => {
       console.log(`HTTP Server running on http://localhost:${HTTP_PORT}`);

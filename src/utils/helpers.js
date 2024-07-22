@@ -242,6 +242,13 @@ const formatDate = (date) => {
   return `${year}-${month}-${day}`;
 };
 
+export function formatDateNew(date) {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 function isValidMongoId(str) {
   // Regular expression to match a 24-character hexadecimal string
   const objectIdRegex = /^[0-9a-fA-F]{24}$/;
@@ -288,6 +295,11 @@ const convertToStringIds = (mongoIds) => {
   return mongoIds.map((id) => id.toString());
 };
 
+function getMonthName(monthIndex) {
+  const date = new Date(2000, monthIndex - 1, 1); // Year 2000 is arbitrary
+  return date.toLocaleString("default", { month: "long" });
+}
+
 export {
   convertToMongoIds,
   convertToStringIds,
@@ -305,4 +317,5 @@ export {
   generateUniqueCode,
   isValidDateFormat,
   groupAndSortIssues,
+  getMonthName,
 };

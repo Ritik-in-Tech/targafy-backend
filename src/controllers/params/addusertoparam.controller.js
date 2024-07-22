@@ -6,6 +6,7 @@ import { User } from "../../models/user.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
 import { activityNotificationEvent } from "../../sockets/notification_socket.js";
+import { Activites } from "../../models/activities.model.js";
 
 const addUserToParam = asyncHandler(async (req, res) => {
   try {
@@ -111,15 +112,24 @@ const addUserToParam = asyncHandler(async (req, res) => {
 
     await param.save();
 
-    const emitData = {
-      content: `You have added to the Parameter ${param.name} in the business ${business.name}`,
-      notificationCategory: "params",
-      createdDate: getCurrentIndianTime(),
-      businessName: business.name,
-      businessId: business._id,
-    };
-
     for (const userId of validUserId) {
+      const user = await User.findById(userId);
+      const activity = new Activites({
+        userId: userId,
+        businessId: param.businessId,
+        content: `Parameter assigned -> ${user.name} : ${param.name}`,
+        activityCategory: "Param Assignment",
+      });
+
+      await activity.save({ session });
+
+      const emitData = {
+        content: `Parameter assigned -> ${user.name} : ${param.name}`,
+        notificationCategory: "params",
+        createdDate: getCurrentIndianTime(),
+        businessName: business.name,
+        businessId: business._id,
+      };
       // console.log(userId);
       await activityNotificationEvent(userId, emitData);
     }

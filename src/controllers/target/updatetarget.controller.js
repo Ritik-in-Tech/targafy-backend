@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
 import { activityNotificationEvent } from "../../sockets/notification_socket.js";
 import { Params } from "../../models/params.model.js";
+import { getMonthName } from "../../utils/helpers.js";
 
 const updateUserTarget = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -120,7 +121,9 @@ const updateUserTarget = asyncHandler(async (req, res) => {
           )
         );
     }
-    const validUserIds = [];
+
+    const MonthName = getMonthName(month);
+    // const validUserIds = [];
     for (const { userId, newTargetValue } of userTargets) {
       const user = await User.findOne({ _id: userId }).session(session);
       if (!user) {
@@ -181,26 +184,21 @@ const updateUserTarget = asyncHandler(async (req, res) => {
       await existingTarget.save({ session });
 
       const activity = new Activites({
-        userId: userId,
+        userId: user._id,
         businessId,
-        content: `Target update for parameter ${paramName} to ${newTargetValue}`,
+        content: `Target update -> ${user.name} (${MonthName} ${paramName}): ${newTargetValue}`,
         activityCategory: "Target Update",
       });
 
       await activity.save({ session });
 
-      validUserIds.push(userId);
-    }
-
-    const emitData = {
-      content: `Your target in ${paramName} for the business ${business.name} has been updated`,
-      notificationCategory: "target",
-      createdDate: getCurrentIndianTime(),
-      businessName: business.name,
-      businessId: business._id,
-    };
-
-    for (const userId of validUserIds) {
+      const emitData = {
+        content: `Target Update -> ${user.name} (${MonthName} ${paramName}): ${newTargetValue}`,
+        notificationCategory: "target",
+        createdDate: getCurrentIndianTime(),
+        businessName: business.name,
+        businessId: business._id,
+      };
       await activityNotificationEvent(userId, emitData);
     }
 

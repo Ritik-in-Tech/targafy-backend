@@ -18,6 +18,7 @@ import {
   convertToIST,
   getCurrentIndianTime,
 } from "../../utils/helpers/time.helper.js";
+import { formatDateNew } from "../../utils/helpers.js";
 moment.tz.setDefault("Asia/Kolkata");
 
 const AddData = asyncHandler(async (req, res) => {
@@ -90,6 +91,7 @@ const AddData = asyncHandler(async (req, res) => {
     }
 
     const currentDate = new Date();
+    const formattedDate = formatDateNew(currentDate);
     // console.log(currentDate);
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
@@ -159,9 +161,7 @@ const AddData = asyncHandler(async (req, res) => {
       const activity = new Activites({
         userId: userId,
         businessId,
-        content: `${user.name} ${
-          todayEntry ? "updated" : "added"
-        } the data for ${parameterName} in ${business.name}`,
+        content: `Achievements done -> ${user.name} (${formattedDate} ${parameterName}): ${todaysdata}`,
         activityCategory: "Data Add",
         createdDate: currentDate,
       });
@@ -181,7 +181,7 @@ const AddData = asyncHandler(async (req, res) => {
       const activity = new Activites({
         userId: userId,
         businessId,
-        content: `${user.name} added the data for ${parameterName} in ${business.name}`,
+        content: `Achievements done -> ${user.name} (${formattedDate} ${parameterName}): ${todaysdata}`,
         activityCategory: "Data Add",
         createdDate: currentDate,
       });
@@ -213,7 +213,7 @@ const AddData = asyncHandler(async (req, res) => {
     // console.log(notificationIds);
 
     const emitData = {
-      content: `${user.name} added the data for the target ${target.paramName} in the Business ${business.name}`,
+      content: `Achievements done -> ${user.name} (${formattedDate} ${parameterName}): ${todaysdata}`,
       notificationCategory: "DataAdd",
       createdDate: getCurrentIndianTime(),
       businessName: business.name,
@@ -328,6 +328,7 @@ const AddDataTest = asyncHandler(async (req, res) => {
 
       // Get current UTC time
       const now = new Date();
+      const formattedDate = formatDateNew(now);
       const currentHours = now.getUTCHours();
       const currentMinutes = now.getUTCMinutes();
       const currentSeconds = now.getUTCSeconds();
@@ -425,9 +426,7 @@ const AddDataTest = asyncHandler(async (req, res) => {
         const activity = new Activites({
           userId: userId,
           businessId,
-          content: `${user.name} ${
-            todayEntry ? "updated" : "added"
-          } the data for ${paramName} in ${business.name}`,
+          content: `Achievements done -> ${user.name} (${formattedDate} ${paramName}): ${todaysdata}`,
           activityCategory: "Data Add",
           createdDate: currentDate,
         });
@@ -447,7 +446,7 @@ const AddDataTest = asyncHandler(async (req, res) => {
         const activity = new Activites({
           userId: userId,
           businessId,
-          content: `${user.name} added the data for ${paramName} in ${business.name}`,
+          content: `Achievements done -> ${user.name} (${formattedDate} ${paramName}): ${todaysdata}`,
           activityCategory: "Data Add",
           createdDate: currentDate,
         });
@@ -475,7 +474,7 @@ const AddDataTest = asyncHandler(async (req, res) => {
       // console.log(notificationIds);
 
       const emitData = {
-        content: `${user.name} added the data for the target ${target.paramName} in the Business ${business.name}`,
+        content: `Achievements done -> ${user.name} (${formattedDate} ${paramName}): ${todaysdata}`,
         notificationCategory: "DataAdd",
         createdDate: istdate,
         businessName: business.name,
