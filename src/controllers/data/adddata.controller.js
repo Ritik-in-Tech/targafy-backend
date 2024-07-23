@@ -477,6 +477,8 @@ const AddDataTest = asyncHandler(async (req, res) => {
 
       // console.log(notificationIds);
 
+      // console.log("The ids where notification to be send is:", notificationIds);
+
       const emitData = {
         content: `Achievements done -> ${user.name} (${formattedDate} ${paramName}): ${todaysdata}`,
         notificationCategory: "DataAdd",
