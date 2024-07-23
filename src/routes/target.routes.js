@@ -5,7 +5,10 @@ import { getAllTargets } from "../controllers/target/getalltargets.controller.js
 import { getTargetValues } from "../controllers/target/gettargetvalues.controller.js";
 import { addUserToTarget } from "../controllers/target/addusertotarget.controller.js";
 import { getTargetById } from "../controllers/target/gettargetbyid.controller.js";
-import { updateUserTarget } from "../controllers/target/updatetarget.controller.js";
+import {
+  updateUserTarget,
+  updateUserTargetComment,
+} from "../controllers/target/updatetarget.controller.js";
 import { deleteTarget } from "../controllers/target/deletetarget.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 
@@ -31,5 +34,9 @@ router
 
 // router to get the target by id , update and delete the target
 router.route("/:bid/:tid").get(getTargetById).delete(deleteTarget);
+
+router
+  .route("/update-user-target-comment/:businessId/:paramName")
+  .put(updateUserTargetComment);
 
 export default router;
