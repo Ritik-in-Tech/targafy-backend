@@ -9,6 +9,7 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 import { Activites } from "../../models/activities.model.js";
 import { activityNotificationEvent } from "../../sockets/notification_socket.js";
 import { formatName, getMonthName } from "../../utils/helpers.js";
+import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
 
 const addUserToTarget = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();

@@ -222,14 +222,14 @@ const createTarget = asyncHandler(async (req, res) => {
       const activity = new Activites({
         userId: user._id,
         businessId,
-        content: `${assignedName}: ${userName}(${MonthName} Target ${paramName}) set to ${target[0].targetValue}`,
+        content: `${assignedName}: ${userName}(${MonthName} Target ${paramName}) set to ${targetValue}`,
         activityCategory: "Target Assignment",
       });
 
       await activity.save({ session });
 
       const emitData = {
-        content: `${assignedName}: ${userName}(${MonthName} Target ${paramName}) set to ${target[0].targetValue}`,
+        content: `${assignedName}: ${userName}(${MonthName} Target ${paramName}) set to ${targetValue}`,
         notificationCategory: "target",
         createdDate: getCurrentIndianTime(),
         businessName: business.name,

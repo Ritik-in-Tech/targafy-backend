@@ -121,7 +121,7 @@ const addUserToParam = asyncHandler(async (req, res) => {
         activityCategory: "Param Assignment",
       });
 
-      await activity.save({ session });
+      await activity.save();
 
       const emitData = {
         content: `Parameter assigned -> ${user.name} : ${param.name}`,

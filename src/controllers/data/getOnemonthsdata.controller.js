@@ -5,6 +5,7 @@ import { Businessusers } from "../../models/businessUsers.model.js";
 import { User } from "../../models/user.model.js";
 import { Target } from "../../models/target.model.js";
 import moment from "moment-timezone";
+import { DataAdd } from "../../models/dataadd.model.js";
 
 const getOneMonthsDataUser = asyncHandler(async (req, res) => {
   try {
@@ -112,10 +113,21 @@ const getOneMonthsDataUser = asyncHandler(async (req, res) => {
       monthIndex: { $in: lastOneMonths },
     });
 
-    // Query the user's data field for the previous three months
+    const dataIds = await DataAdd.find(
+      {
+        businessId: businessId,
+        parameterName: paramName,
+        userId: userId,
+      },
+      { _id: 1 }
+    );
+
+    const dataIdValues = dataIds.map((doc) => doc._id);
+
     const userData = user.data.filter(
       (dataItem) =>
         dataItem.name === paramName &&
+        dataIdValues.includes(dataItem.dataId) &&
         moment(dataItem.createdDate).isBetween(
           now.clone().subtract(1, "months").startOf("month"),
           now.endOf("month")
@@ -257,15 +269,26 @@ const getThreeMonthsDataUser = asyncHandler(async (req, res) => {
       monthIndex: { $in: lastThreeMonths },
     });
 
+    const dataIds = await DataAdd.find(
+      {
+        businessId: businessId,
+        parameterName: paramName,
+        userId: userId,
+      },
+      { _id: 1 }
+    );
+
+    const dataIdValues = dataIds.map((doc) => doc._id);
+
     const userData = user.data.filter(
       (dataItem) =>
         dataItem.name === paramName &&
+        dataIdValues.includes(dataItem.dataId) &&
         moment(dataItem.createdDate).isBetween(
-          now.clone().subtract(2, "months").startOf("month"),
+          now.clone().subtract(1, "months").startOf("month"),
           now.endOf("month")
         )
     );
-
     // Structure the response data
     const result = lastThreeMonths.map((month) => {
       const target = targets.find((t) => t.monthIndex === month);
