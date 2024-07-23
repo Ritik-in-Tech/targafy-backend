@@ -34,6 +34,7 @@ import { updateBusinessParameters } from "../controllers/business/updatebusiness
 import { getBusinessUserDetails } from "../controllers/business/getBusinessDetails.js";
 import {
   getSubUserHierarchyData,
+  getSubUserHierarchyDataNew,
   getUserHierarchyData,
 } from "../controllers/business/getuserhierarchy.controller.js";
 import { changeManager } from "../controllers/business/changemanager.controller.js";
@@ -136,5 +137,9 @@ router
 router.route("/check-approvalBusiness").get(checkBusinessApproved);
 
 router.route("/get-sub-hierarchy/:businessId").get(getSubUserHierarchyData);
+
+router
+  .route("/get-sub-hierarchy-new/:businessId")
+  .get(getSubUserHierarchyDataNew);
 
 export default router;
