@@ -11,6 +11,7 @@ import {
 } from "../controllers/target/updatetarget.controller.js";
 import { deleteTarget } from "../controllers/target/deletetarget.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
+import { getTargetNotAssignUsers } from "../controllers/target/gettargetassignnotusers.controller.js";
 
 // router to verify that jwt token is still valid
 router.use(verifyJWT);
@@ -38,5 +39,9 @@ router.route("/:bid/:tid").get(getTargetById).delete(deleteTarget);
 router
   .route("/update-user-target-comment/:businessId/:paramName")
   .put(updateUserTargetComment);
+
+router
+  .route("/get-not-target-assigned-users/:businessId/:paramName/:monthIndex")
+  .get(getTargetNotAssignUsers);
 
 export default router;

@@ -16,6 +16,8 @@ const getUser = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(400, {}, "User does not exist!!"));
     }
 
+    // console.log(user);
+
     const businessesWithData = [];
 
     for (const business of user.businesses) {
@@ -25,6 +27,7 @@ const getUser = asyncHandler(async (req, res, next) => {
       });
 
       let pendingRequests = 0;
+      // console.log(businessUser.role);
       if (businessUser.role == "Admin" || businessUser.role == "MiniAdmin") {
         // Fetch pending request count for the business
         pendingRequests = await Requests.find({
@@ -33,6 +36,7 @@ const getUser = asyncHandler(async (req, res, next) => {
       }
 
       // Prepare additional data for the business
+
       const additionalData = {
         pendingRequest: pendingRequests?.length || 0,
         userRole: businessUser ? businessUser?.role || "User" : "User",
