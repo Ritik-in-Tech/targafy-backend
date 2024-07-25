@@ -73,7 +73,7 @@ export const getBusinessList = async (req, res) => {
         date: { $gte: last48Hours },
       });
 
-    //   console.log(stats);
+      //   console.log(stats);
 
       const aggregateStats = stats.reduce(
         (acc, stat) => {
@@ -93,6 +93,7 @@ export const getBusinessList = async (req, res) => {
 
       return {
         _id: business._id,
+        id: business._id,
         name: business.name,
         logo: business.logo,
         businessCode: business.businessCode,
