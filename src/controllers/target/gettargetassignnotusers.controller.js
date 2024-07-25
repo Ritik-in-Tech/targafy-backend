@@ -1,6 +1,7 @@
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { Target } from "../../models/target.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
+import { Params } from "../../models/params.model.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
 export const getTargetNotAssignUsers = asyncHandler(async (req, res) => {
@@ -18,11 +19,12 @@ export const getTargetNotAssignUsers = asyncHandler(async (req, res) => {
         );
     }
 
-    const businessUsers = await Businessusers.find({
+    const paramUsers = await Params.findOne({
+      name: paramName,
       businessId: businessId,
     });
 
-    const userList = businessUsers.map((user) => ({
+    const userList = paramUsers.usersAssigned.map((user) => ({
       userId: user.userId,
       name: user.name,
     }));
