@@ -40,6 +40,9 @@ export const getCombinedMonthlyStats = async (req, res) => {
         },
       },
       {
+        $unwind: "$lastSeenHistory",
+      },
+      {
         $group: {
           _id: {
             year: { $year: "$date" },
@@ -49,7 +52,7 @@ export const getCombinedMonthlyStats = async (req, res) => {
           activeUsers: { $sum: "$activeUsers" },
           feedbackGiven: { $sum: "$feedbackGiven" },
           messagesSent: { $sum: "$messagesSent" },
-          lastSeenHistory: { $push: "$lastSeenHistory" },
+          totalSessions: { $sum: { $size: "$lastSeenHistory.lastSeen" } },
           dataAdd: { $sum: "$dataAdd" },
         },
       },
@@ -90,7 +93,7 @@ export const getCombinedMonthlyStats = async (req, res) => {
       response.activeUsers.push(stat ? stat.activeUsers : 0);
       response.feedbackGiven.push(stat ? stat.feedbackGiven : 0);
       response.messagesSent.push(stat ? stat.messagesSent : 0);
-      response.totalSession.push(stat ? stat.totalSession : 0);
+      response.totalSession.push(stat ? stat.totalSessions : 0);
       response.totalDataAdd.push(stat ? stat.dataAdd : 0);
     });
 
