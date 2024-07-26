@@ -91,6 +91,53 @@ dailyStatsSchema.set("toJSON", {
 });
 dailyStatsSchema.set("toObject", { virtuals: true });
 
+dailyStatsSchema.post("save", async function (doc) {
+  await updateOverallStats(doc.date);
+});
+
+dailyStatsSchema.post("findOneAndUpdate", async function (doc) {
+  console.log("Changes");
+  await updateOverallStats(doc.date);
+});
+
+async function calculateTotalSessions(date) {
+  try {
+    const result = await DailyStats.aggregate([
+      { $match: { date: date } },
+      { $unwind: "$lastSeenHistory" },
+      {
+        $group: {
+          _id: null,
+          totalSessions: { $sum: { $size: "$lastSeenHistory.lastSeen" } },
+        },
+      },
+    ]);
+
+    return result.length > 0 ? result[0].totalSessions : 0;
+  } catch (error) {
+    console.error("Error calculating total sessions:", error);
+    return 0;
+  }
+}
+
+async function updateOverallStats(date) {
+  try {
+    const totalSessions = await calculateTotalSessions(date);
+
+    await OverallStats.findOneAndUpdate(
+      { date: date },
+      {
+        $set: {
+          totalSession: totalSessions,
+        },
+      },
+      { new: true, upsert: true }
+    );
+  } catch (error) {
+    console.error("Error updating overall stats:", error);
+  }
+}
+
 const DailyStats =
   mongoose.models.DailyStats || mongoose.model("DailyStats", dailyStatsSchema);
 

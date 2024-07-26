@@ -17,88 +17,91 @@ export const aggregateOverallDailyStats = async () => {
       date: previousDayStart,
     });
 
-    if (!existingStats) {
-      const registeredUsers = await Businessusers.countDocuments({
-        registrationDate: { $gte: previousDayStart, $lt: previousDayEnd },
-      });
-      const feedbackGiven = await Usersratings.countDocuments({
-        createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
-      });
-      const activeUsers = await Businessusers.countDocuments({
-        lastSeen: { $gte: previousDayStart, $lt: previousDayEnd },
-      });
-      const messagesSent = await NotificationModel.countDocuments({
-        createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
-      });
-      const dataAddCount = await DataAdd.aggregate([
-        {
-          $addFields: {
-            matchingDates: {
-              $filter: {
-                input: "$data",
-                as: "dataItem",
-                cond: {
-                  $and: [
-                    { $gte: ["$$dataItem.createdDate", previousDayStart] },
-                    { $lt: ["$$dataItem.createdDate", previousDayEnd] },
-                  ],
-                },
+    // if (!existingStats) {
+    const registeredUsers = await Businessusers.countDocuments({
+      registrationDate: { $gte: previousDayStart, $lt: previousDayEnd },
+    });
+    const feedbackGiven = await Usersratings.countDocuments({
+      createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
+    });
+    const activeUsers = await Businessusers.countDocuments({
+      lastSeen: { $gte: previousDayStart, $lt: previousDayEnd },
+    });
+    const messagesSent = await NotificationModel.countDocuments({
+      createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
+    });
+    const dataAddCount = await DataAdd.aggregate([
+      {
+        $addFields: {
+          matchingDates: {
+            $filter: {
+              input: "$data",
+              as: "dataItem",
+              cond: {
+                $and: [
+                  { $gte: ["$$dataItem.createdDate", previousDayStart] },
+                  { $lt: ["$$dataItem.createdDate", previousDayEnd] },
+                ],
               },
             },
           },
         },
-        {
-          $match: {
-            "matchingDates.0": { $exists: true },
-          },
+      },
+      {
+        $match: {
+          "matchingDates.0": { $exists: true },
         },
-        {
-          $count: "count",
-        },
-      ]);
-      const dataAdd = dataAddCount.length > 0 ? dataAddCount[0].count : 0;
-      const overallTotalSession = await DailyStats.aggregate([
-        { $match: { date: { $gte: previousDayStart, $lt: previousDayEnd } } },
-        {
-          $project: {
-            totalSession: {
-              $reduce: {
-                input: "$lastSeenHistory",
-                initialValue: 0,
-                in: { $add: ["$$value", { $size: "$$this.lastSeen" }] },
-              },
+      },
+      {
+        $count: "count",
+      },
+    ]);
+    const dataAdd = dataAddCount.length > 0 ? dataAddCount[0].count : 0;
+    const overallTotalSession = await DailyStats.aggregate([
+      { $match: { date: { $gte: previousDayStart, $lt: previousDayEnd } } },
+      {
+        $project: {
+          totalSession: {
+            $reduce: {
+              input: "$lastSeenHistory",
+              initialValue: 0,
+              in: { $add: ["$$value", { $size: "$$this.lastSeen" }] },
             },
           },
         },
-        {
-          $group: {
-            _id: null,
-            totalSession: { $sum: "$totalSession" },
-          },
+      },
+      {
+        $group: {
+          _id: null,
+          totalSession: { $sum: "$totalSession" },
         },
-      ]);
+      },
+    ]);
 
-      let totalSession = 0;
-      if (overallTotalSession.length > 0) {
-        totalSession = overallTotalSession[0].totalSession;
-      }
-
-      await OverallStats.create({
-        date: previousDayStart,
-        registeredUsers: registeredUsers,
-        feedbackGiven: feedbackGiven,
-        messagesSent: messagesSent,
-        activeUsers: activeUsers,
-        totalSession: totalSession,
-        dataAdd: dataAdd,
-      });
-
-      console.log(
-        "Overall statistics for the previous day have been processed."
-      );
-    } else {
-      console.log("Overall statistics for the previous day already exist.");
+    let totalSession = 0;
+    if (overallTotalSession.length > 0) {
+      totalSession = overallTotalSession[0].totalSession;
     }
+
+    await OverallStats.findOneAndUpdate(
+      { date: previousDayStart },
+      {
+        $set: {
+          registeredUsers: registeredUsers,
+          feedbackGiven: feedbackGiven,
+          messagesSent: messagesSent,
+          activeUsers: activeUsers,
+          totalSession: totalSession,
+          dataAdd: dataAdd,
+        },
+      },
+      { new: true, upsert: true }
+    );
+
+    console.log("Overall statistics for the previous day have been processed.");
+    // } else {
+    //   console.log("Overall statistics for the previous day already exist.");
+    // }
 
     return true;
   } catch (error) {
