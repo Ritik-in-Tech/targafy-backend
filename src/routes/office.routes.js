@@ -6,9 +6,13 @@ import { updateGroupName } from "../controllers/group/updateGroupName.controller
 import { getUserAddedGroups } from "../controllers/group/getUserAddedGroups.controller.js";
 import { addUsersInGroup } from "../controllers/group/addUsersInGroup.controller.js";
 import { removeUsersFromGroup } from "../controllers/group/removeUsersFromGroup.controller.js";
-import { createSubOffices } from "../controllers/office/createsuboffices.controller.js";
+import {
+  createSubGroups,
+  createSubOffices,
+} from "../controllers/office/createsuboffices.controller.js";
 import { getSubOfficeDataLevel } from "../controllers/office/getsubofficedata.controller.js";
 import {
+  getAllHeadGroups,
   getAllHeadOffices,
   // getGroupDetails,
   // getGroupId,
@@ -25,9 +29,24 @@ import { getSubOfficeDetails } from "../controllers/group/getsubgroupdetails.con
 import { updateGroupLogo } from "../controllers/group/updategrouplogo.controller.js";
 import { getParamData } from "../controllers/office/getparamdata.controller.js";
 import { getOfficeInBusiness } from "../controllers/office/getofficeinbusiness.contoller.js";
-import { getOfficeHierarchy } from "../controllers/office/getofficehierarchy.controller.js";
+import {
+  getGroupHierarchy,
+  getOfficeHierarchy,
+} from "../controllers/office/getofficehierarchy.controller.js";
+import { createHeadGroups } from "../controllers/office/createheadoffices.controller.js";
+import { getAllSubGroups } from "../controllers/office/getsubgroup.controller.js";
 
 router.use(verifyJWT);
+
+router.route("/create-head-group/:businessId").post(createHeadGroups);
+
+router.route("/create-subgroups/:businessId").post(createSubGroups);
+
+router.route("/get-all-head-groups/:businessId").get(getAllHeadGroups);
+
+router.route("/get-all-subgroups/:parentId").get(getAllSubGroups);
+
+router.route("/get-group-hierarchy/:businessId").get(getGroupHierarchy);
 
 router.route("/create-suboffices/:businessId").post(createSubOffices); //done
 

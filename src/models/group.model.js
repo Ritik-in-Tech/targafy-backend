@@ -24,17 +24,31 @@ const subordinateGroups = new Schema(
     _id: false,
   }
 );
+
+const allSubordinateGroups = new Schema(
+  {
+    subordinategroupName: commonStringConstraints,
+    subordinateGroupId: {
+      type: Schema.Types.ObjectId,
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const groupSchema = new Schema({
   businessId: {
     type: Schema.Types.ObjectId,
     required: [true, "Please enter business Id, this group belogs to"],
   },
-  officeName: {
+  groupName: {
     type: String,
     trim: true,
     default: "",
     required: true,
   },
+  parentGroupName: commonStringConstraints,
   logo: {
     type: String,
     trim: true,
@@ -52,10 +66,13 @@ const groupSchema = new Schema({
     type: [subordinateGroups],
     default: [],
   },
+  allsubordinateGroups: {
+    type: [allSubordinateGroups],
+    default: [],
+  },
   parentGroupId: {
     type: Schema.Types.ObjectId,
   },
-  // parameterAssigned: commonStringConstraints,
 });
 
 const Group = model("Groups", groupSchema);
