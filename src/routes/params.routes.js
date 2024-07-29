@@ -9,11 +9,15 @@ import {
   getAssignedParams,
   getAssignUsers,
   getParamId,
-  createTypeBParams,
-  getTypeBParams,
 } from "../controllers/params.controller.js";
 import { addUserToParam } from "../controllers/params/addusertoparam.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
+import { createTypeBParams } from "../controllers/params/createtypeBparams.controller.js";
+import {
+  getTypeBNewParams,
+  getTypeBParams,
+} from "../controllers/params/gettypeBparams.controller.js";
+import { editTypeBParams } from "../controllers/params/edittypeBparams.controller.js";
 // middlewares which verifies is request from the authorized user
 router.use(verifyJWT);
 
@@ -37,6 +41,12 @@ router.route("/get-param-id/:businessId").get(getParamId);
 router.route("/create-typeBParam/:businessId").post(createTypeBParams);
 
 router.route("/get-typeBParams/:businessId").get(getTypeBParams);
+
+router.route("/get-typeBParams-new/:businessId").get(getTypeBNewParams);
+
+router
+  .route("/edit-typeBParams/:businessId/:typeBParamId")
+  .put(editTypeBParams);
 
 router
   .route("/:bid/:pid")
