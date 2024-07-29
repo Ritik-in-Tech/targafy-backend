@@ -18,6 +18,7 @@ import {
   getTypeBParams,
 } from "../controllers/params/gettypeBparams.controller.js";
 import { editTypeBParams } from "../controllers/params/edittypeBparams.controller.js";
+import { deleteTypeBParams } from "../controllers/params/deletetypeBparams.controller.js";
 // middlewares which verifies is request from the authorized user
 router.use(verifyJWT);
 
@@ -47,6 +48,10 @@ router.route("/get-typeBParams-new/:businessId").get(getTypeBNewParams);
 router
   .route("/edit-typeBParams/:businessId/:typeBParamId")
   .put(editTypeBParams);
+
+router
+  .route("/delete-typeBParams/:businessId/:typeBParamId")
+  .delete(deleteTypeBParams);
 
 router
   .route("/:bid/:pid")
