@@ -150,11 +150,13 @@ const startServer = async () => {
     initializeNotificationSocket(ioHttp);
     initializeActivitySocket(ioHttp);
     // initializeNotificationSocket(ioHttps);
-    // const targetDate = new Date("2024-07-21");
+    // const targetDate = new Date("2024-07-28");
     // const result = await aggregateTestDailyStats(targetDate);
-    // // const result = await aggregateTestOverallDailyStats(targetDate);
+    // const result = await aggregateTestOverallDailyStats(targetDate);
     // console.log(result);
 
+    // const result = await aggregateOverallDailyStats();
+    // console.log(result);
     // const ans = getMonthName(11);
     // console.log(ans);
 
