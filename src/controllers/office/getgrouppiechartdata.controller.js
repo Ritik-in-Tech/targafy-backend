@@ -4,27 +4,38 @@ import { User } from "../../models/user.model.js";
 import { Business } from "../../models/business.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import moment from "moment-timezone";
+import { Group } from "../../models/group.model.js";
 moment.tz.setDefault("Asia/Kolkata");
 
-const getPieChartData = asyncHandler(async (req, res) => {
+export const getGroupPieChartData = asyncHandler(async (req, res) => {
   try {
-    const { userId, businessId, paramName, monthValue } = req.params;
+    const { groupId, businessId, paramName, monthValue } = req.params;
 
-    if (!userId || !businessId || !paramName || !monthValue) {
+    if (!groupId || !businessId || !paramName || !monthValue) {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "Please provide businessId, userId, paramName and month value in params"
+            "Please provide businessId, groupId, paramName and month value in params"
           )
         );
     }
 
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(400).json(new ApiResponse(400, {}, "User not found"));
+    const year = moment().year();
+    const month = parseInt(monthValue, 10);
+
+    if (isNaN(month) || month < 1 || month > 12) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Invalid month value provided. Must be between 1 and 12"
+          )
+        );
     }
 
     const business = await Business.findById(businessId);
@@ -34,21 +45,15 @@ const getPieChartData = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Business not found"));
     }
 
-    const businessuser = await Businessusers.findOne({
-      businessId: businessId,
-      userId: userId,
-    });
+    const groupDetail = await Group.findById(groupId);
+    if (!groupDetail) {
+      return res.status(400).json(new ApiResponse(400, {}, "Group not found"));
+    }
 
-    if (!businessuser) {
+    if (groupDetail.businessId.toString() !== business._id.toString()) {
       return res
         .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            {},
-            "Provided user is not associated with the business"
-          )
-        );
+        .json(new ApiResponse(400, {}, "Group not in the provided businessId"));
     }
 
     // Extract target done value for the specific user, parameter, and month
@@ -74,59 +79,31 @@ const getPieChartData = asyncHandler(async (req, res) => {
     // }
 
     // const userTargetDoneValue = userTargetDone.targetDone;
-
-    if (!Array.isArray(businessuser.subordinates)) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            {},
-            "No subordinates found for the provided user"
-          )
-        );
+    let SubordinateGroupId;
+    if (
+      groupDetail.subordinateGroups &&
+      groupDetail.subordinateGroups.length > 0
+    ) {
+      SubordinateGroupId = groupDetail.subordinateGroups.map(
+        (group) => group.subordinateGroupId
+      );
     }
 
-    const Subordinates = businessuser.subordinates
-      .map((sub) =>
-        sub && sub._id ? sub._id.toString() : sub ? sub.toString() : undefined
-      )
-      .filter(Boolean);
-
-    // console.log(Subordinates);
+    console.log(SubordinateGroupId);
 
     const userDataMap = new Map();
     let totalSum = 0;
 
-    for (const subordinateId of Subordinates) {
-      const subordinate = await User.findById(subordinateId);
-      if (!subordinate) {
-        console.log(`User not found for ID: ${subordinateId}`);
-        continue;
-      }
-
-      const subordinateBusinessuser = await Businessusers.findOne({
-        businessId: businessId,
-        userId: subordinateId,
+    for (const subordinateId of SubordinateGroupId) {
+      let newUserIds;
+      const subOrdinateGroupDetail = await Group.findById(subordinateId);
+      subOrdinateGroupDetail.forEach((subGroup) => {
+        if (subGroup.userAdded) {
+          newUserIds = userIds.concat(
+            subGroup.userAdded.map((user) => user.userId.toString())
+          );
+        }
       });
-
-      if (!subordinateBusinessuser) {
-        console.log(`Business user not found for userId: ${subordinateId}`);
-        continue;
-      }
-
-      if (!Array.isArray(subordinateBusinessuser.allSubordinates)) {
-        console.log(`No subordinates found for user: ${subordinateId}`);
-        continue;
-      }
-
-      const allSubordinates = subordinateBusinessuser.allSubordinates
-        .map((sub) =>
-          sub && sub._id ? sub._id.toString() : sub ? sub.toString() : undefined
-        )
-        .filter(Boolean);
-
-      const newUserIds = [subordinateId, ...allSubordinates];
 
       let sumData = 0;
       for (const newUserId of newUserIds) {
@@ -143,7 +120,7 @@ const getPieChartData = asyncHandler(async (req, res) => {
         }
       }
 
-      userDataMap.set(subordinate.name, sumData);
+      userDataMap.set(subOrdinateGroupDetail.groupName, sumData);
       totalSum += sumData;
     }
 
@@ -175,5 +152,3 @@ const getPieChartData = asyncHandler(async (req, res) => {
       .json(new ApiResponse(500, { error }, "Internal server error"));
   }
 });
-
-export { getPieChartData };
