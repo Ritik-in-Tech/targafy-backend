@@ -17,7 +17,10 @@ import {
   // getGroupDetails,
   // getGroupId,
 } from "../controllers/office/getallheadoffice.controller.js";
-import { getOfficeUsers } from "../controllers/office/getofficeusers.controller.js";
+import {
+  getGroupUsers,
+  getOfficeUsers,
+} from "../controllers/office/getofficeusers.controller.js";
 import {
   getParamId,
   headOfficeName,
@@ -47,6 +50,8 @@ router.route("/get-all-head-groups/:businessId").get(getAllHeadGroups);
 router.route("/get-all-subgroups/:parentId").get(getAllSubGroups);
 
 router.route("/get-group-hierarchy/:businessId").get(getGroupHierarchy);
+
+router.route("/get-group-users/:businessId/:groupId").get(getGroupUsers);
 
 router.route("/create-suboffices/:businessId").post(createSubOffices); //done
 
