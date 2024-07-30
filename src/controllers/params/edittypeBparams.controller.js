@@ -42,14 +42,14 @@ export const editTypeBParams = asyncHandler(async (req, res) => {
       businessId: businessId,
     });
 
-    if (!businessusers || businessusers.role !== "Admin") {
+    if (!businessusers || businessusers.role === "User") {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "Either businessUser not exist or it's role is not Admin in this business"
+            "Either businessUser not exist or it's role is not Admin or MiniAdmin in this business"
           )
         );
     }
