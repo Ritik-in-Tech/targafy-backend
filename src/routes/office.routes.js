@@ -39,6 +39,7 @@ import {
 import { createHeadGroups } from "../controllers/office/createheadoffices.controller.js";
 import { getAllSubGroups } from "../controllers/office/getsubgroup.controller.js";
 import { getSubGroupData } from "../controllers/office/getsubgroupdata.controller.js";
+import { getGroupPieChartData } from "../controllers/office/getgrouppiechartdata.controller.js";
 
 router.use(verifyJWT);
 
@@ -57,6 +58,10 @@ router.route("/get-group-users/:businessId/:groupId").get(getGroupUsers);
 router
   .route("/get-group-data/:businessId/:paramName/:monthValue/:groupId")
   .get(getSubGroupData);
+
+router
+  .route("/get-pie-group-data/:businessId/:paramName/:monthValue/:groupId")
+  .get(getGroupPieChartData);
 
 router.route("/create-suboffices/:businessId").post(createSubOffices); //done
 

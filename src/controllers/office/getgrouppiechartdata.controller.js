@@ -5,6 +5,8 @@ import { Business } from "../../models/business.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import moment from "moment-timezone";
 import { Group } from "../../models/group.model.js";
+import { getUniqueUserIds } from "../../utils/getuniqueuserIds.js";
+import { DataAdd } from "../../models/dataadd.model.js";
 moment.tz.setDefault("Asia/Kolkata");
 
 export const getGroupPieChartData = asyncHandler(async (req, res) => {
@@ -23,7 +25,7 @@ export const getGroupPieChartData = asyncHandler(async (req, res) => {
         );
     }
 
-    const year = moment().year();
+    // const year = moment().year();
     const month = parseInt(monthValue, 10);
 
     if (isNaN(month) || month < 1 || month > 12) {
@@ -56,10 +58,10 @@ export const getGroupPieChartData = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Group not in the provided businessId"));
     }
 
+    // console.log(groupDetail);
+
     // Extract target done value for the specific user, parameter, and month
-    const targetMonth = moment()
-      .month(parseInt(monthValue) - 1)
-      .startOf("month");
+
     // const userTargetDone = user.data.find(
     //   (item) =>
     //     item.name === paramName &&
@@ -79,6 +81,15 @@ export const getGroupPieChartData = asyncHandler(async (req, res) => {
     // }
 
     // const userTargetDoneValue = userTargetDone.targetDone;
+
+    if (
+      !groupDetail.subordinateGroups ||
+      groupDetail.subordinateGroups.length === 0
+    ) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "SubOrdinate groups not found"));
+    }
     let SubordinateGroupId;
     if (
       groupDetail.subordinateGroups &&
@@ -88,32 +99,35 @@ export const getGroupPieChartData = asyncHandler(async (req, res) => {
         (group) => group.subordinateGroupId
       );
     }
-
-    console.log(SubordinateGroupId);
+    // console.log("Hello World");
+    // console.log(SubordinateGroupId);
 
     const userDataMap = new Map();
     let totalSum = 0;
 
     for (const subordinateId of SubordinateGroupId) {
-      let newUserIds;
       const subOrdinateGroupDetail = await Group.findById(subordinateId);
-      subOrdinateGroupDetail.forEach((subGroup) => {
-        if (subGroup.userAdded) {
-          newUserIds = userIds.concat(
-            subGroup.userAdded.map((user) => user.userId.toString())
-          );
-        }
-      });
+      const UserIds = await getUniqueUserIds(subordinateId);
+      // console.log(UserIds);
 
       let sumData = 0;
-      for (const newUserId of newUserIds) {
+      for (const newUserId of UserIds) {
+        // console.log("Hello");
+        const dataDetail = await DataAdd.findOne({
+          businessId: businessId,
+          userId: newUserId,
+          parameterName: paramName,
+          monthIndex: month,
+        });
+
+        const dataId = dataDetail._id;
+        // console.log(dataId);
         const subUser = await User.findById(newUserId);
         if (subUser && subUser.data) {
           const subUserData = subUser.data.find(
-            (item) =>
-              item.name === paramName &&
-              moment(item.createdDate).isSame(targetMonth, "month")
+            (item) => item.dataId.toString() === dataId.toString()
           );
+          // console.log(subUserData);
           if (subUserData) {
             sumData += subUserData.targetDone;
           }
@@ -123,6 +137,8 @@ export const getGroupPieChartData = asyncHandler(async (req, res) => {
       userDataMap.set(subOrdinateGroupDetail.groupName, sumData);
       totalSum += sumData;
     }
+
+    console.log(userDataMap);
 
     const percentageData = Array.from(userDataMap).map(([name, value]) => {
       const percentage = totalSum > 0 ? (value / totalSum) * 100 : 0;
