@@ -2,7 +2,6 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { User } from "../../models/user.model.js";
 import { Business } from "../../models/business.model.js";
-import { Businessusers } from "../../models/businessUsers.model.js";
 import moment from "moment-timezone";
 import { Group } from "../../models/group.model.js";
 import { getUniqueUserIds } from "../../utils/getuniqueuserIds.js";
