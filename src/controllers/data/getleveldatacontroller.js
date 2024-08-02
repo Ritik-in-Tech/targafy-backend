@@ -136,7 +136,7 @@ const getLevelDataController = asyncHandler(async (req, res) => {
 
     // console.log(target);
     const lastDayOfMonth1 = endDate.date();
-    const dailyTargetValue = await GetTargetAssignedUsers(
+    const actualTotalTarget = await GetTargetAssignedUsers(
       paramName,
       monthValue,
       businessId,
@@ -146,7 +146,7 @@ const getLevelDataController = asyncHandler(async (req, res) => {
     );
     console.log("hello");
 
-    console.log(dailyTargetValue);
+    console.log(actualTotalTarget);
 
     // const numUsersAssigned = userIds.length;
     // console.log(numUsersAssigned);
@@ -219,7 +219,7 @@ const getLevelDataController = asyncHandler(async (req, res) => {
     let accumulatedData = 0;
     const formattedUserData = [];
     let totalTargetAchieved = 0;
-    let actualTotalTarget = 0;
+    // let actualTotalTarget = 0;
 
     // Iterate through each day in the specified month
     for (
@@ -230,8 +230,8 @@ const getLevelDataController = asyncHandler(async (req, res) => {
       const formattedDate = date.format("YYYY-MM-DD");
 
       // Add daily target value
-      accumulatedDailyTarget += dailyTargetValue;
-      actualTotalTarget += dailyTargetValue;
+      // accumulatedDailyTarget += dailyTargetValue;
+      // actualTotalTarget += dailyTargetValue;
       cumulativeDailyTargets.push([formattedDate, accumulatedDailyTarget]);
 
       // Check if the date has data and add to the accumulated data
@@ -250,7 +250,7 @@ const getLevelDataController = asyncHandler(async (req, res) => {
       userEntries: formattedUserData,
       dailyTargetAccumulated: [
         [firstDayOfMonth.format("YYYY-MM-DD"), 0],
-        [lastDayOfMonth.format("YYYY-MM-DD"), dailyTargetValue],
+        [lastDayOfMonth.format("YYYY-MM-DD"), actualTotalTarget],
       ],
     };
 

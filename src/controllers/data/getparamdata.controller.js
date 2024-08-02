@@ -85,7 +85,7 @@ const GetParamData = asyncHandler(async (req, res) => {
     console.log("End Date:", endDate.format("YYYY-MM-DD"));
     const lastDayOfMonth1 = endDate.date();
 
-    const dailyTargetValue = await GetTargetAssignedUsers(
+    const actualTotalTarget = await GetTargetAssignedUsers(
       paramName,
       monthValue,
       businessId,
@@ -95,7 +95,7 @@ const GetParamData = asyncHandler(async (req, res) => {
     );
     console.log("hello");
 
-    console.log(dailyTargetValue);
+    console.log(actualTotalTarget);
 
     // const numUsersAssigned = target.usersAssigned.length;
     // let targetValue = parseInt(target.targetValue);
@@ -166,7 +166,7 @@ const GetParamData = asyncHandler(async (req, res) => {
     let accumulatedData = 0;
     const formattedUserData = [];
     let totalTargetAchieved = 0;
-    let actualTotalTarget = 0;
+    // let actualTotalTarget = 0;
 
     // Iterate through each day in the month
     for (
@@ -177,8 +177,8 @@ const GetParamData = asyncHandler(async (req, res) => {
       const formattedDate = date.format("YYYY-MM-DD");
 
       // Add daily target value
-      accumulatedDailyTarget += dailyTargetValue;
-      actualTotalTarget += dailyTargetValue;
+      // accumulatedDailyTarget += dailyTargetValue;
+      // actualTotalTarget += dailyTargetValue;
       cumulativeDailyTargets.push([formattedDate, accumulatedDailyTarget]);
 
       // Check if the date is up to the last user date for data accumulation
@@ -197,7 +197,7 @@ const GetParamData = asyncHandler(async (req, res) => {
       userEntries: formattedUserData,
       dailyTargetAccumulated: [
         [firstDayOfMonth.format("YYYY-MM-DD"), 0],
-        [lastDayOfMonth.format("YYYY-MM-DD"), dailyTargetValue],
+        [lastDayOfMonth.format("YYYY-MM-DD"), actualTotalTarget],
       ],
     };
 
