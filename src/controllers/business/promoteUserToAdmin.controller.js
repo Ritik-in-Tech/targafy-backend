@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 const { startSession } = mongoose;
-
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
@@ -11,7 +10,7 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
 
   try {
     const userIdToPromote = req?.params?.userIdToPromote;
-    const businessId = req?.params?.businessId;
+    const { businessId, departmentId } = req.params;
     const userId = req?.user?._id;
     if (!userId) {
       return res.status(401).json(new ApiResponse(401, {}, "Invalid Token"));
@@ -29,6 +28,7 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
       businessId: new mongoose.Types.ObjectId(businessId),
       userId: userId,
       userType: "Insider",
+      departmentId: departmentId,
     });
 
     if (!user || !user.role) {
@@ -59,6 +59,7 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
       businessId: new mongoose.Types.ObjectId(businessId),
       userId: userIdToPromote,
       userType: "Insider",
+      departmentId: departmentId,
     });
 
     if (!userToPromote) {
@@ -78,7 +79,11 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
 
     // Update parent user of the user's subordinates
     await Businessusers.updateMany(
-      { businessId: businessId, userId: { $in: subordinates } },
+      {
+        businessId: businessId,
+        departmentId: departmentId,
+        userId: { $in: subordinates },
+      },
       {
         $set: {
           parentId: userToPromote.parentId,
@@ -89,7 +94,11 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
 
     // add subordinates in parent user
     await Businessusers.updateOne(
-      { businessId: businessId, userId: userToPromote.parentId },
+      {
+        businessId: businessId,
+        userId: userToPromote.parentId,
+        departmentId: departmentId,
+      },
       {
         $push: {
           subordinates: { $each: subordinates },
@@ -100,7 +109,7 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
 
     // Remove user from subordinates list of the parent user
     await Businessusers.updateMany(
-      { businessId: businessId },
+      { businessId: businessId, departmentId: departmentId },
       {
         $pull: {
           subordinates: userIdToPromote,
@@ -122,6 +131,7 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
         businessId: new mongoose.Types.ObjectId(businessId),
         userId: userIdToPromote,
         userType: "Insider",
+        departmentId: departmentId,
       },
       {
         $set: {

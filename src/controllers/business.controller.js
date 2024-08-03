@@ -158,12 +158,16 @@ const buisnessRole = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Invalid token! Please log in again"));
     }
-    const businessId = req.params.businessId;
-    if (!businessId) {
+    const { businessId, departmentId } = req.params;
+    if (!businessId || !departmentId) {
       return res
         .status(400)
         .json(
-          new ApiResponse(400, {}, "Business Id in not provided in parameters")
+          new ApiResponse(
+            400,
+            {},
+            "Business Id or department id is not provided in parameters"
+          )
         );
     }
     const user = await User.findById(userId);
@@ -181,6 +185,7 @@ const buisnessRole = asyncHandler(async (req, res) => {
     const businessusers = await Businessusers.findOne({
       userId: userId,
       businessId: businessId,
+      departmentId: departmentId,
     });
     if (!businessusers) {
       return res

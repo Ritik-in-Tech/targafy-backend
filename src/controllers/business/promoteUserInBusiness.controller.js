@@ -9,19 +9,20 @@ import {
   getCurrentIndianTime,
   getCurrentUTCTime,
 } from "../../utils/helpers/time.helper.js";
+import { Department } from "../../models/department.model.js";
 
 const promoteUser = asyncHandler(async (req, res, next) => {
   const { role, userIdToPromote } = req.body;
-  const businessId = req?.params?.businessId;
+  const { businessId, departmentId } = req.params;
 
-  if (!role || !userIdToPromote || !businessId) {
+  if (!role || !userIdToPromote || !businessId || !departmentId) {
     return res
       .status(400)
       .json(
         new ApiResponse(
           400,
           {},
-          "Provide role , userIdToPromote and businessId"
+          "Provide role , userIdToPromote, businessId and departmentId"
         )
       );
   }
@@ -29,6 +30,13 @@ const promoteUser = asyncHandler(async (req, res, next) => {
   const business = await Business.findById(businessId);
   if (!business) {
     return res.status(400).json(new ApiResponse(400, {}, "Business not found"));
+  }
+
+  const department = await Department.findById(departmentId);
+  if (!department) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, {}, "Department not found"));
   }
 
   if (!userIdToPromote || !role || !["User", "MiniAdmin"].includes(role)) {
@@ -42,6 +50,7 @@ const promoteUser = asyncHandler(async (req, res, next) => {
       businessId: new mongoose.Types.ObjectId(businessId),
       userId: userIdToPromote,
       userType: "Insider",
+      departmentId: departmentId,
     });
 
     if (!userToPromote) {
@@ -77,6 +86,7 @@ const promoteUser = asyncHandler(async (req, res, next) => {
         businessId: new mongoose.Types.ObjectId(businessId),
         userId: userIdToPromote,
         userType: "Insider",
+        departmentId: departmentId,
       },
       { $set: { role: role } }
     );
@@ -88,13 +98,13 @@ const promoteUser = asyncHandler(async (req, res, next) => {
           new ApiResponse(
             400,
             {},
-            "Business not found or user not associated with business"
+            "Business not found or user not associated with business and department"
           )
         );
     }
 
     const emitData = {
-      content: `Your role in business ${business.name}is changed now your role is ${role}`,
+      content: `Your role in business ${business.name} in ${department.name} is changed now your role is ${role}`,
       notificationCategory: "business",
       createdDate: getCurrentIndianTime(),
       businessName: business.name,
@@ -121,13 +131,19 @@ const promoteUser = asyncHandler(async (req, res, next) => {
 
 const demoteUser = asyncHandler(async (req, res, next) => {
   const { userIdToDemote } = req.body;
-  const businessId = req?.params?.businessId;
+  const { businessId, departmentId } = req.params;
   const loggedInUserId = req.user._id;
 
-  if (!userIdToDemote || !businessId) {
+  if (!userIdToDemote || !businessId || !departmentId) {
     return res
       .status(400)
-      .json(new ApiResponse(400, {}, "Provide userIdToDemote and businessId"));
+      .json(
+        new ApiResponse(
+          400,
+          {},
+          "Provide userIdToDemote, businessId, departmentId"
+        )
+      );
   }
 
   const business = await Business.findById(businessId);
@@ -135,9 +151,17 @@ const demoteUser = asyncHandler(async (req, res, next) => {
     return res.status(400).json(new ApiResponse(400, {}, "Business not found"));
   }
 
+  const department = await Department.findById(departmentId);
+  if (!department) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, {}, "Department not found"));
+  }
+
   const loggedInUserDetails = await Businessusers.findOne({
     userId: loggedInUserId,
     businessId: businessId,
+    departmentId: departmentId,
   });
 
   if (!loggedInUserDetails) {
@@ -164,6 +188,7 @@ const demoteUser = asyncHandler(async (req, res, next) => {
       businessId: new mongoose.Types.ObjectId(businessId),
       userId: loggedInUserId,
       userType: "Insider",
+      departmentId: departmentId,
     });
 
     if (!loggedInUser || loggedInUser.role !== "Admin") {
@@ -176,6 +201,7 @@ const demoteUser = asyncHandler(async (req, res, next) => {
       businessId: new mongoose.Types.ObjectId(businessId),
       userId: userIdToDemote,
       userType: "Insider",
+      departmentId: departmentId,
     });
 
     if (!userToDemote) {
@@ -203,6 +229,7 @@ const demoteUser = asyncHandler(async (req, res, next) => {
         businessId: new mongoose.Types.ObjectId(businessId),
         userId: userIdToDemote,
         userType: "Insider",
+        departmentId: departmentId,
       },
       { $set: { role: "User" } }
     );
@@ -220,7 +247,7 @@ const demoteUser = asyncHandler(async (req, res, next) => {
     }
 
     const emitData = {
-      content: `Your role in business ${business.name} has been demoted to User`,
+      content: `Your role in business ${business.name} in ${department.name} department has been demoted to User`,
       notificationCategory: "business",
       createdDate: getCurrentIndianTime(),
       businessName: business.name,

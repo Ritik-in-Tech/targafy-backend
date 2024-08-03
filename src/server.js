@@ -90,6 +90,7 @@ import adminRouter from "./routes/admin.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import { connectDB } from "./db/index.js";
 import groupRoutes from "./routes/office.routes.js";
+import departmentRoutes from "./routes/department.routes.js";
 import {
   aggregateDailyStats,
   aggregateTestDailyStats,
@@ -112,6 +113,7 @@ app.use("/api/v1/activity", activityRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/notification", notificationRoutes);
 app.use("/api/v1/groups", groupRoutes);
+app.use("/api/v1/department", departmentRoutes);
 
 app.use(
   "/api-docs",

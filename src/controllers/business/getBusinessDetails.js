@@ -21,7 +21,7 @@ const getBusinessUserDetails = asyncHandler(async (req, res) => {
     const businessIds = user.businesses.map((business) => business.businessId);
     if (!businessIds.length) {
       return res
-        .status(400)
+        .status(200)
         .json(
           new ApiResponse(
             200,
@@ -33,7 +33,7 @@ const getBusinessUserDetails = asyncHandler(async (req, res) => {
 
     const businesses = await Business.find({
       _id: { $in: businessIds },
-    }).select("-params -targets");
+    }).select("-params -targets -groups -departments");
     if (!businesses.length) {
       return res
         .status(400)

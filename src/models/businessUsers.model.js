@@ -22,34 +22,31 @@ const businessUsersSchema = new Schema({
     type: Schema.Types.ObjectId,
     required: [true, "Please provide a user id"],
   },
-
   businessId: {
     type: Schema.Types.ObjectId,
     required: [true, "Please provide a business id"],
   },
-
+  departmentId: {
+    type: Schema.Types.ObjectId,
+  },
   name: commonStringConstraints,
-
   contactNumber: contactNumberSchema,
-
   userType: {
     type: String,
     enum: ["Insider", "Outsider"],
     required: true,
   },
-
   role: {
     type: String,
     trim: true,
     enum: {
-      values: AvailableUserRolesEnum, // Define your roles enum separately
+      values: AvailableUserRolesEnum,
       message: "Please provide a valid role",
     },
     required: function () {
       return this.userType === "Insider";
     },
   },
-
   parentId: {
     type: Schema.Types.ObjectId,
     default: function () {
@@ -58,7 +55,6 @@ const businessUsersSchema = new Schema({
       }
     },
   },
-
   subordinates: {
     type: [Schema.Types.ObjectId],
     required: function () {

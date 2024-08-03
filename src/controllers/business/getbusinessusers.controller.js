@@ -52,11 +52,17 @@ const getBusinessUsers = asyncHandler(async (req, res, next) => {
 
 const getAllsubOrdinatesBusinessUsers = asyncHandler(async (req, res) => {
   try {
-    const businessId = req.params.businessId;
-    if (!businessId) {
+    const { businessId, departmentId } = req.params;
+    if (!businessId || !departmentId) {
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "Please provide businessId"));
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Please provide businessId and department Id in params"
+          )
+        );
     }
     const userId = req.user._id;
     if (!userId) {
@@ -77,6 +83,7 @@ const getAllsubOrdinatesBusinessUsers = asyncHandler(async (req, res) => {
     const businessuser = await Businessusers.findOne({
       businessId: businessId,
       userId: userId,
+      departmentId: departmentId,
     });
     if (!businessuser) {
       return res
@@ -93,7 +100,7 @@ const getAllsubOrdinatesBusinessUsers = asyncHandler(async (req, res) => {
     const role = businessuser.role;
     // console.log(role);
     const businessUsers = await Businessusers.find(
-      { businessId: businessId },
+      { businessId: businessId, departmentId: departmentId },
       { name: 1, userId: 1, userType: 1, role: 1, lastSeen: 1 }
     );
     // console.log(businessUsers);

@@ -64,34 +64,36 @@ router
 router.route("/update/:businessId").patch(updateBusinessDetails); // done
 
 // get all users from particular business
-router.route("/get/all/users/:businessId").get(getBusinessUsers); // done
+router.route("/get/all/users/:businessId").get(getBusinessUsers); // done  // this I have also to check
 
 router
-  .route("/get-all-subordinate-businessusers/:businessId")
-  .get(getAllsubOrdinatesBusinessUsers);
+  .route("/get-all-subordinate-businessusers/:businessId/:departmentId")
+  .get(getAllsubOrdinatesBusinessUsers); // done
 
 // get user profile in particular business
 router.route("/user/:businessId/:userId").get(getUserProfileInBusiness); // done
 
 // you can admin or miniadmin can promote user to miniadmin or viceversa
-router.route("/promotion/:businessId").patch(promoteUser); // done
+router.route("/promotion/:businessId/:departmentId").patch(promoteUser); // done
 
 // router to demote user from mini admin to user
-router.route("/demote/:businessId").patch(demoteUser);
+router.route("/demote/:businessId/:departmentId").patch(demoteUser);
 
 // only admin can promote user or mini admin to admin
 router
-  .route("/promote/admin/:businessId/:userIdToPromote")
+  .route("/promote/admin/:businessId/:userIdToPromote/:departmentId")
   .patch(promoteToAdmin); // done
 
 // router to change user manager
-router.route("/change-manager/:businessId/:userId").patch(changeManager);
+router
+  .route("/change-manager/:businessId/:userId/:departmentId")
+  .patch(changeManager);
 
 // rate business user
 router.route("/rate/user/:businessId/:userId").post(rateUserInBusiness); // done
 
 // router to return the business role
-router.route("/get-user-role/:businessId").get(buisnessRole);
+router.route("/get-user-role/:businessId/:departmentId").get(buisnessRole);
 
 // fetchBusiness Details
 router.route("/get-business-details").get(getBusinessUserDetails);
@@ -136,10 +138,12 @@ router
 
 router.route("/check-approvalBusiness").get(checkBusinessApproved);
 
-router.route("/get-sub-hierarchy/:businessId").get(getSubUserHierarchyData);
+router
+  .route("/get-sub-hierarchy/:businessId/:departmentId")
+  .get(getSubUserHierarchyData);
 
 router
-  .route("/get-sub-hierarchy-new/:businessId")
+  .route("/get-sub-hierarchy-new/:businessId/:departmentId")
   .get(getSubUserHierarchyDataNew);
 
 export default router;

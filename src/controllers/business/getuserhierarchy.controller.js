@@ -1,5 +1,6 @@
 import { Business } from "../../models/business.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
+import { Department } from "../../models/department.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import catchAsync from "../../utils/catchAsync.js";
 
@@ -75,11 +76,17 @@ const getSubUserHierarchyData = catchAsync(async (req, res, next) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Token is Invalid!!"));
     }
-    const businessId = req.params.businessId;
-    if (!businessId) {
+    const { businessId, departmentId } = req.params;
+    if (!businessId || !departmentId) {
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "Business ID is not provided"));
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Business ID or departmentId is not provided"
+          )
+        );
     }
     const business = await Business.findById(businessId);
     if (!business) {
@@ -88,9 +95,21 @@ const getSubUserHierarchyData = catchAsync(async (req, res, next) => {
         .json(new ApiResponse(400, {}, "Business not found"));
     }
 
+    const department = await Department.findById(departmentId);
+    if (!department) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Department not found"));
+    }
+
     // Find the specific user
     const specificUser = await Businessusers.findOne(
-      { businessId: businessId, userId: loggedInUserId, userType: "Insider" },
+      {
+        businessId: businessId,
+        userId: loggedInUserId,
+        departmentId: departmentId,
+        userType: "Insider",
+      },
       { userId: 1, subordinates: 1, name: 1, role: 1 }
     );
 
@@ -120,7 +139,12 @@ const getSubUserHierarchyData = catchAsync(async (req, res, next) => {
         edges.push(edgeItem);
 
         const subordinate = await Businessusers.findOne(
-          { businessId: businessId, userId: subId, userType: "Insider" },
+          {
+            businessId: businessId,
+            departmentId: departmentId,
+            userId: subId,
+            userType: "Insider",
+          },
           { userId: 1, subordinates: 1, name: 1, role: 1 }
         );
 
@@ -157,7 +181,7 @@ const getSubUserHierarchyDataNew = catchAsync(async (req, res, next) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Token is Invalid!!"));
     }
-    const businessId = req.params.businessId;
+    const { businessId, departmentId } = req.params;
     if (!businessId) {
       return res
         .status(400)
@@ -170,9 +194,21 @@ const getSubUserHierarchyDataNew = catchAsync(async (req, res, next) => {
         .json(new ApiResponse(400, {}, "Business not found"));
     }
 
+    const department = await Department.findById(departmentId);
+    if (!department) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Department not found"));
+    }
+
     // Find the specific user
     const specificUser = await Businessusers.findOne(
-      { businessId: businessId, userId: loggedInUserId, userType: "Insider" },
+      {
+        businessId: businessId,
+        userId: loggedInUserId,
+        departmentId: departmentId,
+        userType: "Insider",
+      },
       { userId: 1, subordinates: 1, name: 1, role: 1, allSubordinates: 1 }
     );
 
@@ -205,7 +241,12 @@ const getSubUserHierarchyDataNew = catchAsync(async (req, res, next) => {
         edges.push(edgeItem);
 
         const subordinate = await Businessusers.findOne(
-          { businessId: businessId, userId: subId, userType: "Insider" },
+          {
+            businessId: businessId,
+            departmentId: departmentId,
+            userId: subId,
+            userType: "Insider",
+          },
           { userId: 1, subordinates: 1, name: 1, role: 1, allSubordinates: 1 }
         );
 

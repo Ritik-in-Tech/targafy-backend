@@ -29,6 +29,17 @@ const paramSchema = new Schema(
   },
   { _id: false }
 );
+
+const departmentSchema = new Schema(
+  {
+    name: commonStringConstraints,
+    departmentId: Schema.Types.ObjectId,
+  },
+  {
+    _id: false,
+  }
+);
+
 const businessSchema = new Schema({
   businessCode: {
     type: String,
@@ -49,6 +60,10 @@ const businessSchema = new Schema({
   industryType: commonStringConstraints,
   city: commonStringConstraints,
   country: commonStringConstraints,
+  departments: {
+    type: [departmentSchema],
+    default: [],
+  },
   params: {
     type: [paramSchema],
     default: [],

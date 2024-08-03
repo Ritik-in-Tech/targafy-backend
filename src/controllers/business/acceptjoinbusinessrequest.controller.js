@@ -16,9 +16,10 @@ import {
   getCurrentUTCTime,
 } from "../../utils/helpers/time.helper.js";
 import { Office } from "../../models/office.model.js";
+import { Department } from "../../models/department.model.js";
 
 const acceptUserJoinRequest = asyncHandler(async (req, res) => {
-  const { role, userId, parentId } = req.body;
+  const { role, userId, parentId, departmentId } = req.body;
   const businessId = req.params.businessId;
   const acceptedByName = req.user.name;
 
@@ -35,11 +36,15 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Business Id is not found in params"));
     }
-    if (!role || !userId || !parentId) {
+    if (!role || !userId || !parentId || !departmentId) {
       return res
         .status(400)
         .json(
-          new ApiResponse(400, {}, "Fill role, userId, parentId  in req.body!")
+          new ApiResponse(
+            400,
+            {},
+            "Fill role, userId, parentId and departmentId  in req.body!"
+          )
         );
     }
 
@@ -51,12 +56,19 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
       const parentUser = await Businessusers.findOne({
         businessId: businessId,
         userId: parentId,
+        departmentId: departmentId,
       });
 
       if (!parentUser) {
         return res
           .status(400)
-          .json(new ApiResponse(400, {}, "Parent user not found"));
+          .json(
+            new ApiResponse(
+              400,
+              {},
+              "Parent user not found with this business id and department Id"
+            )
+          );
       }
 
       // Step 2: Check if the user to add already exists in the business
@@ -64,6 +76,7 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
       const userToAdd = await Businessusers.findOne({
         businessId: businessId,
         userId: userId,
+        departmentId: departmentId,
       });
 
       if (userToAdd) {
@@ -72,8 +85,21 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         return res
           .status(401)
           .json(
-            new ApiResponse(401, {}, "The user already exists in the business!")
+            new ApiResponse(
+              401,
+              {},
+              "The user already exists in the business and in the same department"
+            )
           );
+      }
+
+      const department = await Department.findById(departmentId);
+      if (!department) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(401)
+          .json(new ApiResponse(401, {}, "Department does not exist"));
       }
 
       // Step 3: Create new user and business entities
@@ -108,24 +134,12 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
           .json(new ApiResponse(401, {}, "The business does not exist!"));
       }
 
-      // const office = await Office.findById(officeId);
-
-      // if (!office) {
-      //   await session.abortTransaction();
-      //   session.endSession();
-      //   return res
-      //     .status(401)
-      //     .json(new ApiResponse(401, {}, "The office does not exist!"));
-      // }
-
-      // office.userAdded.push({ name: user.name, userId: userId });
-      // await office.save({ session });
-
       const newUser = {
         role,
         userId,
         businessId,
         parentId,
+        departmentId: departmentId,
         name: userName,
         contactNumber: userContactNumber,
         userType: "Insider",
@@ -191,7 +205,7 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
       // await parentUser.save();
 
       const emitData = {
-        content: `Congratulations, ${user.name} have been added to ${business.name} successfully! 🥳🥳`,
+        content: `Congratulations, ${user.name} have been added to ${business.name} successfully! in the ${department.name} department 🥳🥳`,
         notificationCategory: "business",
         createdDate: getCurrentIndianTime(),
         businessName: business.name,
@@ -212,6 +226,7 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
       const newBusinessUser = await Businessusers.findOne({
         businessId: businessId,
         userId: userId,
+        departmentId: departmentId,
       });
 
       if (newBusinessUser) {

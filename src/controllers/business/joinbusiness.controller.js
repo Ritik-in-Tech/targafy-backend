@@ -118,9 +118,15 @@ const joinBusiness = catchAsync(async (req, res, next) => {
       businessId: businessData._id,
     };
 
-    const businessAdmins = await Businessusers.find(
+    const allBusinessAdmins = await Businessusers.find(
       { businessId, role: "Admin" },
       { name: 1, userId: 1 }
+    );
+
+    const businessAdmins = Array.from(
+      new Map(
+        allBusinessAdmins.map((admin) => [admin.userId.toString(), admin])
+      ).values()
     );
 
     await Promise.all(
