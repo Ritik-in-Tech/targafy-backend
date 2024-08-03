@@ -18,14 +18,41 @@ export const aggregateOverallDailyStats = async () => {
     });
 
     // if (!existingStats) {
-    const registeredUsers = await Businessusers.countDocuments({
-      registrationDate: { $gte: previousDayStart, $lt: previousDayEnd },
-    });
+    const registeredUsers = await Businessusers.aggregate([
+      {
+        $match: {
+          businessId: businessId,
+          registrationDate: { $gte: previousDayStart, $lt: previousDayEnd },
+        },
+      },
+      {
+        $group: {
+          _id: "$userId",
+        },
+      },
+      {
+        $count: "uniqueCount",
+      },
+    ]);
+
+    const activeUsers = await Businessusers.aggregate([
+      {
+        $match: {
+          businessId: businessId,
+          lastSeen: { $gte: previousDayStart, $lt: previousDayEnd },
+        },
+      },
+      {
+        $group: {
+          _id: "$userId",
+        },
+      },
+      {
+        $count: "uniqueCount",
+      },
+    ]);
     const feedbackGiven = await Usersratings.countDocuments({
       createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
-    });
-    const activeUsers = await Businessusers.countDocuments({
-      lastSeen: { $gte: previousDayStart, $lt: previousDayEnd },
     });
     const messagesSent = await NotificationModel.countDocuments({
       createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
@@ -122,14 +149,41 @@ export const aggregateTestOverallDailyStats = async (targetDate) => {
     });
 
     if (!existingStats) {
-      const registeredUsers = await Businessusers.countDocuments({
-        registrationDate: { $gte: previousDayStart, $lt: previousDayEnd },
-      });
+      const registeredUsers = await Businessusers.aggregate([
+        {
+          $match: {
+            businessId: businessId,
+            registrationDate: { $gte: previousDayStart, $lt: previousDayEnd },
+          },
+        },
+        {
+          $group: {
+            _id: "$userId",
+          },
+        },
+        {
+          $count: "uniqueCount",
+        },
+      ]);
+
+      const activeUsers = await Businessusers.aggregate([
+        {
+          $match: {
+            businessId: businessId,
+            lastSeen: { $gte: previousDayStart, $lt: previousDayEnd },
+          },
+        },
+        {
+          $group: {
+            _id: "$userId",
+          },
+        },
+        {
+          $count: "uniqueCount",
+        },
+      ]);
       const feedbackGiven = await Usersratings.countDocuments({
         createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
-      });
-      const activeUsers = await Businessusers.countDocuments({
-        lastSeen: { $gte: previousDayStart, $lt: previousDayEnd },
       });
       const messagesSent = await NotificationModel.countDocuments({
         createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
