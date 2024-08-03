@@ -76,7 +76,7 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
       const userToAdd = await Businessusers.findOne({
         businessId: businessId,
         userId: userId,
-        departmentId: departmentId,
+        // departmentId: departmentId,
       });
 
       if (userToAdd) {
@@ -88,7 +88,7 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
             new ApiResponse(
               401,
               {},
-              "The user already exists in the business and in the same department"
+              "The user already exists in the business and as an user is associated with any of the only departments"
             )
           );
       }
