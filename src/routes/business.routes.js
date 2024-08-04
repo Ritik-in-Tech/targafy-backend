@@ -64,7 +64,7 @@ router
 router.route("/update/:businessId").patch(updateBusinessDetails); // done
 
 // get all users from particular business
-router.route("/get/all/users/:businessId").get(getBusinessUsers); // done  // this I have also to check
+router.route("/get/all/users/:businessId/:departmentId").get(getBusinessUsers); // done  // this I have also to check
 
 router
   .route("/get-all-subordinate-businessusers/:businessId/:departmentId")

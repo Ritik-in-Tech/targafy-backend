@@ -5,13 +5,42 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { User } from "../../models/user.model.js";
 import { Business } from "../../models/business.model.js";
+import { Department } from "../../models/department.model.js";
 
 const getBusinessUsers = asyncHandler(async (req, res, next) => {
   try {
-    const businessId = req?.params?.businessId;
-    console.log(businessId);
+    const { businessId, departmentId } = req.params;
+    // console.log(businessId);
+    if (!businessId || !departmentId) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Please provide departmentId and businessId in params"
+          )
+        );
+    }
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Business not found"));
+    }
+
+    const department = await Department.findById(departmentId);
+    if (!department) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Department not found"));
+    }
     const businessUsers = await Businessusers.find(
-      { businessId: new mongoose.Types.ObjectId(businessId) },
+      {
+        businessId: new mongoose.Types.ObjectId(businessId),
+        departmentId: departmentId,
+      },
       { name: 1, userId: 1, userType: 1, role: 1, lastSeen: 1 }
     );
 
