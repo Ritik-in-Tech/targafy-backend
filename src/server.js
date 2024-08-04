@@ -154,9 +154,12 @@ const startServer = async () => {
     initializeNotificationSocket(ioHttp);
     initializeActivitySocket(ioHttp);
     // initializeNotificationSocket(ioHttps);
-    // const targetDate = new Date("2024-07-28");
+    // const targetDate = new Date("2024-08-03");
     // const result = await aggregateTestDailyStats(targetDate);
     // const result = await aggregateTestOverallDailyStats(targetDate);
+    // console.log(result);
+
+    // const result = await aggregateDailyStats();
     // console.log(result);
 
     // const result = await aggregateOverallDailyStats();

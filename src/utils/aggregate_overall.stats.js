@@ -18,10 +18,9 @@ export const aggregateOverallDailyStats = async () => {
     });
 
     // if (!existingStats) {
-    const registeredUsers = await Businessusers.aggregate([
+    let registeredUsers = await Businessusers.aggregate([
       {
         $match: {
-          businessId: businessId,
           registrationDate: { $gte: previousDayStart, $lt: previousDayEnd },
         },
       },
@@ -35,10 +34,12 @@ export const aggregateOverallDailyStats = async () => {
       },
     ]);
 
-    const activeUsers = await Businessusers.aggregate([
+    registeredUsers = registeredUsers[0].uniqueCount;
+    // console.log(registeredUsers);
+
+    let activeUsers = await Businessusers.aggregate([
       {
         $match: {
-          businessId: businessId,
           lastSeen: { $gte: previousDayStart, $lt: previousDayEnd },
         },
       },
@@ -51,6 +52,9 @@ export const aggregateOverallDailyStats = async () => {
         $count: "uniqueCount",
       },
     ]);
+
+    activeUsers = activeUsers[0].uniqueCount;
+    // console.log(activeUsers);
     const feedbackGiven = await Usersratings.countDocuments({
       createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
     });
@@ -149,10 +153,9 @@ export const aggregateTestOverallDailyStats = async (targetDate) => {
     });
 
     if (!existingStats) {
-      const registeredUsers = await Businessusers.aggregate([
+      let registeredUsers = await Businessusers.aggregate([
         {
           $match: {
-            businessId: businessId,
             registrationDate: { $gte: previousDayStart, $lt: previousDayEnd },
           },
         },
@@ -166,10 +169,12 @@ export const aggregateTestOverallDailyStats = async (targetDate) => {
         },
       ]);
 
-      const activeUsers = await Businessusers.aggregate([
+      registeredUsers = registeredUsers[0].uniqueCount;
+      console.log(registeredUsers);
+
+      let activeUsers = await Businessusers.aggregate([
         {
           $match: {
-            businessId: businessId,
             lastSeen: { $gte: previousDayStart, $lt: previousDayEnd },
           },
         },
@@ -182,6 +187,9 @@ export const aggregateTestOverallDailyStats = async (targetDate) => {
           $count: "uniqueCount",
         },
       ]);
+
+      activeUsers = activeUsers[0].uniqueCount;
+      console.log(activeUsers);
       const feedbackGiven = await Usersratings.countDocuments({
         createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
       });

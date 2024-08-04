@@ -3,30 +3,23 @@ import { aggregateDailyStats } from "../aggregate_daily.stats.js";
 import { aggregateOverallDailyStats } from "../aggregate_overall.stats.js";
 
 const task = cron.schedule("5 0 * * *", async () => {
-  console.log("Running statistics aggregation...");
+  console.log("Running daily statistics aggregation...");
   console.log(Date.now());
 
-  const allUpdated = await aggregateDailyStats();
+  const dailyUpdated = await aggregateDailyStats();
 
-  if (allUpdated) {
-    console.log("All business IDs aggregated. Stopping cron job.");
-    task.stop();
+  if (dailyUpdated) {
+    console.log(
+      "Daily statistics aggregated. Now running overall statistics aggregation..."
+    );
+
+    const overallUpdated = await aggregateOverallDailyStats();
+
+    if (overallUpdated) {
+      console.log("Overall statistics aggregated. Stopping cron job.");
+      task.stop();
+    }
   }
 });
 
 task.start();
-
-const OverallStats = cron.schedule("10 0 * * *", async () => {
-  console.log("Running Overall statistics aggregation...");
-  console.log(Date.now());
-
-  const allUpdated = await aggregateOverallDailyStats();
-
-  if (allUpdated) {
-    console.log("Stopping cron job.");
-    OverallStats.stop();
-  }
-});
-
-// Start the task
-OverallStats.start();

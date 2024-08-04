@@ -43,7 +43,7 @@ const aggregateDailyStats = async () => {
         date: previousDayStart,
       });
 
-      const registeredUsers = await Businessusers.aggregate([
+      const registeredUsersResult = await Businessusers.aggregate([
         {
           $match: {
             businessId: businessId,
@@ -60,7 +60,13 @@ const aggregateDailyStats = async () => {
         },
       ]);
 
-      const activeUsers = await Businessusers.aggregate([
+      const registeredUsers =
+        registeredUsersResult.length > 0
+          ? registeredUsersResult[0].uniqueCount
+          : 0;
+      console.log("The registered users are: ", registeredUsers);
+
+      const activeUsersResult = await Businessusers.aggregate([
         {
           $match: {
             businessId: businessId,
@@ -76,6 +82,10 @@ const aggregateDailyStats = async () => {
           $count: "uniqueCount",
         },
       ]);
+
+      const activeUsers =
+        activeUsersResult.length > 0 ? activeUsersResult[0].uniqueCount : 0;
+      console.log("The active users are: ", activeUsers);
 
       const feedbackGiven = await Usersratings.countDocuments({
         businessId: businessId,
@@ -212,7 +222,7 @@ const aggregateTestDailyStats = async (targetDate) => {
         date: previousDayStart,
       });
 
-      const registeredUsers = await Businessusers.aggregate([
+      const registeredUsersResult = await Businessusers.aggregate([
         {
           $match: {
             businessId: businessId,
@@ -229,7 +239,13 @@ const aggregateTestDailyStats = async (targetDate) => {
         },
       ]);
 
-      const activeUsers = await Businessusers.aggregate([
+      const registeredUsers =
+        registeredUsersResult.length > 0
+          ? registeredUsersResult[0].uniqueCount
+          : 0;
+      // console.log("The registered users are: ", registeredUsers);
+
+      const activeUsersResult = await Businessusers.aggregate([
         {
           $match: {
             businessId: businessId,
@@ -245,6 +261,10 @@ const aggregateTestDailyStats = async (targetDate) => {
           $count: "uniqueCount",
         },
       ]);
+
+      const activeUsers =
+        activeUsersResult.length > 0 ? activeUsersResult[0].uniqueCount : 0;
+      // console.log("The active users are: ", activeUsers);
 
       const feedbackGiven = await Usersratings.countDocuments({
         businessId: businessId,
