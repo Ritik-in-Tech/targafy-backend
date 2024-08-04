@@ -2,6 +2,8 @@ import { Business } from "../../models/business.model.js";
 import { User } from "../../models/user.model.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
+import { Businessusers } from "../../models/businessUsers.model.js";
+import { Department } from "../../models/department.model.js";
 
 const getBusinessUserDetails = asyncHandler(async (req, res) => {
   try {
@@ -31,6 +33,30 @@ const getBusinessUserDetails = asyncHandler(async (req, res) => {
         );
     }
 
+    const businessusers = await Businessusers.find({
+      userId: userId,
+      businessId: { $in: businessIds },
+      departmentId: { $exists: true },
+    });
+
+    const departmentIds = businessusers.map((user) => user.departmentId);
+    const departments = await Department.find({
+      _id: { $in: departmentIds },
+    });
+
+    const departmentMap = departments.reduce((map, department) => {
+      map[department._id] = department.name;
+      return map;
+    }, {});
+
+    const result = businessusers.map((user) => {
+      return {
+        departmentId: user.departmentId,
+        departmentName: departmentMap[user.departmentId],
+        role: user.role,
+      };
+    });
+
     const businesses = await Business.find({
       _id: { $in: businessIds },
     }).select("-params -targets -groups -departments");
@@ -45,7 +71,7 @@ const getBusinessUserDetails = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           200,
-          { businesses, user },
+          { businesses, user, result },
           "Businesses fetched successfully"
         )
       );
