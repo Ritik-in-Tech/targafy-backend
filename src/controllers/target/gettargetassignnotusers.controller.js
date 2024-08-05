@@ -6,8 +6,8 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 
 export const getTargetNotAssignUsers = asyncHandler(async (req, res) => {
   try {
-    const { businessId, paramName, monthIndex } = req.params;
-    if (!businessId || !paramName || !monthIndex) {
+    const { businessId, paramName, monthIndex, departmentId } = req.params;
+    if (!businessId || !paramName || !monthIndex || !departmentId) {
       return res
         .status(400)
         .json(
@@ -22,6 +22,7 @@ export const getTargetNotAssignUsers = asyncHandler(async (req, res) => {
     const paramUsers = await Params.findOne({
       name: paramName,
       businessId: businessId,
+      departmentId: departmentId,
     });
 
     const userList = paramUsers.usersAssigned.map((user) => ({
@@ -35,6 +36,7 @@ export const getTargetNotAssignUsers = asyncHandler(async (req, res) => {
       businessId: businessId,
       monthIndex: monthIndex,
       paramName: paramName,
+      departmentId: departmentId,
     });
 
     const targetUsersList = targetUsers.map((target) => ({

@@ -5,7 +5,18 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 
 const getTargetValues = asyncHandler(async (req, res) => {
   try {
-    const businessId = req.params.businessId;
+    const { businessId, departmentId } = req.params;
+    if (!businessId || !departmentId) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            404,
+            {},
+            "BusinessId or Department Id not provided in params"
+          )
+        );
+    }
     const business = await Business.findById(businessId);
 
     if (!business) {
@@ -14,7 +25,10 @@ const getTargetValues = asyncHandler(async (req, res) => {
         .json(new ApiResponse(404, {}, "Business not found"));
     }
 
-    const targets = await Target.find({ businessId: businessId });
+    const targets = await Target.find({
+      businessId: businessId,
+      departmentId: departmentId,
+    });
 
     if (!targets.length) {
       return res

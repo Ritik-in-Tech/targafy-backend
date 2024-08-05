@@ -34,6 +34,9 @@ const targetSchema = new Schema({
     type: Schema.Types.ObjectId,
     required: true,
   },
+  departmentId: {
+    type: Schema.Types.ObjectId,
+  },
   assignedto: commonStringConstraints,
   assignedBy: commonStringConstraints,
   monthIndex: commonStringConstraints,
