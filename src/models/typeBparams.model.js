@@ -15,6 +15,9 @@ const typeBParamSchema = new Schema({
     type: Schema.Types.ObjectId,
     required: true,
   },
+  departmentId: {
+    type: Schema.Types.ObjectId,
+  },
   benchMark: [benchMarkSchema],
 });
 

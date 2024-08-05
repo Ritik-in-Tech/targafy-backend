@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Businessusers } from "../models/businessUsers.model.js";
 import mongoose from "mongoose";
+import { Department } from "../models/department.model.js";
 import { TypeBParams } from "../models/typeBparams.model.js";
 import {
   activityNotificationEvent,
@@ -41,7 +42,20 @@ const createParam = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Invalid duration value"));
     }
 
-    const businessId = req.params.businessId;
+    const { businessId, departmentId } = req.params;
+    if (!businessId || !departmentId) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Business ID or department Id is not provided in params"
+          )
+        );
+    }
     const business = await Business.findById(businessId).session(session);
 
     // Validate business existence
@@ -52,9 +66,19 @@ const createParam = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Please provide a valid businessId"));
     }
+
+    const department = await Department.findById(departmentId);
+    if (!department) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Department not found"));
+    }
     const businessUsers = await Businessusers.findOne({
       userId: userId,
       businessId: businessId,
+      departmentId: departmentId,
     }).session(session);
 
     if (businessUsers.role === "User") {
@@ -72,7 +96,11 @@ const createParam = asyncHandler(async (req, res) => {
     }
 
     // Check if the param name already exists for the business
-    const existingParam = business.params.find((param) => param.name === name);
+    const existingParam = await Params.findOne({
+      businessId: businessId,
+      departmentId: departmentId,
+      name: name,
+    });
     if (existingParam) {
       await session.abortTransaction();
       session.endSession();
@@ -98,12 +126,13 @@ const createParam = asyncHandler(async (req, res) => {
         return res
           .status(400)
           .json(
-            new ApiResponse(400, {}, `User with id ${userId} does not exist`)
+            new ApiResponse(400, {}, `User with id ${userId} does not exist.`)
           );
       }
       const businessUser = await Businessusers.findOne({
         userId: user._id,
         businessId,
+        departmentId: departmentId,
       }).session(session);
       if (!businessUser) {
         await session.abortTransaction();
@@ -114,7 +143,7 @@ const createParam = asyncHandler(async (req, res) => {
             new ApiResponse(
               400,
               {},
-              `User with id ${userId} is not associated with this business`
+              `User with id ${userId} is not associated with this business and in ${department.name} department `
             )
           );
       }
@@ -157,6 +186,7 @@ const createParam = asyncHandler(async (req, res) => {
       duration,
       description,
       usersAssigned,
+      departmentId: departmentId,
     });
 
     // Save the Params document to the database
@@ -231,7 +261,15 @@ const getAllParams = asyncHandler(async (req, res) => {
 // get params and the number of assigned users to specifc business
 const getAssignedParams = asyncHandler(async (req, res) => {
   try {
-    const businessId = req.params.businessId;
+    const { businessId, departmentId } = req.params;
+
+    if (!businessId || !departmentId) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "BusinessId or department Id not provided")
+        );
+    }
     const business = await Business.findById(businessId);
 
     if (!business) {
@@ -240,8 +278,18 @@ const getAssignedParams = asyncHandler(async (req, res) => {
         .json(new ApiResponse(404, {}, "Business not found"));
     }
 
+    const department = await Department.findById(departmentId);
+    if (!department) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, {}, "Department not found"));
+    }
+
     // Retrieve the Params documents associated with the business
-    const paramsDetails = await Params.find({ businessId: business._id });
+    const paramsDetails = await Params.find({
+      businessId: business._id,
+      departmentId: departmentId,
+    });
 
     // Construct the response
     const response = paramsDetails.map((param) => ({

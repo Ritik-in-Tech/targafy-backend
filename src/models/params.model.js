@@ -39,6 +39,10 @@ const paramsSchema = new Schema({
     type: Schema.Types.ObjectId,
     required: true,
   },
+  departmentId: {
+    type: Schema.Types.ObjectId,
+    // required
+  },
   usersAssigned: [userSchema],
   charts: [commonStringConstraints],
   duration: {

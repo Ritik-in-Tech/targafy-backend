@@ -23,27 +23,33 @@ import { deleteTypeBParams } from "../controllers/params/deletetypeBparams.contr
 router.use(verifyJWT);
 
 // router to add paramerters
-router.route("/add/:businessId").post(createParam);
+router.route("/add/:businessId/:departmentId").post(createParam);
 
 // router to get all parameters
 router.route("/all/:businessId").get(getAllParams);
 
 // router to get params and assigned users for that params in a particular business
-router.route("/get/assigned-parameter/:businessId").get(getAssignedParams);
+router
+  .route("/get/assigned-parameter/:businessId/:departmentId")
+  .get(getAssignedParams);
 
 // router to get assign users for the specific parameter and business id
-router.route("/get-assign-user/:paramName/:businessId").get(getAssignUsers);
+router.route("/get-assign-user/:paramName").get(getAssignUsers);
 
 //router to add users to the existing params
 router.route("/add-user-to-param/:paramId").post(addUserToParam);
 
 router.route("/get-param-id/:businessId").get(getParamId);
 
-router.route("/create-typeBParam/:businessId").post(createTypeBParams);
+router
+  .route("/create-typeBParam/:businessId/:departmentId")
+  .post(createTypeBParams);
 
 router.route("/get-typeBParams/:businessId").get(getTypeBParams);
 
-router.route("/get-typeBParams-new/:businessId").get(getTypeBNewParams);
+router
+  .route("/get-typeBParams-new/:businessId/:departmentId")
+  .get(getTypeBNewParams);
 
 router
   .route("/edit-typeBParams/:businessId/:typeBParamId")
