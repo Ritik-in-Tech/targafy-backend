@@ -33,30 +33,6 @@ const getBusinessUserDetails = asyncHandler(async (req, res) => {
         );
     }
 
-    const businessusers = await Businessusers.find({
-      userId: userId,
-      businessId: { $in: businessIds },
-      departmentId: { $exists: true },
-    });
-
-    const departmentIds = businessusers.map((user) => user.departmentId);
-    const departments = await Department.find({
-      _id: { $in: departmentIds },
-    });
-
-    const departmentMap = departments.reduce((map, department) => {
-      map[department._id] = department.name;
-      return map;
-    }, {});
-
-    const result = businessusers.map((user) => {
-      return {
-        departmentId: user.departmentId,
-        departmentName: departmentMap[user.departmentId],
-        role: user.role,
-      };
-    });
-
     const businesses = await Business.find({
       _id: { $in: businessIds },
     }).select("-params -targets -groups -departments");
@@ -71,13 +47,71 @@ const getBusinessUserDetails = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           200,
-          { businesses, user, result },
+          { businesses, user },
           "Businesses fetched successfully"
         )
       );
   } catch (error) {
     console.error("Error fetching user business details:", error);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+export const getLoggedInUserDepartments = asyncHandler(async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    const userId = req.user._id;
+
+    if (!businessId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Please provide businessId in params"));
+    }
+
+    const businessuser = await Businessusers.findOne({
+      userId: userId,
+      businessId: businessId,
+    });
+
+    if (!businessuser) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "User is not associated with the given business"
+          )
+        );
+    }
+
+    const departmentIds = businessuser.departmentId; // Convert departmentId objects to array of strings
+    // console.log(departmentIds);
+    // Fetch department names from Department collection
+    const departments = await Department.find(
+      {
+        _id: { $in: departmentIds },
+      },
+      {
+        _id: 1,
+        name: 1,
+      }
+    );
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { departments },
+          "Departments fetched successfully"
+        )
+      );
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, { error }, "Internal server error"));
   }
 });
 

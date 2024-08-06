@@ -1,25 +1,18 @@
 import mongoose from "mongoose";
 const { startSession } = mongoose;
-
 import { User } from "../../models/user.model.js";
 import { Business } from "../../models/business.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { Requests } from "../../models/requests.model.js";
 import { Acceptedrequests } from "../../models/acceptedRequests.model.js";
-
-// Response and Error handling
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { emitNewNotificationAndAddBusinessEvent } from "../../sockets/notification_socket.js";
-import {
-  getCurrentIndianTime,
-  getCurrentUTCTime,
-} from "../../utils/helpers/time.helper.js";
-import { Office } from "../../models/office.model.js";
-import { Department } from "../../models/department.model.js";
+import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
+import { Params } from "../../models/params.model.js";
 
 const acceptUserJoinRequest = asyncHandler(async (req, res) => {
-  const { role, userId, parentId, departmentId } = req.body;
+  const { role, userId, parentId, paramIds } = req.body;
   const businessId = req.params.businessId;
   const acceptedByName = req.user.name;
 
@@ -36,15 +29,23 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Business Id is not found in params"));
     }
-    if (!role || !userId || !parentId || !departmentId) {
+    if (!role || !userId || !parentId || !paramIds) {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "Fill role, userId, parentId and departmentId  in req.body!"
+            "Fill role, userId, parentId and paramIds in req.body!"
           )
+        );
+    }
+
+    if (!Array.isArray(paramIds)) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, {}, "Department Ids must be in array format")
         );
     }
 
@@ -52,31 +53,11 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
     session.startTransaction();
 
     try {
-      // Step 1: Find the parent user
-      const parentUser = await Businessusers.findOne({
-        businessId: businessId,
-        userId: parentId,
-        departmentId: departmentId,
-      });
-
-      if (!parentUser) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(
-              400,
-              {},
-              "Parent user not found with this business id and department Id"
-            )
-          );
-      }
-
-      // Step 2: Check if the user to add already exists in the business
+      // Step 1: Check if the user to add already exists in the business
 
       const userToAdd = await Businessusers.findOne({
         businessId: businessId,
         userId: userId,
-        // departmentId: departmentId,
       });
 
       if (userToAdd) {
@@ -85,24 +66,10 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         return res
           .status(401)
           .json(
-            new ApiResponse(
-              401,
-              {},
-              "The user already exists in the business and as an user is associated with any of the only departments"
-            )
+            new ApiResponse(401, {}, "The user already exists in the business")
           );
       }
 
-      const department = await Department.findById(departmentId);
-      if (!department) {
-        await session.abortTransaction();
-        session.endSession();
-        return res
-          .status(401)
-          .json(new ApiResponse(401, {}, "Department does not exist"));
-      }
-
-      // Step 3: Create new user and business entities
       const user = await User.findById(userId);
 
       if (!user) {
@@ -134,18 +101,106 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
           .json(new ApiResponse(401, {}, "The business does not exist!"));
       }
 
+      const parentUser = await Businessusers.findOne({
+        businessId: businessId,
+        userId: parentId,
+      });
+
+      if (!parentUser) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(401)
+          .json(
+            new ApiResponse(
+              401,
+              {},
+              "Parent is not associated with the same business as the user you want to add"
+            )
+          );
+      }
+
+      const validParamId = [];
+      const uniqueDepartmentIds = new Set();
+
+      for (const paramId of paramIds) {
+        console.log("The paramIds Ids are:", paramId);
+        const param = await Params.findById(paramId);
+        if (!param) {
+          await session.abortTransaction();
+          session.endSession();
+          return res
+            .status(401)
+            .json(new ApiResponse(401, {}, "Param does not exist"));
+        }
+
+        const userAlreadyAssigned = param.usersAssigned.some(
+          (user) => user.userId.toString() === userId.toString()
+        );
+
+        if (userAlreadyAssigned) {
+          await session.abortTransaction();
+          session.endSession();
+          return res
+            .status(400)
+            .json(
+              new ApiResponse(400, {}, "User is already assigned to this param")
+            );
+        }
+
+        validParamId.push(paramId);
+
+        for (const deptId of param.departmentId) {
+          uniqueDepartmentIds.add(deptId.toString());
+        }
+      }
+
+      const departmentId = Array.from(uniqueDepartmentIds);
+      console.log(departmentId);
+
       const newUser = {
         role,
         userId,
         businessId,
         parentId,
         departmentId: departmentId,
+        paramId: validParamId,
         name: userName,
         contactNumber: userContactNumber,
         userType: "Insider",
         subordinates: [],
         allSubordinates: [],
       };
+
+      await Businessusers.create([newUser], { session });
+
+      const updateQuery =
+        parentUser.role === "Admin"
+          ? {
+              businessId: businessId,
+              role: "Admin",
+            }
+          : {
+              businessId: businessId,
+              userId: parentId,
+            };
+
+      await Businessusers.updateMany(
+        updateQuery,
+        {
+          $push: { subordinates: userId, allSubordinates: userId },
+        },
+        { session }
+      );
+
+      await Businessusers.updateMany(
+        {
+          businessId: businessId,
+          allSubordinates: parentId,
+        },
+        { $addToSet: { allSubordinates: userId } },
+        { session }
+      );
 
       const newBusiness = {
         name: business.name,
@@ -164,28 +219,6 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         },
       };
 
-      await Businessusers.create([newUser], { session });
-
-      // Step 4: Update parent user and business entities
-      const updateQuery =
-        parentUser.role === "Admin"
-          ? { businessId: businessId, role: "Admin" }
-          : { businessId: businessId, userId: parentId };
-
-      await Businessusers.updateMany(
-        updateQuery,
-        {
-          $push: { subordinates: userId, allSubordinates: userId },
-        },
-        { session }
-      );
-
-      await Businessusers.updateMany(
-        { businessId: businessId, allSubordinates: parentId },
-        { $addToSet: { allSubordinates: userId } },
-        { session }
-      );
-
       await User.updateOne(
         { _id: userId },
         {
@@ -201,11 +234,8 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
 
       await Acceptedrequests.create([acceptedRequest], { session });
 
-      // parentUser.notificationViewCounter += 1;
-      // await parentUser.save();
-
       const emitData = {
-        content: `Congratulations, ${user.name} have been added to ${business.name} successfully! in the ${department.name} department 🥳🥳`,
+        content: `Congratulations, ${user.name} have been added to ${business.name} successfully 🥳🥳`,
         notificationCategory: "business",
         createdDate: getCurrentIndianTime(),
         businessName: business.name,
@@ -226,8 +256,12 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
       const newBusinessUser = await Businessusers.findOne({
         businessId: businessId,
         userId: userId,
-        departmentId: departmentId,
       });
+
+      // console.log(
+      //   "This is the new Business User who have added:",
+      //   newBusinessUser
+      // );
 
       if (newBusinessUser) {
         newBusinessUser.notificationViewCounter += 1;

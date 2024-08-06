@@ -22,7 +22,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
   session.startTransaction();
 
   try {
-    const { paramName, businessId, monthName } = req.params;
+    const { paramName, businessId, monthName, departmentId } = req.params;
     const userId = req.user._id;
 
     if (!userId) {
@@ -34,7 +34,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
     }
 
     // Validate presence of required params
-    if (!paramName || !businessId || !monthName) {
+    if (!paramName || !businessId || !monthName || !departmentId) {
       await session.abortTransaction();
       session.endSession();
       return res
@@ -43,7 +43,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
           new ApiResponse(
             400,
             {},
-            "Missing paramName, businessId, or monthName in params"
+            "Missing paramName, businessId, departmentId or monthName in params"
           )
         );
     }
@@ -68,6 +68,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
     const paramDetails = await Params.findOne({
       name: paramName,
       businessId,
+      departmentId: departmentId,
     }).session(session);
     if (!paramDetails) {
       await session.abortTransaction();
@@ -98,6 +99,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
       businessId,
       userId: userId,
       monthIndex: monthStart.month() + 1,
+      departmentId: departmentId,
     }).session(session);
     if (!target) {
       await session.abortTransaction();
@@ -128,6 +130,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
     let dataAdd = await DataAdd.findOne({
       paramName,
       userId,
+      departmentId: departmentId,
       businessId,
       $expr: {
         $and: [
@@ -160,6 +163,7 @@ const AddTestDataForMonth = asyncHandler(async (req, res) => {
       dataAdd = new DataAdd({
         parameterName: paramName,
         userId,
+        departmentId: departmentId,
         addedBy: user.name,
         monthIndex: currentMonth,
         businessId,

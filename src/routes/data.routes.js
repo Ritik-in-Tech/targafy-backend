@@ -33,7 +33,7 @@ router.use(verifyJWT);
 
 router.route("/add-data/:businessId/:parameterName").post(AddData);
 
-router.route("/add-test-data/:businessId").post(AddDataTest);
+router.route("/add-test-data/:businessId/:departmentId").post(AddDataTest);
 
 // router to get user specific data
 router
@@ -58,7 +58,7 @@ router.route("/get-target-users/:businessId").get(getTargetToAddData);
 router.route("/get-target-users-value/:businessId").get(getTargetToAddDataNew);
 
 router
-  .route("/add-test-data/:businessId/:paramName/:monthName")
+  .route("/add-test-data/:businessId/:paramName/:monthName/:departmentId")
   .post(AddTestDataForMonth);
 
 router
@@ -70,11 +70,11 @@ router
   .get(getPieChartData);
 
 router
-  .route("/get-one-months-data/:userId/:businessId/:paramName")
+  .route("/get-one-months-data/:userId/:businessId/:paramName/:departmentId")
   .get(getOneMonthsDataUser);
 
 router
-  .route("/get-three-months-data/:userId/:businessId/:paramName")
+  .route("/get-three-months-data/:userId/:businessId/:paramName/:departmentId")
   .get(getThreeMonthsDataUser);
 
 // router

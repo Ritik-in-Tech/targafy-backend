@@ -9,18 +9,12 @@ import { Department } from "../../models/department.model.js";
 
 const getBusinessUsers = asyncHandler(async (req, res, next) => {
   try {
-    const { businessId, departmentId } = req.params;
+    const { businessId } = req.params;
     // console.log(businessId);
-    if (!businessId || !departmentId) {
+    if (!businessId) {
       return res
         .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            {},
-            "Please provide departmentId and businessId in params"
-          )
-        );
+        .json(new ApiResponse(400, {}, "Please provide businessId in params"));
     }
 
     const business = await Business.findById(businessId);
@@ -30,16 +24,9 @@ const getBusinessUsers = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(400, {}, "Business not found"));
     }
 
-    const department = await Department.findById(departmentId);
-    if (!department) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Department not found"));
-    }
     const businessUsers = await Businessusers.find(
       {
         businessId: new mongoose.Types.ObjectId(businessId),
-        departmentId: departmentId,
       },
       { name: 1, userId: 1, userType: 1, role: 1, lastSeen: 1 }
     );
@@ -81,17 +68,11 @@ const getBusinessUsers = asyncHandler(async (req, res, next) => {
 
 const getAllsubOrdinatesBusinessUsers = asyncHandler(async (req, res) => {
   try {
-    const { businessId, departmentId } = req.params;
-    if (!businessId || !departmentId) {
+    const { businessId } = req.params;
+    if (!businessId) {
       return res
         .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            {},
-            "Please provide businessId and department Id in params"
-          )
-        );
+        .json(new ApiResponse(400, {}, "Please provide businessId in params"));
     }
     const userId = req.user._id;
     if (!userId) {
@@ -112,7 +93,6 @@ const getAllsubOrdinatesBusinessUsers = asyncHandler(async (req, res) => {
     const businessuser = await Businessusers.findOne({
       businessId: businessId,
       userId: userId,
-      departmentId: departmentId,
     });
     if (!businessuser) {
       return res
@@ -128,10 +108,11 @@ const getAllsubOrdinatesBusinessUsers = asyncHandler(async (req, res) => {
     // console.log(businessuser);
     const role = businessuser.role;
     // console.log(role);
-    const businessUsers = await Businessusers.find(
-      { businessId: businessId, departmentId: departmentId },
+    let businessUsers = await Businessusers.find(
+      { businessId: businessId },
       { name: 1, userId: 1, userType: 1, role: 1, lastSeen: 1 }
     );
+
     // console.log(businessUsers);
     if (businessUsers) {
       let newUsers = [];

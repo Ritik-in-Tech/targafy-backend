@@ -31,7 +31,10 @@ import getPendingRequestCount from "../controllers/business/getPendingRequestCou
 import { getBusinessLogo } from "../controllers/business/getBusinessLogo.controller.js";
 import { rateUserInBusiness } from "../controllers/business/rateUserInBusiness.controller.js";
 import { updateBusinessParameters } from "../controllers/business/updatebusinessparameters.js";
-import { getBusinessUserDetails } from "../controllers/business/getBusinessDetails.js";
+import {
+  getBusinessUserDetails,
+  getLoggedInUserDepartments,
+} from "../controllers/business/getBusinessDetails.js";
 import {
   getSubUserHierarchyData,
   getSubUserHierarchyDataNew,
@@ -64,10 +67,10 @@ router
 router.route("/update/:businessId").patch(updateBusinessDetails); // done
 
 // get all users from particular business
-router.route("/get/all/users/:businessId/:departmentId").get(getBusinessUsers); // done  // this I have also to check
+router.route("/get/all/users/:businessId").get(getBusinessUsers); // done  // this I have also to check
 
 router
-  .route("/get-all-subordinate-businessusers/:businessId/:departmentId")
+  .route("/get-all-subordinate-businessusers/:businessId")
   .get(getAllsubOrdinatesBusinessUsers); // done
 
 // get user profile in particular business
@@ -93,7 +96,7 @@ router
 router.route("/rate/user/:businessId/:userId").post(rateUserInBusiness); // done
 
 // router to return the business role
-router.route("/get-user-role/:businessId/:departmentId").get(buisnessRole);
+router.route("/get-user-role/:businessId").get(buisnessRole);
 
 // fetchBusiness Details
 router.route("/get-business-details").get(getBusinessUserDetails);
@@ -143,7 +146,11 @@ router
   .get(getSubUserHierarchyData);
 
 router
-  .route("/get-sub-hierarchy-new/:businessId/:departmentId")
+  .route("/get-sub-hierarchy-new/:businessId/:departmentId/:paramId")
   .get(getSubUserHierarchyDataNew);
+
+router
+  .route("/get-logged-inuser-department/:businessId")
+  .get(getLoggedInUserDepartments);
 
 export default router;

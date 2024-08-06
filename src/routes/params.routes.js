@@ -1,7 +1,7 @@
 import { Router } from "express";
 const router = Router();
 import {
-  createParam,
+  // createParam,
   getAllParams,
   getParamById,
   updateParam,
@@ -19,11 +19,14 @@ import {
 } from "../controllers/params/gettypeBparams.controller.js";
 import { editTypeBParams } from "../controllers/params/edittypeBparams.controller.js";
 import { deleteTypeBParams } from "../controllers/params/deletetypeBparams.controller.js";
+import { createParam } from "../controllers/params/createparam.controller.js";
 // middlewares which verifies is request from the authorized user
 router.use(verifyJWT);
 
 // router to add paramerters
-router.route("/add/:businessId/:departmentId").post(createParam);
+// router.route("/add/:businessId/:departmentId").post(createParam);
+
+router.route("/add/:businessId").post(createParam);
 
 // router to get all parameters
 router.route("/all/:businessId").get(getAllParams);

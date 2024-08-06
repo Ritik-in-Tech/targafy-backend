@@ -26,9 +26,6 @@ const businessUsersSchema = new Schema({
     type: Schema.Types.ObjectId,
     required: [true, "Please provide a business id"],
   },
-  departmentId: {
-    type: Schema.Types.ObjectId,
-  },
   name: commonStringConstraints,
   contactNumber: contactNumberSchema,
   userType: {
@@ -61,12 +58,17 @@ const businessUsersSchema = new Schema({
       return this.userType !== "Outsider"; // Only required if userType is not "outsider"
     },
   },
-
   allSubordinates: {
     type: [Schema.Types.ObjectId],
     required: function () {
       return this.userType !== "Outsider"; // Only required if userType is not "outsider"
     },
+  },
+  departmentId: {
+    type: [Schema.Types.ObjectId],
+  },
+  paramId: {
+    type: [Schema.Types.ObjectId],
   },
   notificationViewCounter: {
     default: 0,

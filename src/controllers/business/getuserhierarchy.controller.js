@@ -1,6 +1,7 @@
 import { Business } from "../../models/business.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { Department } from "../../models/department.model.js";
+import { Params } from "../../models/params.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import catchAsync from "../../utils/catchAsync.js";
 
@@ -181,11 +182,17 @@ const getSubUserHierarchyDataNew = catchAsync(async (req, res, next) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Token is Invalid!!"));
     }
-    const { businessId, departmentId } = req.params;
-    if (!businessId) {
+    const { businessId, departmentId, paramId } = req.params;
+    if (!businessId || !departmentId || !paramId) {
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "Business ID is not provided"));
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Business ID, Department Id or ParamId is not provided"
+          )
+        );
     }
     const business = await Business.findById(businessId);
     if (!business) {
@@ -201,12 +208,18 @@ const getSubUserHierarchyDataNew = catchAsync(async (req, res, next) => {
         .json(new ApiResponse(400, {}, "Department not found"));
     }
 
+    const param = await Params.findById(paramId);
+    if (!param) {
+      return res.status(400).json(new ApiResponse(400, {}, "Param not found"));
+    }
+
     // Find the specific user
     const specificUser = await Businessusers.findOne(
       {
         businessId: businessId,
         userId: loggedInUserId,
-        departmentId: departmentId,
+        departmentId: { $elemMatch: { $eq: departmentId } },
+        paramId: { $elemMatch: { $eq: paramId } },
         userType: "Insider",
       },
       { userId: 1, subordinates: 1, name: 1, role: 1, allSubordinates: 1 }
@@ -243,7 +256,8 @@ const getSubUserHierarchyDataNew = catchAsync(async (req, res, next) => {
         const subordinate = await Businessusers.findOne(
           {
             businessId: businessId,
-            departmentId: departmentId,
+            departmentId: { $elemMatch: { $eq: departmentId } },
+            paramId: { $elemMatch: { $eq: paramId } },
             userId: subId,
             userType: "Insider",
           },

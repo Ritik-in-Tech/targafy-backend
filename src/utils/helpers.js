@@ -295,8 +295,8 @@ function getCurrentIndianTime() {
 }
 // console.log(getCurrentIndianTime());
 
-const convertToMongoIds = (stringIds) => {
-  return stringIds.map((id) => new mongoose.Types.ObjectId(id));
+const convertToMongoIds = (id) => {
+  return new mongoose.Types.ObjectId(id);
 };
 
 const convertToStringIds = (mongoIds) => {

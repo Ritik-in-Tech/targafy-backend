@@ -7,6 +7,12 @@ const departmentSchema = new Schema({
     required: [true, "Please provide a business id"],
   },
   name: commonStringConstraints,
+  paramNames: {
+    type: [commonStringConstraints],
+  },
+  paramId: {
+    type: [Schema.Types.ObjectId],
+  },
 });
 
 const Department = model("Department", departmentSchema);

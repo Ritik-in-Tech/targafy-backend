@@ -6,15 +6,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { generateUniqueCode } from "../utils/helpers/array.helper.js";
 import { Businessusers } from "../models/businessUsers.model.js";
 import { startSession } from "mongoose";
-import {
-  emitCreateBusinessNotification,
-  emitNewNotificationEvent,
-} from "../sockets/notification_socket.js";
-import {
-  getCurrentIndianTime,
-  getCurrentUTCTime,
-} from "../utils/helpers/time.helper.js";
-import { Office } from "../models/office.model.js";
+import { emitCreateBusinessNotification } from "../sockets/notification_socket.js";
+import { getCurrentIndianTime } from "../utils/helpers/time.helper.js";
 
 const createBusiness = asyncHandler(async (req, res) => {
   const session = await startSession();
@@ -52,10 +45,6 @@ const createBusiness = asyncHandler(async (req, res) => {
 
     const businessCode = generateUniqueCode(existingCodes);
 
-    // const parametersArray = parameters
-    //   .split(",")
-    //   .map((param) => param.trim())
-    //   .filter(Boolean);
     const business = await Business.create(
       [
         {
@@ -79,7 +68,8 @@ const createBusiness = asyncHandler(async (req, res) => {
       contactNumber: adminContactNumber,
       subordinates: [],
       allSubordinates: [],
-      myPinnedIssues: [],
+      departmentId: [],
+      paramId: [],
       groupsJoined: [],
     };
 
@@ -158,16 +148,12 @@ const buisnessRole = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Invalid token! Please log in again"));
     }
-    const { businessId, departmentId } = req.params;
-    if (!businessId || !departmentId) {
+    const { businessId } = req.params;
+    if (!businessId) {
       return res
         .status(400)
         .json(
-          new ApiResponse(
-            400,
-            {},
-            "Business Id or department id is not provided in parameters"
-          )
+          new ApiResponse(400, {}, "Business Id is not provided in parameters")
         );
     }
     const user = await User.findById(userId);
@@ -185,7 +171,6 @@ const buisnessRole = asyncHandler(async (req, res) => {
     const businessusers = await Businessusers.findOne({
       userId: userId,
       businessId: businessId,
-      departmentId: departmentId,
     });
     if (!businessusers) {
       return res

@@ -20,6 +20,7 @@ import {
 } from "../../utils/helpers/time.helper.js";
 import { formatDateNew } from "../../utils/helpers.js";
 moment.tz.setDefault("Asia/Kolkata");
+import { Department } from "../../models/department.model.js";
 
 const AddData = asyncHandler(async (req, res) => {
   try {
@@ -276,7 +277,19 @@ const AddData = asyncHandler(async (req, res) => {
 const AddDataTest = asyncHandler(async (req, res) => {
   try {
     const { userData, date } = req.body;
-    const businessId = req.params.businessId;
+    const { businessId, departmentId } = req.params;
+
+    if (!businessId || !departmentId) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Please provide businessId and department Id in params"
+          )
+        );
+    }
 
     const userId = req.user._id;
     if (!userId) {
@@ -292,6 +305,13 @@ const AddDataTest = asyncHandler(async (req, res) => {
         .json(
           new ApiResponse(404, {}, "User not found or name of user not exist")
         );
+    }
+
+    const department = await Department.findById(departmentId);
+    if (!department) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, {}, "Department not found"));
     }
 
     if (!businessId) {
@@ -317,6 +337,7 @@ const AddDataTest = asyncHandler(async (req, res) => {
       const paramDetails = await Params.findOne({
         name: paramName,
         businessId,
+        departmentId: departmentId,
       });
       if (!paramDetails) {
         return res
@@ -369,6 +390,7 @@ const AddDataTest = asyncHandler(async (req, res) => {
         businessId,
         userId: userId,
         monthIndex: ongoingMonth,
+        departmentId: departmentId,
       });
       if (!target) {
         return res
@@ -384,6 +406,7 @@ const AddDataTest = asyncHandler(async (req, res) => {
         parameterName: paramName,
         userId,
         businessId,
+        departmentId: departmentId,
         $expr: {
           $and: [
             { $eq: [{ $month: "$createdDate" }, currentMonth + 1] },
@@ -438,6 +461,7 @@ const AddDataTest = asyncHandler(async (req, res) => {
           parameterName: paramName,
           data: [{ todaysdata, comment, createdDate: currentDate }],
           userId,
+          departmentId: departmentId,
           addedBy: user.name,
           monthIndex: currentMonth + 1,
           businessId,

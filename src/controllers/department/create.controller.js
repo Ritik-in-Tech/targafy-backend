@@ -59,8 +59,7 @@ export const createDepartment = asyncHandler(async (req, res) => {
         );
     }
 
-    let firstDepartmentId = null;
-
+    const departmentIds = [];
     for (let i = 0; i < names.length; i++) {
       const name = names[i];
       const existingDepartment = await Department.findOne({
@@ -83,26 +82,11 @@ export const createDepartment = asyncHandler(async (req, res) => {
 
       business.departments.push({ name: name, departmentId: department._id });
 
-      if (i === 0) {
-        firstDepartmentId = department._id;
-        businessuser.departmentId = firstDepartmentId;
-        await businessuser.save();
-      } else {
-        const newBusinessUser = new Businessusers({
-          userId: userId,
-          businessId: businessId,
-          departmentId: department._id,
-          role: "Admin",
-          name: user.name,
-          userType: "Insider",
-          contactNumber: user.contactNumber,
-          subordinates: [],
-          allSubordinates: [],
-          groupsJoined: [],
-        });
-        await newBusinessUser.save();
-      }
+      departmentIds.push(department._id.toString());
     }
+
+    businessuser.departmentId.push(...departmentIds);
+    await businessuser.save();
 
     await business.save();
 

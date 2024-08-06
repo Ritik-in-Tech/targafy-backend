@@ -5,18 +5,9 @@ import { Declinedrequests } from "../../models/declinedRequests.model.js";
 import { Acceptedrequests } from "../../models/acceptedRequests.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import {
-  emitNewNotificationEvent,
-  joinBusinessNotificationEvent,
-} from "../../sockets/notification_socket.js";
-import mongoose from "mongoose";
-import {
-  getCurrentIndianTime,
-  getCurrentUTCTime,
-} from "../../utils/helpers/time.helper.js";
+import { joinBusinessNotificationEvent } from "../../sockets/notification_socket.js";
+import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
 import catchAsync from "../../utils/catchAsync.js";
-import ApiError from "../../utils/ApiError.js";
 
 const joinBusiness = catchAsync(async (req, res, next) => {
   const { businessCode } = req.params;
@@ -123,14 +114,14 @@ const joinBusiness = catchAsync(async (req, res, next) => {
       { name: 1, userId: 1 }
     );
 
-    const businessAdmins = Array.from(
-      new Map(
-        allBusinessAdmins.map((admin) => [admin.userId.toString(), admin])
-      ).values()
-    );
+    // const businessAdmins = Array.from(
+    //   new Map(
+    //     allBusinessAdmins.map((admin) => [admin.userId.toString(), admin])
+    //   ).values()
+    // );
 
     await Promise.all(
-      businessAdmins.map(async (admin) => {
+      allBusinessAdmins.map(async (admin) => {
         await joinBusinessNotificationEvent(admin.userId, emitData);
       })
     );

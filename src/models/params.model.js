@@ -7,10 +7,6 @@ const commonStringConstraints = {
   default: "",
 };
 
-const commonNumberConstraints = {
-  type: Number,
-  default: 0,
-};
 const userSchema = new Schema(
   {
     name: commonStringConstraints,
@@ -21,17 +17,17 @@ const userSchema = new Schema(
   { _id: false }
 );
 
-const subOrdinateGroups = new Schema(
-  {
-    groupName: commonStringConstraints,
-    groupId: {
-      type: Schema.Types.ObjectId,
-    },
-  },
-  {
-    _id: false,
-  }
-);
+// const subOrdinateGroups = new Schema(
+//   {
+//     groupName: commonStringConstraints,
+//     groupId: {
+//       type: Schema.Types.ObjectId,
+//     },
+//   },
+//   {
+//     _id: false,
+//   }
+// );
 
 const paramsSchema = new Schema({
   name: commonStringConstraints,
@@ -40,18 +36,17 @@ const paramsSchema = new Schema({
     required: true,
   },
   departmentId: {
-    type: Schema.Types.ObjectId,
-    // required
+    type: [Schema.Types.ObjectId],
   },
   usersAssigned: [userSchema],
-  charts: [commonStringConstraints],
-  duration: {
-    type: String,
-    enum: ["1stTo31st", "upto30days", "30days"],
-    default: "1stTo31st",
-  },
+  // charts: [commonStringConstraints],
+  // duration: {
+  //   type: String,
+  //   enum: ["1stTo31st", "upto30days", "30days"],
+  //   default: "1stTo31st",
+  // },
   description: commonStringConstraints,
-  subOrdinateGroups: [subOrdinateGroups],
+  // subOrdinateGroups: [subOrdinateGroups],
   createdAt: {
     type: Date,
     default: getCurrentIndianTime(),
