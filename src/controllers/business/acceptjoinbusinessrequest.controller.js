@@ -148,6 +148,9 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
             );
         }
 
+        param.usersAssigned.push({ name: user.name, userId: userId });
+        await param.save({ session });
+
         validParamId.push(paramId);
 
         for (const deptId of param.departmentId) {
