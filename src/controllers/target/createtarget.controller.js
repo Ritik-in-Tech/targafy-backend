@@ -8,14 +8,10 @@ import { Businessusers } from "../../models/businessUsers.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { Activites } from "../../models/activities.model.js";
 import moment from "moment-timezone";
-import {
-  activityNotificationEvent,
-  emitNewNotificationEvent,
-} from "../../sockets/notification_socket.js";
+import { activityNotificationEvent } from "../../sockets/notification_socket.js";
 import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
 import { formatName, getMonthName } from "../../utils/helpers.js";
 moment.tz.setDefault("Asia/Kolkata");
-import { Department } from "../../models/department.model.js";
 
 // controllers to add target
 const createTarget = asyncHandler(async (req, res) => {
@@ -24,17 +20,15 @@ const createTarget = asyncHandler(async (req, res) => {
 
   try {
     const { targetValue, paramName, comment, userIds, monthIndex } = req.body;
-    const { businessId, departmentId } = req.params;
+    const { businessId } = req.params;
     const loggedInuserId = req.user._id;
 
-    if (!businessId || !departmentId) {
+    if (!businessId) {
       await session.abortTransaction();
       session.endSession();
       return res
         .status(400)
-        .json(
-          new ApiResponse(400, {}, "Business or Department Id is not provided")
-        );
+        .json(new ApiResponse(400, {}, "BusinessId is not provided"));
     }
 
     if (
@@ -95,19 +89,9 @@ const createTarget = asyncHandler(async (req, res) => {
         );
     }
 
-    const department = await Department.findById(departmentId);
-    if (!department) {
-      await session.abortTransaction();
-      session.endSession();
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Department not found"));
-    }
-
     const businessUsers = await Businessusers.findOne({
       userId: loggedInuserId,
       businessId: businessId,
-      departmentId: departmentId,
     }).session(session);
 
     if (!businessUsers) {
@@ -136,8 +120,7 @@ const createTarget = asyncHandler(async (req, res) => {
 
     const param = await Params.findOne({
       name: paramName,
-      businessId,
-      departmentId: departmentId,
+      businessId: businessId,
     }).session(session);
     if (!param) {
       await session.abortTransaction();
@@ -148,7 +131,7 @@ const createTarget = asyncHandler(async (req, res) => {
           new ApiResponse(
             400,
             {},
-            "Parameter name does not exist for this business and in the department where you want to set the target"
+            "Parameter name does not exist for this business where you want to set the target"
           )
         );
     }
@@ -172,7 +155,6 @@ const createTarget = asyncHandler(async (req, res) => {
       const businessUser = await Businessusers.findOne({
         userId: user._id,
         businessId,
-        departmentId: departmentId,
       }).session(session);
       if (!businessUser) {
         await session.abortTransaction();
@@ -183,7 +165,7 @@ const createTarget = asyncHandler(async (req, res) => {
             new ApiResponse(
               400,
               {},
-              `User with ID ${userId} is not associated with this business and in the same department`
+              `User with ID ${userId} is not associated with this business`
             )
           );
       }
@@ -210,7 +192,6 @@ const createTarget = asyncHandler(async (req, res) => {
         businessId,
         monthIndex,
         userId: user._id,
-        departmentId: departmentId,
       }).session(session);
       if (existingTarget) {
         await session.abortTransaction();
@@ -234,7 +215,6 @@ const createTarget = asyncHandler(async (req, res) => {
         businessId: business._id,
         comment: comment,
         userId: user._id,
-        departmentId: departmentId,
         monthIndex: monthIndex,
         assignedBy: loggedInUser.name,
         assignedto: user.name,

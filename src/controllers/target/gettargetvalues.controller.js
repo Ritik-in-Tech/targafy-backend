@@ -2,20 +2,15 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import { Target } from "../../models/target.model.js";
 import { Business } from "../../models/business.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
+import { Businessusers } from "../../models/businessUsers.model.js";
 
 const getTargetValues = asyncHandler(async (req, res) => {
   try {
-    const { businessId, departmentId } = req.params;
-    if (!businessId || !departmentId) {
+    const { businessId } = req.params;
+    if (!businessId) {
       return res
         .status(404)
-        .json(
-          new ApiResponse(
-            404,
-            {},
-            "BusinessId or Department Id not provided in params"
-          )
-        );
+        .json(new ApiResponse(404, {}, "BusinessId is not provided in params"));
     }
     const business = await Business.findById(businessId);
 
@@ -25,9 +20,25 @@ const getTargetValues = asyncHandler(async (req, res) => {
         .json(new ApiResponse(404, {}, "Business not found"));
     }
 
+    const businessuser = await Businessusers.findOne({
+      businessId: businessId,
+      userId: req.user._id,
+    });
+
+    if (!businessuser) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "Logged in user is not associated with the current business"
+          )
+        );
+    }
+
     const targets = await Target.find({
       businessId: businessId,
-      departmentId: departmentId,
     });
 
     if (!targets.length) {

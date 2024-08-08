@@ -44,15 +44,11 @@ router.route("/add-user-to-param/:paramId").post(addUserToParam);
 
 router.route("/get-param-id/:businessId").get(getParamId);
 
-router
-  .route("/create-typeBParam/:businessId/:departmentId")
-  .post(createTypeBParams);
+router.route("/create-typeBParam/:businessId").post(createTypeBParams);
 
 router.route("/get-typeBParams/:businessId").get(getTypeBParams);
 
-router
-  .route("/get-typeBParams-new/:businessId/:departmentId")
-  .get(getTypeBNewParams);
+router.route("/get-typeBParams-new/:businessId").get(getTypeBNewParams);
 
 router
   .route("/edit-typeBParams/:businessId/:typeBParamId")

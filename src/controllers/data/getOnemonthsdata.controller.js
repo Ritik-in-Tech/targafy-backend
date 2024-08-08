@@ -9,16 +9,16 @@ import { DataAdd } from "../../models/dataadd.model.js";
 
 const getOneMonthsDataUser = asyncHandler(async (req, res) => {
   try {
-    const { userId, paramName, businessId, departmentId } = req.params;
+    const { userId, paramName, businessId } = req.params;
 
-    if (!userId || !paramName || !businessId || !departmentId) {
+    if (!userId || !paramName || !businessId) {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "Please provide userId, paramName, businessId and departmentId in params"
+            "Please provide userId, paramName, businessId in params"
           )
         );
     }
@@ -45,7 +45,6 @@ const getOneMonthsDataUser = asyncHandler(async (req, res) => {
     const businessusers = await Businessusers.findOne({
       businessId: businessId,
       userId: loggedInUserId,
-      departmentId: departmentId,
     });
 
     if (!businessusers) {
@@ -80,7 +79,6 @@ const getOneMonthsDataUser = asyncHandler(async (req, res) => {
     const businessUser = await Businessusers.findOne({
       businessId: businessId,
       userId: userId,
-      departmentId: departmentId,
     });
 
     if (!businessUser) {
@@ -113,7 +111,6 @@ const getOneMonthsDataUser = asyncHandler(async (req, res) => {
       userId: userId,
       paramName: paramName,
       monthIndex: { $in: lastOneMonths },
-      departmentId: departmentId,
     });
 
     const dataIds = await DataAdd.find(
@@ -121,7 +118,6 @@ const getOneMonthsDataUser = asyncHandler(async (req, res) => {
         businessId: businessId,
         parameterName: paramName,
         userId: userId,
-        departmentId: departmentId,
       },
       { _id: 1 }
     );
@@ -169,16 +165,16 @@ const getOneMonthsDataUser = asyncHandler(async (req, res) => {
 
 const getThreeMonthsDataUser = asyncHandler(async (req, res) => {
   try {
-    const { userId, paramName, businessId, departmentId } = req.params;
+    const { userId, paramName, businessId } = req.params;
 
-    if (!userId || !paramName || !businessId || !departmentId) {
+    if (!userId || !paramName || !businessId) {
       return res
         .status(400)
         .json(
           new ApiResponse(
             400,
             {},
-            "Please provide targetId and userId in params"
+            "Please provide userId, paramName and businessId in params"
           )
         );
     }
@@ -205,7 +201,6 @@ const getThreeMonthsDataUser = asyncHandler(async (req, res) => {
     const businessusers = await Businessusers.findOne({
       businessId: businessId,
       userId: loggedInUserId,
-      departmentId: departmentId,
     });
 
     if (!businessusers) {
@@ -240,7 +235,6 @@ const getThreeMonthsDataUser = asyncHandler(async (req, res) => {
     const businessUser = await Businessusers.findOne({
       businessId: businessId,
       userId: userId,
-      departmentId: departmentId,
     });
 
     if (!businessUser) {
@@ -273,7 +267,6 @@ const getThreeMonthsDataUser = asyncHandler(async (req, res) => {
       userId: userId,
       paramName: paramName,
       monthIndex: { $in: lastThreeMonths },
-      departmentId: departmentId,
     });
 
     const dataIds = await DataAdd.find(
@@ -281,7 +274,6 @@ const getThreeMonthsDataUser = asyncHandler(async (req, res) => {
         businessId: businessId,
         parameterName: paramName,
         userId: userId,
-        departmentId: departmentId,
       },
       { _id: 1 }
     );

@@ -16,12 +16,10 @@ import { getTargetNotAssignUsers } from "../controllers/target/gettargetassignno
 // router to verify that jwt token is still valid
 router.use(verifyJWT);
 // router to create target
-router.route("/add-target/:businessId/:departmentId").post(createTarget);
+router.route("/add-target/:businessId").post(createTarget);
 
 // router to get parameters and target values
-router
-  .route("/get-target-values/:businessId/:departmentId")
-  .get(getTargetValues);
+router.route("/get-target-values/:businessId").get(getTargetValues);
 
 // add user to existing target
 router
@@ -43,9 +41,7 @@ router
   .put(updateUserTargetComment);
 
 router
-  .route(
-    "/get-not-target-assigned-users/:businessId/:paramName/:monthIndex/:departmentId"
-  )
+  .route("/get-not-target-assigned-users/:businessId/:paramName/:monthIndex")
   .get(getTargetNotAssignUsers);
 
 export default router;

@@ -49,7 +49,6 @@ const addUserToParam = asyncHandler(async (req, res) => {
     const businessUsers = await Businessusers.findOne({
       userId: userId,
       businessId: param.businessId,
-      departmentId: param.departmentId,
     });
 
     if (!businessUsers || businessUsers.role === "User") {
@@ -79,7 +78,6 @@ const addUserToParam = asyncHandler(async (req, res) => {
       const businessUser = await Businessusers.findOne({
         userId: user._id,
         businessId: param.businessId,
-        departmentId: param.departmentId,
       });
 
       if (!businessUser) {

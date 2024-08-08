@@ -1,4 +1,3 @@
-import { Businessusers } from "../../models/businessUsers.model.js";
 import { Target } from "../../models/target.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { Params } from "../../models/params.model.js";
@@ -6,8 +5,8 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 
 export const getTargetNotAssignUsers = asyncHandler(async (req, res) => {
   try {
-    const { businessId, paramName, monthIndex, departmentId } = req.params;
-    if (!businessId || !paramName || !monthIndex || !departmentId) {
+    const { businessId, paramName, monthIndex } = req.params;
+    if (!businessId || !paramName || !monthIndex) {
       return res
         .status(400)
         .json(
@@ -22,7 +21,6 @@ export const getTargetNotAssignUsers = asyncHandler(async (req, res) => {
     const paramUsers = await Params.findOne({
       name: paramName,
       businessId: businessId,
-      departmentId: departmentId,
     });
 
     const userList = paramUsers.usersAssigned.map((user) => ({
@@ -36,7 +34,6 @@ export const getTargetNotAssignUsers = asyncHandler(async (req, res) => {
       businessId: businessId,
       monthIndex: monthIndex,
       paramName: paramName,
-      departmentId: departmentId,
     });
 
     const targetUsersList = targetUsers.map((target) => ({

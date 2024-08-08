@@ -4,11 +4,10 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import mongoose from "mongoose";
 import { TypeBParams } from "../../models/typeBparams.model.js";
-import { Department } from "../../models/department.model.js";
 
 export const createTypeBParams = asyncHandler(async (req, res) => {
   try {
-    const { businessId, departmentId } = req.params;
+    const { businessId } = req.params;
     if (!businessId || !mongoose.Types.ObjectId.isValid(businessId)) {
       return res
         .status(400)
@@ -21,13 +20,6 @@ export const createTypeBParams = asyncHandler(async (req, res) => {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Business not found"));
-    }
-
-    const department = await Department.findById(departmentId);
-    if (!department) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Department not found"));
     }
 
     const userId = req.user._id;
@@ -48,7 +40,6 @@ export const createTypeBParams = asyncHandler(async (req, res) => {
     const businessuser = await Businessusers.findOne({
       businessId: businessId,
       userId: userId,
-      departmentId: departmentId,
     });
 
     if (!businessuser || businessuser.role === "User") {
@@ -82,7 +73,6 @@ export const createTypeBParams = asyncHandler(async (req, res) => {
       businessId: businessId,
       paramName1: paramName1,
       paramName2: paramName2,
-      departmentId: departmentId,
     });
 
     if (existingTypeBParam) {
@@ -96,7 +86,6 @@ export const createTypeBParams = asyncHandler(async (req, res) => {
       paramName2: paramName2,
       businessId: businessId,
       benchMark: benchMarkArray,
-      departmentId: departmentId,
     });
 
     await typeBParam.save();

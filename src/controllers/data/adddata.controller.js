@@ -4,23 +4,18 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import { Params } from "../../models/params.model.js";
 import { Target } from "../../models/target.model.js";
 import { DataAdd } from "../../models/dataadd.model.js";
-import mongoose from "mongoose";
 import { User } from "../../models/user.model.js";
 import { Activites } from "../../models/activities.model.js";
 import moment from "moment-timezone";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { getParentIdsList } from "../../utils/helpers/getparentIds.js";
-import {
-  activityNotificationEvent,
-  emitNewNotificationEvent,
-} from "../../sockets/notification_socket.js";
+import { activityNotificationEvent } from "../../sockets/notification_socket.js";
 import {
   convertToIST,
   getCurrentIndianTime,
 } from "../../utils/helpers/time.helper.js";
 import { formatDateNew } from "../../utils/helpers.js";
 moment.tz.setDefault("Asia/Kolkata");
-import { Department } from "../../models/department.model.js";
 
 const AddData = asyncHandler(async (req, res) => {
   try {
@@ -277,18 +272,12 @@ const AddData = asyncHandler(async (req, res) => {
 const AddDataTest = asyncHandler(async (req, res) => {
   try {
     const { userData, date } = req.body;
-    const { businessId, departmentId } = req.params;
+    const { businessId } = req.params;
 
-    if (!businessId || !departmentId) {
+    if (!businessId) {
       return res
         .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            {},
-            "Please provide businessId and department Id in params"
-          )
-        );
+        .json(new ApiResponse(400, {}, "Please provide businessId in params"));
     }
 
     const userId = req.user._id;
@@ -305,13 +294,6 @@ const AddDataTest = asyncHandler(async (req, res) => {
         .json(
           new ApiResponse(404, {}, "User not found or name of user not exist")
         );
-    }
-
-    const department = await Department.findById(departmentId);
-    if (!department) {
-      return res
-        .status(404)
-        .json(new ApiResponse(404, {}, "Department not found"));
     }
 
     if (!businessId) {
@@ -337,7 +319,6 @@ const AddDataTest = asyncHandler(async (req, res) => {
       const paramDetails = await Params.findOne({
         name: paramName,
         businessId,
-        departmentId: departmentId,
       });
       if (!paramDetails) {
         return res
@@ -390,7 +371,6 @@ const AddDataTest = asyncHandler(async (req, res) => {
         businessId,
         userId: userId,
         monthIndex: ongoingMonth,
-        departmentId: departmentId,
       });
       if (!target) {
         return res
@@ -406,7 +386,6 @@ const AddDataTest = asyncHandler(async (req, res) => {
         parameterName: paramName,
         userId,
         businessId,
-        departmentId: departmentId,
         $expr: {
           $and: [
             { $eq: [{ $month: "$createdDate" }, currentMonth + 1] },
@@ -461,7 +440,6 @@ const AddDataTest = asyncHandler(async (req, res) => {
           parameterName: paramName,
           data: [{ todaysdata, comment, createdDate: currentDate }],
           userId,
-          departmentId: departmentId,
           addedBy: user.name,
           monthIndex: currentMonth + 1,
           businessId,

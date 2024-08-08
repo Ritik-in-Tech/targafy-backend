@@ -3,6 +3,7 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { TypeBParams } from "../../models/typeBparams.model.js";
 import { Department } from "../../models/department.model.js";
+import { Businessusers } from "../../models/businessUsers.model.js";
 
 export const getTypeBParams = asyncHandler(async (req, res) => {
   try {
@@ -47,16 +48,12 @@ export const getTypeBParams = asyncHandler(async (req, res) => {
 
 export const getTypeBNewParams = asyncHandler(async (req, res) => {
   try {
-    const { businessId, departmentId } = req.params;
-    if (!businessId || !departmentId) {
+    const { businessId } = req.params;
+    if (!businessId) {
       return res
         .status(400)
         .json(
-          new ApiResponse(
-            400,
-            {},
-            "BusinessId or departmentId is not provided in the params"
-          )
+          new ApiResponse(400, {}, "BusinessId is not provided in the params")
         );
     }
 
@@ -67,16 +64,25 @@ export const getTypeBNewParams = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Business not found"));
     }
 
-    const department = await Department.findById(departmentId);
-    if (!department) {
+    const businessuser = await Businessusers.findOne({
+      businessId: businessId,
+      userId: req.user._id,
+    });
+
+    if (!businessuser) {
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "Department not found"));
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "The logged in user is not associated with the business. Please switch business"
+          )
+        );
     }
 
     const typeBParams = await TypeBParams.find({
       businessId: businessId,
-      departmentId: departmentId,
     });
 
     if (!typeBParams) {
@@ -86,7 +92,7 @@ export const getTypeBNewParams = asyncHandler(async (req, res) => {
           new ApiResponse(
             400,
             {},
-            "There is not any type B param in this business with the given department Id"
+            "There is not any type B param in this businesss"
           )
         );
     }
