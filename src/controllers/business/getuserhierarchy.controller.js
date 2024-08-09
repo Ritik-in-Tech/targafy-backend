@@ -225,6 +225,8 @@ const getSubUserHierarchyDataNew = catchAsync(async (req, res, next) => {
       { userId: 1, subordinates: 1, name: 1, role: 1, allSubordinates: 1 }
     );
 
+    // console.log(specificUser);
+
     if (!specificUser) {
       return res
         .status(400)
@@ -236,23 +238,38 @@ const getSubUserHierarchyDataNew = catchAsync(async (req, res, next) => {
 
     // Function to recursively get subordinates
     const getSubordinates = async (user) => {
+      let validSubordinatesCount = 0;
+
+      // Check if the user has valid subordinates
+      for (let subId of user.subordinates) {
+        const validSubordinate = await Businessusers.findOne(
+          {
+            businessId: businessId,
+            departmentId: { $elemMatch: { $eq: departmentId } },
+            paramId: { $elemMatch: { $eq: paramId } },
+            userId: subId,
+            userType: "Insider",
+          },
+          { userId: 1 }
+        );
+
+        if (validSubordinate) {
+          validSubordinatesCount++;
+        }
+      }
+
       let nodeItem = {
         id: user.userId.toString(),
         label: {
           name: user.name,
           userId: user.userId.toString(),
           role: user.role,
-          allSubordinatesCount: user.allSubordinates
-            ? user.allSubordinates.length
-            : 0,
+          allSubordinatesCount: validSubordinatesCount,
         },
       };
       nodes.push(nodeItem);
 
       for (let subId of user.subordinates) {
-        let edgeItem = { from: user.userId.toString(), to: subId.toString() };
-        edges.push(edgeItem);
-
         const subordinate = await Businessusers.findOne(
           {
             businessId: businessId,
@@ -265,6 +282,8 @@ const getSubUserHierarchyDataNew = catchAsync(async (req, res, next) => {
         );
 
         if (subordinate) {
+          let edgeItem = { from: user.userId.toString(), to: subId.toString() };
+          edges.push(edgeItem);
           await getSubordinates(subordinate);
         }
       }

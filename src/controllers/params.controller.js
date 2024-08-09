@@ -325,8 +325,7 @@ const getAssignUsers = asyncHandler(async (req, res) => {
         );
     }
 
-    const paramName = req.params.paramName;
-    const businessId = req.params.businessId;
+    const { paramName, businessId } = req.params;
 
     if (!paramName || !businessId) {
       return res
