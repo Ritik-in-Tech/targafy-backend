@@ -23,6 +23,12 @@ export const createParam = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Please provide all required fields"));
     }
+
+    if (!Array.isArray(departmentIds)) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Department Ids must be in array"));
+    }
     const userId = req.user._id;
 
     const { businessId } = req.params;
