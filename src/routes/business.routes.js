@@ -77,20 +77,18 @@ router
 router.route("/user/:businessId/:userId").get(getUserProfileInBusiness); // done
 
 // you can admin or miniadmin can promote user to miniadmin or viceversa
-router.route("/promotion/:businessId/:departmentId").patch(promoteUser); // done
+router.route("/promotion/:businessId").patch(promoteUser); // done
 
 // router to demote user from mini admin to user
-router.route("/demote/:businessId/:departmentId").patch(demoteUser);
+router.route("/demote/:businessId").patch(demoteUser);
 
 // only admin can promote user or mini admin to admin
 router
-  .route("/promote/admin/:businessId/:userIdToPromote/:departmentId")
+  .route("/promote/admin/:businessId/:userIdToPromote")
   .patch(promoteToAdmin); // done
 
 // router to change user manager
-router
-  .route("/change-manager/:businessId/:userId/:departmentId")
-  .patch(changeManager);
+router.route("/change-manager/:businessId/:userId").patch(changeManager);
 
 // rate business user
 router.route("/rate/user/:businessId/:userId").post(rateUserInBusiness); // done

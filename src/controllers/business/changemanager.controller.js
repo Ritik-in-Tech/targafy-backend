@@ -5,7 +5,7 @@ import { Businessusers } from "../../models/businessUsers.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 
 export const changeManager = asyncHandler(async (req, res, next) => {
-  const { userId, businessId, departmentId } = req.params;
+  const { userId, businessId } = req.params;
   const { newParentId } = req.query;
 
   /*
@@ -32,13 +32,11 @@ export const changeManager = asyncHandler(async (req, res, next) => {
       businessId,
       userId,
       userType: "Insider",
-      departmentId: departmentId,
     });
     const newParentUser = await Businessusers.findOne({
       businessId,
       userId: newParentId,
       userType: "Insider",
-      departmentId: departmentId,
     });
     console.log("This is user ", user);
     console.log("This is parent ", newParentUser);
@@ -78,7 +76,6 @@ export const changeManager = asyncHandler(async (req, res, next) => {
         (await Businessusers.find(
           {
             businessId,
-            departmentId: departmentId,
             allSubordinates: {
               $elemMatch: { $eq: new mongoose.Types.ObjectId(userId) },
             },
@@ -94,7 +91,6 @@ export const changeManager = asyncHandler(async (req, res, next) => {
       await Businessusers.updateMany(
         {
           businessId: businessId,
-          departmentId: departmentId,
           userId: { $in: _userIds },
         },
         {
@@ -112,7 +108,6 @@ export const changeManager = asyncHandler(async (req, res, next) => {
         (await Businessusers.find(
           {
             businessId,
-            departmentId: departmentId,
             allSubordinates: {
               $elemMatch: { $eq: new mongoose.Types.ObjectId(newParentId) },
             },
@@ -130,7 +125,6 @@ export const changeManager = asyncHandler(async (req, res, next) => {
       await Businessusers.updateMany(
         {
           businessId: businessId,
-          departmentId: departmentId,
           userId: { $in: userIds },
         },
         {
@@ -144,7 +138,6 @@ export const changeManager = asyncHandler(async (req, res, next) => {
       await Businessusers.updateOne(
         {
           businessId: businessId,
-          departmentId: departmentId,
           userId: new mongoose.Types.ObjectId(newParentId),
         },
         {
@@ -158,7 +151,6 @@ export const changeManager = asyncHandler(async (req, res, next) => {
       await Businessusers.updateOne(
         {
           businessId: businessId,
-          departmentId: departmentId,
           userId: new mongoose.Types.ObjectId(userId),
         },
         {
