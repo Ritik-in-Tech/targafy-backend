@@ -7,6 +7,7 @@ import { Businessusers } from "../../models/businessUsers.model.js";
 import { getCurrentIndianTime } from "../../utils/helpers/time.helper.js";
 import { activityNotificationEvent } from "../../sockets/notification_socket.js";
 import { Activites } from "../../models/activities.model.js";
+import { convertToMongoIds } from "../../utils/helpers.js";
 
 const addUserToParam = asyncHandler(async (req, res) => {
   try {
@@ -63,8 +64,20 @@ const addUserToParam = asyncHandler(async (req, res) => {
         );
     }
 
+    const departmentIds = Array.isArray(param.departmentId)
+      ? param.departmentId
+      : [param.departmentId];
+
+    const paramIds = Array.isArray(paramId)
+      ? convertToMongoIds(paramId)
+      : [convertToMongoIds(paramId)];
+
+    console.log(departmentIds);
+    console.log(paramIds);
+
     const validUsers = [];
     const validUserId = [];
+
     for (const userId of userIds) {
       const user = await User.findById(userId);
       if (!user) {
@@ -79,6 +92,8 @@ const addUserToParam = asyncHandler(async (req, res) => {
         userId: user._id,
         businessId: param.businessId,
       });
+
+      console.log(businessUser);
 
       if (!businessUser) {
         return res
@@ -103,8 +118,14 @@ const addUserToParam = asyncHandler(async (req, res) => {
             )
           );
       }
+
       validUserId.push(userId);
       validUsers.push({ userId: user._id, name: user.name });
+
+      businessUser.departmentId.push(...departmentIds);
+      businessUser.paramId.push(...paramIds);
+
+      await businessUser.save();
     }
 
     // Add valid users to the parameter's usersAssigned array
