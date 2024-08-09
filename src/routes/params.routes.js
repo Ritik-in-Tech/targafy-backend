@@ -32,9 +32,7 @@ router.route("/add/:businessId").post(createParam);
 router.route("/all/:businessId").get(getAllParams);
 
 // router to get params and assigned users for that params in a particular business
-router
-  .route("/get/assigned-parameter/:businessId/:departmentId")
-  .get(getAssignedParams);
+router.route("/get/assigned-parameter/:businessId").get(getAssignedParams);
 
 // router to get assign users for the specific parameter and business id
 router.route("/get-assign-user/:paramName").get(getAssignUsers);

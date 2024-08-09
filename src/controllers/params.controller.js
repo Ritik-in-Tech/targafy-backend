@@ -261,14 +261,12 @@ const getAllParams = asyncHandler(async (req, res) => {
 // get params and the number of assigned users to specifc business
 const getAssignedParams = asyncHandler(async (req, res) => {
   try {
-    const { businessId, departmentId } = req.params;
+    const { businessId } = req.params;
 
-    if (!businessId || !departmentId) {
+    if (!businessId) {
       return res
         .status(400)
-        .json(
-          new ApiResponse(400, {}, "BusinessId or department Id not provided")
-        );
+        .json(new ApiResponse(400, {}, "BusinessId Id is not provided"));
     }
     const business = await Business.findById(businessId);
 
@@ -278,17 +276,9 @@ const getAssignedParams = asyncHandler(async (req, res) => {
         .json(new ApiResponse(404, {}, "Business not found"));
     }
 
-    const department = await Department.findById(departmentId);
-    if (!department) {
-      return res
-        .status(404)
-        .json(new ApiResponse(404, {}, "Department not found"));
-    }
-
     // Retrieve the Params documents associated with the business
     const paramsDetails = await Params.find({
       businessId: business._id,
-      departmentId: departmentId,
     });
 
     // Construct the response
