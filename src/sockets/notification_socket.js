@@ -236,7 +236,7 @@ export async function activityNotificationEvent(userId, eventData) {
     }
 
     const businessId = eventData.businessId;
-    console.log(businessId);
+    // console.log(businessId);
 
     await Businessusers.updateOne(
       { userId: userId, businessId: businessId },

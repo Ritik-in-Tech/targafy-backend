@@ -4,7 +4,6 @@ import notificationModel from "../../models/notification.model.js";
 import { User } from "../../models/user.model.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
-import moment from "moment-timezone";
 
 export const getSubordinateUserNotification = asyncHandler(async (req, res) => {
   const businessId = req.params.businessId;
