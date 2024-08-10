@@ -34,7 +34,14 @@ export const aggregateOverallDailyStats = async () => {
       },
     ]);
 
-    registeredUsers = registeredUsers[0].uniqueCount;
+    // console.log(registeredUsers);
+
+    if (registeredUsers.length !== 0) {
+      registeredUsers = registeredUsers[0].uniqueCount;
+    } else {
+      registeredUsers = 0;
+    }
+
     // console.log(registeredUsers);
 
     let activeUsers = await Businessusers.aggregate([
@@ -53,7 +60,12 @@ export const aggregateOverallDailyStats = async () => {
       },
     ]);
 
-    activeUsers = activeUsers[0].uniqueCount;
+    if (activeUsers.length !== 0) {
+      activeUsers = activeUsers[0].uniqueCount;
+    } else {
+      activeUsers = 0;
+    }
+
     // console.log(activeUsers);
     const feedbackGiven = await Usersratings.countDocuments({
       createdDate: { $gte: previousDayStart, $lt: previousDayEnd },
