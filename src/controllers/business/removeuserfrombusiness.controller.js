@@ -1,16 +1,13 @@
 import mongoose from "mongoose";
 const { startSession } = mongoose;
-
 import { User } from "../../models/user.model.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 import { Acceptedrequests } from "../../models/acceptedRequests.model.js";
-
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { Params } from "../../models/params.model.js";
 import { Target } from "../../models/target.model.js";
-import { Business } from "../../models/business.model.js";
-import { AddData } from "../../controllers/data/adddata.controller.js";
+import { DataAdd } from "../../models/dataadd.model.js";
 
 const removeUserFromBusiness = asyncHandler(async (req, res, next) => {
   const userToRemoveId = req.params?.userToRemoveId;
@@ -136,57 +133,39 @@ const removeUserFromBusiness = asyncHandler(async (req, res, next) => {
       { session }
     );
 
-    // Remove the user from any target they are assigned to
-    const targets = await Target.find({
-      businessId: businessId,
-      "usersAssigned.userId": userToRemoveId,
-    }).session(session);
-
-    await Target.updateMany(
-      { businessId: businessId },
+    await Target.deleteMany(
       {
-        $pull: {
-          usersAssigned: { userId: userToRemoveId },
-        },
+        businessId: businessId,
+        userId: userToRemoveId,
       },
       { session }
     );
 
-    // Update targetValue in the business table
-    for (const target of targets) {
-      const updatedTarget = await Target.findById(target._id).session(session);
-      const updatedTargetValue =
-        parseFloat(target.targetValue) * updatedTarget.usersAssigned.length;
-
-      await Business.updateMany(
-        { _id: businessId, "targets.targetId": target._id },
-        {
-          $set: { "targets.$.targetValue": updatedTargetValue },
-        },
-        { session }
-      );
-    }
-
     // Remove user data from AddData table
-    await AddData.deleteMany(
+
+    const dataAddIds = await DataAdd.find(
+      {
+        businessId: businessId,
+        userId: userToRemoveId,
+      },
+      { session }
+    )
+      .select("_id")
+      .lean(); // Using lean() to get a plain JavaScript object
+
+    const dataIdsToRemove = dataAddIds.map((data) => data._id);
+
+    await DataAdd.deleteMany(
       { businessId: businessId, userId: userToRemoveId },
       { session }
     );
 
-    // Remove user data from User table
-    const userDocument = await User.findById(userToRemoveId).session(session);
-    if (userDocument) {
-      userDocument.data = userDocument.data.filter(
-        (dataEntry) => String(dataEntry.businessId) !== businessId
-      );
-      await userDocument.save({ session });
-    }
-
-    await User.updateOne(
+    await User.updateMany(
       { _id: userToRemoveId },
       {
         $pull: {
-          businesses: { businessId },
+          data: { dataId: { $in: dataIdsToRemove } },
+          businesses: { businessId: businessId },
         },
       },
       { session }
@@ -217,7 +196,7 @@ const removeUserFromBusiness = asyncHandler(async (req, res, next) => {
     session.endSession();
     return res
       .status(500)
-      .json(new ApiResponse(500, {}, "Internal Server Error"));
+      .json(new ApiResponse(500, { error }, "Internal Server Error"));
   }
 });
 
