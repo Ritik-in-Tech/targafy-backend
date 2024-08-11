@@ -8,6 +8,8 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import { Params } from "../../models/params.model.js";
 import { Target } from "../../models/target.model.js";
 import { DataAdd } from "../../models/dataadd.model.js";
+import notificationModel from "../../models/notification.model.js";
+import { Activites } from "../../models/activities.model.js";
 
 const removeUserFromBusiness = asyncHandler(async (req, res, next) => {
   const userToRemoveId = req.params?.userToRemoveId;
@@ -143,13 +145,10 @@ const removeUserFromBusiness = asyncHandler(async (req, res, next) => {
 
     // Remove user data from AddData table
 
-    const dataAddIds = await DataAdd.find(
-      {
-        businessId: businessId,
-        userId: userToRemoveId,
-      },
-      { session }
-    )
+    const dataAddIds = await DataAdd.find({
+      businessId: businessId,
+      userId: userToRemoveId,
+    })
       .select("_id")
       .lean(); // Using lean() to get a plain JavaScript object
 
@@ -158,6 +157,24 @@ const removeUserFromBusiness = asyncHandler(async (req, res, next) => {
     await DataAdd.deleteMany(
       { businessId: businessId, userId: userToRemoveId },
       { session }
+    );
+
+    await notificationModel.deleteMany(
+      {
+        businessId: businessId,
+        userId: userToRemoveId,
+      },
+      { session }
+    );
+
+    await Activites.deleteMany(
+      {
+        businessId: businessId,
+        userId: userToRemoveId,
+      },
+      {
+        session,
+      }
     );
 
     await User.updateMany(
