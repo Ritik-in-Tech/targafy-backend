@@ -165,7 +165,7 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         role,
         userId,
         businessId,
-        parentId,
+        parentId: parentId,
         departmentId: departmentId,
         paramId: validParamId,
         name: userName,
