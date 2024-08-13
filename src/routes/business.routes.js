@@ -23,7 +23,10 @@ import {
   demoteUser,
   promoteUser,
 } from "../controllers/business/promoteUserInBusiness.controller.js";
-import { promoteToAdmin } from "../controllers/business/promoteUserToAdmin.controller.js";
+import {
+  demoteAdminToUser,
+  promoteUserToAdmin,
+} from "../controllers/business/promoteUserToAdmin.controller.js";
 import getBusinessRequests from "../controllers/business/getBusinessRequests.controller.js";
 import { getBusinessAcceptedRequests } from "../controllers/business/getBusinessAcceptedRequests.controller.js";
 import { getBusinessDeclinedRequests } from "../controllers/business/getBusinessDeclinedRequests.controller.js";
@@ -85,7 +88,11 @@ router.route("/demote/:businessId").patch(demoteUser);
 // only admin can promote user or mini admin to admin
 router
   .route("/promote/admin/:businessId/:userIdToPromote")
-  .patch(promoteToAdmin); // done
+  .patch(promoteUserToAdmin); // done
+
+router
+  .route("/demote/admin/:businessId/:adminIdToDemote")
+  .patch(demoteAdminToUser);
 
 // router to change user manager
 router.route("/change-manager/:businessId/:userId").patch(changeManager);

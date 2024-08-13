@@ -308,6 +308,18 @@ function getMonthName(monthIndex) {
   return date.toLocaleString("default", { month: "long" });
 }
 
+export async function generateUniqueObjectId(model) {
+  let objectId;
+  while (true) {
+    objectId = new mongoose.Types.ObjectId();
+    const exists = await model.exists({ _id: objectId });
+    if (!exists) {
+      break;
+    }
+  }
+  return objectId;
+}
+
 export {
   convertToMongoIds,
   convertToStringIds,

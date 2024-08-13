@@ -66,6 +66,18 @@ const promoteUser = asyncHandler(async (req, res, next) => {
         );
     }
 
+    if (userToPromote.role === "Admin") {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            {},
+            "User is in the highest position you can't promote any more"
+          )
+        );
+    }
+
     const result = await Businessusers.updateOne(
       {
         businessId: new mongoose.Types.ObjectId(businessId),

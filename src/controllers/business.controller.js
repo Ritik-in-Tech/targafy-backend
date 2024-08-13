@@ -8,6 +8,7 @@ import { Businessusers } from "../models/businessUsers.model.js";
 import { startSession } from "mongoose";
 import { emitCreateBusinessNotification } from "../sockets/notification_socket.js";
 import { getCurrentIndianTime } from "../utils/helpers/time.helper.js";
+import { generateUniqueObjectId } from "../utils/helpers.js";
 
 const createBusiness = asyncHandler(async (req, res) => {
   const session = await startSession();
@@ -19,9 +20,6 @@ const createBusiness = asyncHandler(async (req, res) => {
     const adminId = req.user._id;
     const adminName = req.user.name;
     const adminContactNumber = req.user.contactNumber;
-    // console.log(adminId);
-    // console.log(adminContactNumber);
-    // console.log(adminName);
 
     if (!adminContactNumber) {
       return res
@@ -34,12 +32,6 @@ const createBusiness = asyncHandler(async (req, res) => {
         .status(400)
         .json(new ApiResponse(400, {}, "Fill name and admin of business!!"));
     }
-
-    // if (!email) {
-    //   return res
-    //     .status(400)
-    //     .json(new ApiResponse(400, {}, "Email is required!"));
-    // }
 
     const existingCodes = new Set(await Business.distinct("businessCode"));
 
@@ -73,9 +65,41 @@ const createBusiness = asyncHandler(async (req, res) => {
       groupsJoined: [],
     };
 
+    const dummyAdminId = await generateUniqueObjectId(User);
+
+    const dummyAdminInfo = {
+      userId: dummyAdminId,
+      businessId: business[0]._id,
+      role: "DummyAdmin",
+      name: "DummyAdmin",
+      userType: "Insider",
+      parentId: adminId,
+      subordinates: [],
+      allSubordinates: [],
+      departmentId: [],
+      paramId: [],
+      groupsJoined: [],
+    };
+
     const createdBusinessUser = await Businessusers.create([adminInfo], {
       session: session,
     });
+
+    const createDummyBusinessUser = await Businessusers.create(
+      [dummyAdminInfo],
+      { session }
+    );
+
+    await Businessusers.findByIdAndUpdate(
+      createdBusinessUser[0]._id,
+      {
+        $push: {
+          subordinates: dummyAdminId,
+          allSubordinates: dummyAdminId,
+        },
+      },
+      { session: session }
+    );
 
     await Businessusers.findByIdAndUpdate(
       createdBusinessUser[0]._id,

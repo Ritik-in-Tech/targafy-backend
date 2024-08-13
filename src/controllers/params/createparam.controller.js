@@ -65,6 +65,19 @@ export const createParam = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, {}, "Only Admin can create the params"));
     }
 
+    const dummyBusinessUser = await Businessusers.findOne({
+      businessId: businessId,
+      role: "DummyAdmin",
+    }).session(session);
+
+    if (!dummyBusinessUser) {
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Dummy admin user not found"));
+    }
+
     const validDepartmentIds = [];
     for (const departmentId of departmentIds) {
       const department = await Department.findById(departmentId);
@@ -118,6 +131,9 @@ export const createParam = asyncHandler(async (req, res) => {
     businessUsers.paramId.push(param._id);
 
     await businessUsers.save({ session });
+
+    dummyBusinessUser.paramId.push(param._id);
+    await dummyBusinessUser.save({ session });
 
     for (const departmentId of validDepartmentIds) {
       const department = await Department.findById(departmentId);

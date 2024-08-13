@@ -4,7 +4,7 @@ import { ApiResponse } from "../../utils/ApiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { Businessusers } from "../../models/businessUsers.model.js";
 
-const promoteToAdmin = asyncHandler(async (req, res, next) => {
+export const promoteUserToAdmin = asyncHandler(async (req, res, next) => {
   const session = await startSession();
   session.startTransaction();
 
@@ -23,7 +23,7 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
           new ApiResponse(
             401,
             {},
-            "Provide  userIdToPromote, and businessId in params"
+            "Provide userIdToPromote and businessId in params"
           )
         );
     }
@@ -41,21 +41,15 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
           new ApiResponse(
             400,
             {},
-            "User not found or user not associated with business!!"
+            "User not found or user not associated with business!"
           )
         );
     }
 
-    if (user.role != "Admin") {
+    if (user.role !== "Admin") {
       return res
         .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            {},
-            "You do not have permission to perform this task!!"
-          )
-        );
+        .json(new ApiResponse(400, {}, "Only admins can perform this task"));
     }
 
     const userToPromote = await Businessusers.findOne({
@@ -70,62 +64,76 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(400, {}, "User to promote not found"));
     }
 
-    if (userToPromote.role == "Admin") {
+    if (userToPromote.role === "Admin") {
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "User is already admin"));
+        .json(new ApiResponse(400, {}, "User is already an admin"));
     }
 
     const subordinates = userToPromote.subordinates || [];
-    // const issueIdsToUpdate = userToPromote.assignedToMeIssues || [];
 
-    // Update parent user of the user's subordinates
+    // Find the dummy admin
+    const dummyAdmin = await Businessusers.findOne({
+      businessId: new mongoose.Types.ObjectId(businessId),
+      role: "DummyAdmin",
+      userType: "Insider",
+    });
+
+    if (!dummyAdmin) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "DummyAdmin not found"));
+    }
+
+    // Update parent ID of the subordinates to the dummy admin
     await Businessusers.updateMany(
       {
-        businessId: businessId,
+        businessId: new mongoose.Types.ObjectId(businessId),
         userId: { $in: subordinates },
       },
       {
         $set: {
-          parentId: userToPromote.parentId,
+          parentId: dummyAdmin.userId,
         },
       },
       { session }
     );
 
-    // add subordinates in parent user
+    // Update dummy admin's subordinates and allSubordinates with the promoted user's subordinates
     await Businessusers.updateOne(
       {
-        businessId: businessId,
-        userId: userToPromote.parentId,
+        businessId: new mongoose.Types.ObjectId(businessId),
+        userId: dummyAdmin.userId,
       },
       {
-        $push: {
+        $addToSet: {
           subordinates: { $each: subordinates },
         },
       },
-      { session: session }
+      { session }
     );
 
-    // Remove user from subordinates list of the parent user
+    // Remove the promoted user from subordinates and allSubordinates lists
     await Businessusers.updateMany(
-      { businessId: businessId },
+      {
+        businessId: new mongoose.Types.ObjectId(businessId),
+      },
       {
         $pull: {
           subordinates: userIdToPromote,
           allSubordinates: userIdToPromote,
         },
       },
-      { session: session }
+      { session }
     );
 
-    const filteredSubordinates = user.subordinates.filter(
-      (id) => !id.equals(userIdToPromote)
-    );
-    const filteredAllSubordinates = user.allSubordinates.filter(
-      (id) => !id.equals(userIdToPromote)
-    );
+    // Fetch the subordinates and allSubordinates from any existing admin
+    const existingAdmin = await Businessusers.findOne({
+      businessId: new mongoose.Types.ObjectId(businessId),
+      role: "Admin",
+    });
 
+    // Promote the user and update subordinates/allSubordinates fields
     await Businessusers.updateOne(
       {
         businessId: new mongoose.Types.ObjectId(businessId),
@@ -135,14 +143,14 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
       {
         $set: {
           role: "Admin",
-          subordinates: filteredSubordinates,
-          allSubordinates: filteredAllSubordinates,
-        },
-        $unset: {
-          "users.$.parentId": "",
+          parentId: null,
+          subordinates: existingAdmin.subordinates,
+          allSubordinates: existingAdmin.allSubordinates.filter(
+            (id) => !id.equals(userIdToPromote)
+          ),
         },
       },
-      { session: session }
+      { session }
     );
 
     await session.commitTransaction();
@@ -154,7 +162,7 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
         new ApiResponse(200, {}, "User role updated to Admin successfully")
       );
   } catch (error) {
-    console.log(error);
+    console.error(error);
     await session.abortTransaction();
     session.endSession();
     return res
@@ -163,4 +171,132 @@ const promoteToAdmin = asyncHandler(async (req, res, next) => {
   }
 });
 
-export { promoteToAdmin };
+export const demoteAdminToUser = asyncHandler(async (req, res, next) => {
+  const session = await startSession();
+  session.startTransaction();
+
+  try {
+    const { businessId, adminIdToDemote } = req.params;
+    const userId = req?.user?._id;
+    if (!userId) {
+      return res.status(401).json(new ApiResponse(401, {}, "Invalid Token"));
+    }
+
+    // console.log(userId);
+
+    if (!adminIdToDemote || !businessId) {
+      return res
+        .status(401)
+        .json(
+          new ApiResponse(
+            401,
+            {},
+            "Provide adminIdToDemote and businessId in params"
+          )
+        );
+    }
+
+    const admin = await Businessusers.findOne({
+      businessId: new mongoose.Types.ObjectId(businessId),
+      userId: userId,
+      userType: "Insider",
+    });
+
+    // console.log(admin);
+
+    if (!admin || admin.role !== "Admin") {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Only admins can perform this task"));
+    }
+
+    const adminToDemote = await Businessusers.findOne({
+      businessId: new mongoose.Types.ObjectId(businessId),
+      userId: adminIdToDemote,
+      role: "Admin",
+      userType: "Insider",
+    });
+
+    if (!adminToDemote) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Admin to demote not found"));
+    }
+
+    // Find the dummy admin who will be the new parent
+    const dummyAdmin = await Businessusers.findOne({
+      businessId: new mongoose.Types.ObjectId(businessId),
+      role: "DummyAdmin",
+      userType: "Insider",
+    });
+
+    if (!dummyAdmin) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "DummyAdmin not found"));
+    }
+
+    // Update subordinates and allSubordinates of the admin to be demoted
+    await Businessusers.updateOne(
+      {
+        businessId: new mongoose.Types.ObjectId(businessId),
+        userId: adminIdToDemote,
+        role: "Admin",
+      },
+      {
+        $set: {
+          role: "User",
+          parentId: dummyAdmin.userId,
+          subordinates: [],
+          allSubordinates: [],
+        },
+      },
+      { session }
+    );
+
+    // Update all admins' allSubordinates by adding the demoted user
+    await Businessusers.updateMany(
+      {
+        businessId: new mongoose.Types.ObjectId(businessId),
+        role: "Admin",
+      },
+      {
+        $addToSet: {
+          allSubordinates: adminIdToDemote,
+        },
+      },
+      { session }
+    );
+
+    // Update dummy admin's subordinates and allSubordinates with the demoted user
+    await Businessusers.updateOne(
+      {
+        businessId: new mongoose.Types.ObjectId(businessId),
+        userId: dummyAdmin.userId,
+      },
+      {
+        $addToSet: {
+          subordinates: adminIdToDemote,
+          allSubordinates: adminIdToDemote,
+        },
+      },
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, {}, "Admin role demoted to User successfully")
+      );
+  } catch (error) {
+    console.error(error);
+    await session.abortTransaction();
+    session.endSession();
+    return res
+      .status(500)
+      .json(new ApiResponse(500, {}, "Internal server error"));
+  }
+});

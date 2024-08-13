@@ -261,11 +261,6 @@ const acceptUserJoinRequest = asyncHandler(async (req, res) => {
         userId: userId,
       });
 
-      // console.log(
-      //   "This is the new Business User who have added:",
-      //   newBusinessUser
-      // );
-
       if (newBusinessUser) {
         newBusinessUser.notificationViewCounter += 1;
         await newBusinessUser.save();

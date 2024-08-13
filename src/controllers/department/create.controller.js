@@ -38,6 +38,17 @@ export const createDepartment = asyncHandler(async (req, res) => {
       userId: userId,
     });
 
+    const dummyBusinessUser = await Businessusers.findOne({
+      businessId: businessId,
+      role: "DummyAdmin",
+    });
+
+    if (!dummyBusinessUser) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Dummy admin user not found"));
+    }
+
     if (!businessuser || businessuser.role !== "Admin") {
       return res
         .status(400)
@@ -87,6 +98,9 @@ export const createDepartment = asyncHandler(async (req, res) => {
 
     businessuser.departmentId.push(...departmentIds);
     await businessuser.save();
+
+    dummyBusinessUser.departmentId.push(...departmentIds);
+    await dummyBusinessUser.save();
 
     await business.save();
 
