@@ -21,6 +21,14 @@ const removeUserFromBusiness = asyncHandler(async (req, res, next) => {
       .json(new ApiResponse(400, {}, "Invalid token please log in again"));
   }
 
+  if (userId.toString() === userToRemoveId.toString()) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(400, {}, "Self remove from business is not possible")
+      );
+  }
+
   if (!userToRemoveId || !businessId) {
     return res
       .status(400)
