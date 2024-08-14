@@ -317,11 +317,7 @@ const getAssignUsers = asyncHandler(async (req, res) => {
       return res
         .status(400)
         .json(
-          new ApiResponse(
-            400,
-            response,
-            "Token is not valid! Please log in again"
-          )
+          new ApiResponse(400, {}, "Token is not valid! Please log in again")
         );
     }
 
@@ -333,7 +329,7 @@ const getAssignUsers = asyncHandler(async (req, res) => {
         .json(
           new ApiResponse(
             400,
-            response,
+            {},
             "Please provide paramName and businessId in req params"
           )
         );
@@ -344,16 +340,10 @@ const getAssignUsers = asyncHandler(async (req, res) => {
       return res
         .status(400)
         .json(
-          new ApiResponse(
-            400,
-            response,
-            "business with the given Id does not exist"
-          )
+          new ApiResponse(400, {}, "Business with the given Id does not exist")
         );
     }
 
-    // console.log(userId);
-    // console.log(businessId);
     const businessusers = await Businessusers.findOne({
       userId: userId,
       businessId: businessId,
@@ -370,8 +360,7 @@ const getAssignUsers = asyncHandler(async (req, res) => {
           )
         );
     }
-    // console.log(businessusers);
-    console.log(businessusers.role);
+
     if (businessusers.role !== "Admin" && businessusers.role !== "MiniAdmin") {
       return res
         .status(200)
@@ -379,9 +368,20 @@ const getAssignUsers = asyncHandler(async (req, res) => {
           new ApiResponse(
             200,
             {},
-            "Only Admin and MiniAdmin can allow to access this operation"
+            "Only Admin and MiniAdmin can access this operation"
           )
         );
+    }
+
+    const dummyAdmin = await Businessusers.findOne({
+      businessId: businessId,
+      role: "DummyAdmin",
+    });
+
+    if (!dummyAdmin) {
+      return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Dummy Admin not found"));
     }
 
     const paramDetails = await Params.findOne({
@@ -396,16 +396,22 @@ const getAssignUsers = asyncHandler(async (req, res) => {
           new ApiResponse(
             400,
             {},
-            "Provided param name and business Id not exist simultaneously"
+            "Provided param name and business Id do not exist simultaneously"
           )
         );
     }
 
-    // Extract the list of assigned users
     const assignedUsers = paramDetails.usersAssigned.map((user) => ({
       name: user.name,
       userId: user.userId,
     }));
+
+    const dummyAdminDetails = {
+      name: dummyAdmin.name,
+      userId: dummyAdmin.userId,
+    };
+
+    assignedUsers.push(dummyAdminDetails);
 
     return res
       .status(200)
