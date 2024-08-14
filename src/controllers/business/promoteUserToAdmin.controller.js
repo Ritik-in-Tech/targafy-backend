@@ -216,6 +216,12 @@ export const demoteAdminToUser = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(400, {}, "Only admins can perform this task"));
     }
 
+    if (userId.toString() === adminIdToDemote.toString()) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Self role change not allowed"));
+    }
+
     const adminToDemote = await Businessusers.findOne({
       businessId: new mongoose.Types.ObjectId(businessId),
       userId: adminIdToDemote,
@@ -229,11 +235,11 @@ export const demoteAdminToUser = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(400, {}, "Admin to demote not found"));
     }
 
-    if (adminToDemote.role === admin.role) {
-      return res
-        .status(400)
-        .json(new ApiResponse(400, {}, "Self role change not allowed"));
-    }
+    // if (adminToDemote.role === admin.role) {
+    //   return res
+    //     .status(400)
+    //     .json(new ApiResponse(400, {}, "Self role change not allowed"));
+    // }
 
     // Find the dummy admin who will be the new parent
     const dummyAdmin = await Businessusers.findOne({
