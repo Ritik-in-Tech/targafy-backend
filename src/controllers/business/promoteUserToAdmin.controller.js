@@ -70,6 +70,12 @@ export const promoteUserToAdmin = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(400, {}, "User is already an admin"));
     }
 
+    if (userToPromote.role === user.role) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Self role change not allowed"));
+    }
+
     const subordinates = userToPromote.subordinates || [];
 
     // Find the dummy admin
@@ -221,6 +227,12 @@ export const demoteAdminToUser = asyncHandler(async (req, res, next) => {
       return res
         .status(400)
         .json(new ApiResponse(400, {}, "Admin to demote not found"));
+    }
+
+    if (adminToDemote.role === admin.role) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "Self role change not allowed"));
     }
 
     // Find the dummy admin who will be the new parent
